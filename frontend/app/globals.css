@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-surface: #faf8ff;
+    --color-surface-dim: #d9d9e5;
+    --color-surface-bright: #faf8ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f3f3fe;
+    --color-surface-container: #ededf9;
+    --color-surface-container-high: #e7e7f3;
+    --color-surface-container-highest: #e1e2ed;
+    --color-on-surface: #191b23;
+    --color-on-surface-variant: #434655;
+    --color-inverse-surface: #2e3039;
+    --color-inverse-on-surface: #f0f0fb;
+    --color-outline: #737686;
+    --color-outline-variant: #c3c6d7;
+    --color-surface-tint: #0053db;
+    --color-primary: #004ac6;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #2563eb;
+    --color-on-primary-container: #eeefff;
+    --color-inverse-primary: #b4c5ff;
+    --color-secondary: #585f6c;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #dce2f3;
+    --color-on-secondary-container: #5e6572;
+    --color-tertiary: #943700;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #bc4800;
+    --color-on-tertiary-container: #ffede6;
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+    --color-primary-fixed: #dbe1ff;
+    --color-primary-fixed-dim: #b4c5ff;
+    --color-on-primary-fixed: #00174b;
+    --color-on-primary-fixed-variant: #003ea8;
+    --color-secondary-fixed: #dce2f3;
+    --color-secondary-fixed-dim: #c0c7d6;
+    --color-on-secondary-fixed: #151c27;
+    --color-on-secondary-fixed-variant: #404754;
+    --color-tertiary-fixed: #ffdbcd;
+    --color-tertiary-fixed-dim: #ffb596;
+    --color-on-tertiary-fixed: #360f00;
+    --color-on-tertiary-fixed-variant: #7d2d00;
+    --color-background: #faf8ff;
+    --color-on-background: #191b23;
+    --color-surface-variant: #e1e2ed;
+  }
+}
+
+@theme {
+  --color-surface: #faf8ff;
+  --color-surface-dim: #d9d9e5;
+  --color-surface-bright: #faf8ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3fe;
+  --color-surface-container: #ededf9;
+  --color-surface-container-high: #e7e7f3;
+  --color-surface-container-highest: #e1e2ed;
+  --color-on-surface: #191b23;
+  --color-on-surface-variant: #434655;
+  --color-inverse-surface: #2e3039;
+  --color-inverse-on-surface: #f0f0fb;
+  --color-outline: #737686;
+  --color-outline-variant: #c3c6d7;
+  --color-surface-tint: #0053db;
+  --color-primary: #004ac6;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #2563eb;
+  --color-on-primary-container: #eeefff;
+  --color-inverse-primary: #b4c5ff;
+  --color-secondary: #585f6c;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dce2f3;
+  --color-on-secondary-container: #5e6572;
+  --color-tertiary: #943700;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #bc4800;
+  --color-on-tertiary-container: #ffede6;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #dbe1ff;
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-primary-fixed: #00174b;
+  --color-on-primary-fixed-variant: #003ea8;
+  --color-secondary-fixed: #dce2f3;
+  --color-secondary-fixed-dim: #c0c7d6;
+  --color-on-secondary-fixed: #151c27;
+  --color-on-secondary-fixed-variant: #404754;
+  --color-tertiary-fixed: #ffdbcd;
+  --color-tertiary-fixed-dim: #ffb596;
+  --color-on-tertiary-fixed: #360f00;
+  --color-on-tertiary-fixed-variant: #7d2d00;
+  --color-background: #faf8ff;
+  --color-on-background: #191b23;
+  --color-surface-variant: #e1e2ed;
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-container-padding: 24px;
+  --spacing-gutter: 16px;
+}
+
+body {
+  background-color: #faf8ff;
+  color: #191b23;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.material-symbols-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Custom Typography Helpers */
+.text-page-title {
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.text-section-title {
+  font-size: 18px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.text-card-title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.text-body-base {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.text-body-sm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+.text-label-caps {
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Custom scrollbar for data tables and streams */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f3fe;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c3c6d7;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #737686;
+}
