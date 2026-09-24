@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
+import { SimulationProvider } from "./context/SimulationContext";
 
 export const metadata = {
   title: "ITBIS SECURITY — Insider Threat Behavioral Intelligence System",
@@ -25,7 +26,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="bg-background text-on-surface antialiased min-h-screen">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <SimulationProvider>{children}</SimulationProvider>
+        </AuthProvider>
       </body>
     </html>
   );

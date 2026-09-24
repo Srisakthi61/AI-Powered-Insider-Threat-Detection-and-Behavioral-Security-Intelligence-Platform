@@ -80,13 +80,13 @@ def decode_token(token: str) -> dict:
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
+            detail="Token has expired. Please log in again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except (JWTError, Exception):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
+            detail="Invalid or missing authentication token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

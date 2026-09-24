@@ -70,11 +70,34 @@ def ingest_log(
     )
 
 
+@router.get("/count")
+def get_logs_count(
+    event_type: Optional[str] = None,
+    employee_id: Optional[str] = None,
+    mongo: Database = Depends(get_mongo_db),
+    current_user: dict = Depends(
+        require_role("admin", "security_analyst", "soc_engineer", "security_manager")
+    ),
+):
+    """
+    Get total count of activity logs matching filters in MongoDB.
+    """
+    query: Dict[str, Any] = {}
+    if event_type and event_type.upper() != "ALL":
+        query["event_type"] = event_type.strip()
+    if employee_id and employee_id.upper() != "ALL":
+        query["employee_id"] = employee_id.strip()
+
+    total = mongo["activity_logs"].count_documents(query)
+    return {"total": total}
+
+
 @router.get("/", response_model=List[Dict[str, Any]])
 def get_all_logs(
     event_type: Optional[str] = None,
     employee_id: Optional[str] = None,
     limit: int = Query(50, ge=1, le=1000),
+    skip: int = Query(0, ge=0),
     mongo: Database = Depends(get_mongo_db),
     current_user: dict = Depends(
         require_role("admin", "security_analyst", "soc_engineer", "security_manager")
@@ -83,14 +106,15 @@ def get_all_logs(
     """
     Retrieve live stream activity logs across all employees from MongoDB.
     Accessible by admin, security_analyst, soc_engineer, security_manager.
+    Supports skip & limit pagination across 10,000+ data points.
     """
     query: Dict[str, Any] = {}
     if event_type and event_type.upper() != "ALL":
         query["event_type"] = event_type.strip()
-    if employee_id:
+    if employee_id and employee_id.upper() != "ALL":
         query["employee_id"] = employee_id.strip()
 
-    cursor = mongo["activity_logs"].find(query).sort("timestamp", -1).limit(limit)
+    cursor = mongo["activity_logs"].find(query).sort("timestamp", -1).skip(skip).limit(limit)
 
     logs = []
     for doc in cursor:
@@ -105,6 +129,7 @@ def get_employee_logs(
     employee_id: str,
     event_type: Optional[str] = None,
     limit: int = Query(50, ge=1, le=1000),
+    skip: int = Query(0, ge=0),
     mongo: Database = Depends(get_mongo_db),
     current_user: dict = Depends(
         require_role("admin", "security_analyst", "soc_engineer", "security_manager")
@@ -112,14 +137,13 @@ def get_employee_logs(
 ):
     """
     Retrieve activity logs for a specific employee from MongoDB.
-    Supports optional event_type filtering, newest-first sorting, and pagination limit.
+    Supports optional event_type filtering, newest-first sorting, and pagination.
     """
     query: Dict[str, Any] = {"employee_id": employee_id.strip()}
     if event_type and event_type.upper() != "ALL":
         query["event_type"] = event_type.strip()
 
-    # Query MongoDB activity_logs collection sorted by timestamp descending
-    cursor = mongo["activity_logs"].find(query).sort("timestamp", -1).limit(limit)
+    cursor = mongo["activity_logs"].find(query).sort("timestamp", -1).skip(skip).limit(limit)
 
     logs = []
     for doc in cursor:

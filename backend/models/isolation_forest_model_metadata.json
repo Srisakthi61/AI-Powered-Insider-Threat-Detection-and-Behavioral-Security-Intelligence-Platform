@@ -1,0 +1,30 @@
+{
+  "model_type": "IsolationForest",
+  "feature_names": [
+    "avg_login_hour",
+    "std_login_hour",
+    "off_hours_logins",
+    "mean_daily_access",
+    "std_daily_access",
+    "total_transfer_mb",
+    "avg_transfer_mb",
+    "max_single_transfer_mb",
+    "usb_event_count",
+    "usb_total_mb",
+    "sudo_attempts",
+    "denied_events",
+    "critical_flags",
+    "unique_devices",
+    "email_count"
+  ],
+  "n_features": 15,
+  "scaler_saved": true,
+  "path": "C:\\Users\\srisa\\project (clg)\\AI-Powered-Insider-Threat-Detection-and-Behavioral-Security-Intelligence-Platform\\backend\\models\\isolation_forest_model.joblib",
+  "validation_metrics": {
+    "employee_count": 13,
+    "contamination": 0.15384615384615385,
+    "n_estimators": 200
+  },
+  "contamination": 0.15384615384615385,
+  "n_estimators": 200
+}

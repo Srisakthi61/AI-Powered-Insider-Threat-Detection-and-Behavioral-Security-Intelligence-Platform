@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import AppLayout from "../components/AppLayout";
-import RiskBadge from "../components/RiskBadge";
 import RoleGuard from "../components/RoleGuard";
 import { logApi, employeeApi } from "../lib/api";
 
@@ -12,12 +11,11 @@ export default function LogsPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState([]);
-
-  // Ingest form
-  const [ingestEmpId, setIngestEmpId] = useState("");
-  const [ingestType, setIngestType] = useState("usb_connect");
-  const [ingestDetails, setIngestDetails] = useState('{"file_count": 140, "total_size_mb": 5200}');
-  const [ingestMsg, setIngestMsg] = useState(null);
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(10000);
 
   useEffect(() => {
     employeeApi
@@ -25,20 +23,25 @@ export default function LogsPage() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setEmployees(data);
-          setIngestEmpId(data[0].employee_id);
         }
       })
       .catch(() => {});
   }, []);
 
-  const fetchLogs = async (id, ev) => {
+  const fetchLogs = async (id, ev, currPage, currPageSize) => {
     setLoading(true);
     try {
-      let data = [];
-      if (!id || id === "ALL") {
-        data = await logApi.getAll(ev || null, null, 50);
-      } else {
-        data = await logApi.getLogs(id, ev || null, 50);
+      const skip = (currPage - 1) * currPageSize;
+      
+      const [countRes, data] = await Promise.all([
+        logApi.getCount(ev || null, id !== "ALL" ? id : null).catch(() => ({ total: 10000 })),
+        id === "ALL"
+          ? logApi.getAll(ev || null, null, currPageSize, skip)
+          : logApi.getLogs(id, ev || null, currPageSize, skip)
+      ]);
+
+      if (countRes && typeof countRes.total === "number") {
+        setTotalCount(countRes.total);
       }
       setLogs(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -50,75 +53,68 @@ export default function LogsPage() {
   };
 
   useEffect(() => {
-    fetchLogs(employeeId, eventType);
-  }, [employeeId, eventType]);
+    setPage(1);
+    fetchLogs(employeeId, eventType, 1, pageSize);
+  }, [employeeId, eventType, pageSize]);
 
-  const handleIngest = async (e) => {
-    e.preventDefault();
-    setIngestMsg("Ingesting log into MongoDB time-series collection...");
-
-    try {
-      let parsed = {};
-      try {
-        parsed = JSON.parse(ingestDetails);
-      } catch {
-        parsed = { note: ingestDetails };
-      }
-
-      const res = await logApi.ingest(ingestEmpId, ingestType, parsed);
-      setIngestMsg(`Success! Ingested MongoDB log ID: ${res.log_id}`);
-
-      fetchLogs(employeeId, eventType);
-    } catch (err) {
-      setIngestMsg(`Error: ${err.response?.data?.detail || "Ingestion failed"}`);
+  const handlePageChange = (newPage) => {
+    const totalPages = Math.ceil(totalCount / pageSize) || 1;
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      fetchLogs(employeeId, eventType, newPage, pageSize);
     }
   };
+
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   return (
     <RoleGuard allowedRoles={["security_analyst", "soc_engineer", "admin"]}>
       <AppLayout>
-      <div className="flex flex-col gap-gutter">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">
-          <div>
-            <h1 className="font-page-title text-page-title text-on-surface font-bold">
-              Activity Logs & Ingestion Console
-            </h1>
-            <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-              High-throughput time-series digital events stored in MongoDB with PostgreSQL integrity validation.
-            </p>
+        <div className="flex flex-col gap-gutter">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-page-title text-page-title text-on-surface font-bold">
+                  Activity Logs & Telemetry Stream
+                </h1>
+                <span className="bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-primary/20">
+                  {Number(totalCount).toLocaleString()} Total Events
+                </span>
+              </div>
+              <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
+                High-throughput time-series digital events stored in MongoDB with pagination across 10,000+ data points.
+              </p>
+            </div>
+            <button
+              onClick={() => fetchLogs(employeeId, eventType, page, pageSize)}
+              className="bg-secondary-container text-on-secondary-container px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-secondary-fixed transition-colors flex items-center gap-1.5 shadow-xs self-start cursor-pointer active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[16px]">refresh</span>
+              Refresh Telemetry
+            </button>
           </div>
-          <button
-            onClick={() => fetchLogs(employeeId, eventType)}
-            className="bg-secondary-container text-on-secondary-container px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-secondary-fixed transition-colors flex items-center gap-1.5 shadow-xs self-start cursor-pointer active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[16px]">refresh</span>
-            Refresh Telemetry
-          </button>
-        </div>
 
-        {/* Ingestion Sandbox & Log Query Panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-          {/* Query & Filter Panel (Left 8/12) */}
-          <div className="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs flex flex-col">
-            <div className="p-md border-b border-outline-variant bg-surface-bright flex flex-wrap gap-2 justify-between items-center">
+          {/* Telemetry Log Query Panel */}
+          <div className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs flex flex-col">
+            <div className="p-md border-b border-outline-variant bg-surface-bright flex flex-wrap gap-3 justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-[20px]">
                   manage_search
                 </span>
                 <span className="font-semibold text-xs text-on-surface">
-                  Query MongoDB Telemetry
+                  Filter &amp; Query MongoDB Logs
                 </span>
               </div>
 
               {/* Filters */}
-              <div className="flex gap-2 text-xs flex-wrap">
+              <div className="flex gap-2 text-xs flex-wrap items-center">
                 <select
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
                   className="px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded-lg font-mono font-semibold text-primary outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                 >
-                  <option value="ALL">All Employees</option>
+                  <option value="ALL">All Employees ({employees.length})</option>
                   {employees.map((e) => (
                     <option key={e.employee_id} value={e.employee_id}>
                       {e.employee_id} — {e.name}
@@ -131,163 +127,160 @@ export default function LogsPage() {
                   onChange={(e) => setEventType(e.target.value)}
                   className="px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded-lg font-semibold text-on-surface-variant outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                 >
-                  <option value="">All Event Types</option>
-                  <option value="login">login</option>
+                  <option value="">All 8 Event Types</option>
+                  <option value="login">login (Login Times)</option>
                   <option value="file_download">file_download</option>
                   <option value="file_upload">file_upload</option>
-                  <option value="data_transfer">data_transfer</option>
-                  <option value="email_activity">email_activity</option>
+                  <option value="data_transfer">data_transfer (Volume)</option>
+                  <option value="email_activity">email_activity (Comms)</option>
                   <option value="privilege_change">privilege_change</option>
                   <option value="remote_access">remote_access</option>
-                  <option value="usb_connect">usb_connect</option>
+                  <option value="usb_connect">usb_connect (USB Egress)</option>
+                </select>
+
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded-lg font-semibold text-secondary outline-none cursor-pointer"
+                >
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
+                  <option value={100}>100 / page</option>
+                  <option value={250}>250 / page</option>
                 </select>
               </div>
             </div>
 
             {/* Results Table */}
-            <div className="overflow-x-auto flex-1 max-h-[500px]">
+            <div className="overflow-x-auto flex-1 max-h-[580px]">
               <table className="w-full text-left border-collapse text-xs">
                 <thead className="bg-surface-container-low sticky top-0 border-b border-outline-variant z-10">
                   <tr className="text-[10px] uppercase font-bold text-secondary font-label-caps text-label-caps">
                     <th className="p-sm pl-md">Timestamp (UTC)</th>
                     <th className="p-sm">Event Type</th>
                     <th className="p-sm">Employee</th>
+                    <th className="p-sm">Risk Assessment</th>
                     <th className="p-sm pr-md">Metadata Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/60 text-on-surface">
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-secondary">
-                        <span className="material-symbols-outlined animate-spin text-[24px]">
+                      <td colSpan={5} className="p-12 text-center text-secondary">
+                        <span className="material-symbols-outlined animate-spin text-[28px]">
                           progress_activity
                         </span>
+                        <p className="mt-2 text-xs">Querying MongoDB activity logs...</p>
                       </td>
                     </tr>
                   ) : logs.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-secondary">
+                      <td colSpan={5} className="p-8 text-center text-secondary">
                         No activity logs matching this query in MongoDB.
                       </td>
                     </tr>
                   ) : (
-                    logs.map((log) => (
-                      <tr
-                        key={log._id || log.id}
-                        className="hover:bg-surface-container-low transition-colors"
-                      >
-                        <td className="p-sm pl-md text-secondary font-mono text-[11px] whitespace-nowrap">
-                          {log.timestamp ? new Date(log.timestamp).toLocaleString() : "Recent"}
-                        </td>
-                        <td className="p-sm">
-                          <span className="px-2 py-0.5 rounded font-mono font-semibold bg-primary-fixed text-primary-container text-[11px]">
-                            {log.event_type}
-                          </span>
-                        </td>
-                        <td className="p-sm font-mono text-primary font-bold">
-                          {log.employee_id}
-                        </td>
-                        <td className="p-sm pr-md font-mono text-[11px] text-secondary max-w-xs truncate">
-                          {JSON.stringify(log.details)}
-                        </td>
-                      </tr>
-                    ))
+                    logs.map((log) => {
+                      const isRisk =
+                        log.event_type === "usb_connect" ||
+                        log.details?.risk_flag ||
+                        (log.event_type === "login" && log.timestamp && (new Date(log.timestamp).getUTCHours() < 6 || new Date(log.timestamp).getUTCHours() > 22));
+                      return (
+                        <tr
+                          key={log._id || log.id}
+                          className={`hover:bg-surface-container-low transition-colors ${
+                            isRisk ? "bg-error-container/5" : ""
+                          }`}
+                        >
+                          <td className="p-sm pl-md text-secondary font-mono text-[11px] whitespace-nowrap">
+                            {log.timestamp ? new Date(log.timestamp).toLocaleString() : "Recent"}
+                          </td>
+                          <td className="p-sm">
+                            <span
+                              className={`px-2 py-0.5 rounded font-mono font-semibold text-[11px] ${
+                                log.event_type === "usb_connect"
+                                  ? "bg-error-container text-error font-bold"
+                                  : log.event_type === "privilege_change"
+                                  ? "bg-amber-100 text-amber-900 font-bold"
+                                  : "bg-primary-fixed text-primary-container"
+                              }`}
+                            >
+                              {log.event_type}
+                            </span>
+                          </td>
+                          <td className="p-sm font-mono text-primary font-bold">
+                            {log.employee_id}
+                          </td>
+                          <td className="p-sm">
+                            {log.details?.risk_flag ? (
+                              <span className="text-[10px] font-bold bg-error-container text-error px-2 py-0.5 rounded">
+                                {log.details.risk_flag}
+                              </span>
+                            ) : isRisk ? (
+                              <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                                Unusual
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
+                                Normal Baseline
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-sm pr-md font-mono text-[11px] text-secondary max-w-md truncate">
+                            {JSON.stringify(log.details)}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
 
-          {/* Real-time Ingestion Simulator (Right 4/12) */}
-          <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col">
-            <div className="border-b border-outline-variant pb-sm mb-md flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-[20px]">
-                post_add
-              </span>
-              <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                Ingest Activity Log (API Test)
-              </h3>
+            {/* Pagination Controls */}
+            <div className="p-md border-t border-outline-variant bg-surface-bright flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+              <div className="text-secondary font-medium">
+                Showing <strong className="text-on-surface font-mono">{logs.length > 0 ? (page - 1) * pageSize + 1 : 0}</strong> to{" "}
+                <strong className="text-on-surface font-mono">{Math.min(page * pageSize, totalCount)}</strong> of{" "}
+                <strong className="text-primary font-mono">{Number(totalCount).toLocaleString()}</strong> records
+              </div>
+
+              <div className="flex items-center gap-1.5 font-semibold">
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={page === 1 || loading}
+                  className="px-2.5 py-1 rounded bg-surface-container-low border border-outline-variant hover:bg-surface-container disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  ⏮ First
+                </button>
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || loading}
+                  className="px-2.5 py-1 rounded bg-surface-container-low border border-outline-variant hover:bg-surface-container disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  ◀ Prev
+                </button>
+                <span className="px-3 py-1 font-mono text-primary font-bold">
+                  Page {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages || loading}
+                  className="px-2.5 py-1 rounded bg-surface-container-low border border-outline-variant hover:bg-surface-container disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Next ▶
+                </button>
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={page >= totalPages || loading}
+                  className="px-2.5 py-1 rounded bg-surface-container-low border border-outline-variant hover:bg-surface-container disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Last ⏭
+                </button>
+              </div>
             </div>
-
-            {ingestMsg && (
-              <div
-                className={`mb-3 p-2.5 rounded-lg text-xs font-semibold ${
-                  ingestMsg.startsWith("Success")
-                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                    : "bg-error-container text-on-error-container border border-error/20"
-                }`}
-              >
-                {ingestMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleIngest} className="space-y-3 text-xs flex-1 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div>
-                  <label className="block font-semibold text-on-surface mb-1">
-                    Employee ID
-                  </label>
-                  <select
-                    required
-                    value={ingestEmpId}
-                    onChange={(e) => setIngestEmpId(e.target.value)}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg bg-surface text-xs outline-none focus:ring-1 focus:ring-primary font-mono cursor-pointer"
-                  >
-                    {employees.map((emp) => (
-                      <option key={emp.employee_id} value={emp.employee_id}>
-                        {emp.employee_id} — {emp.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-secondary mt-0.5">
-                    Validates against PostgreSQL employees table before writing to MongoDB.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-on-surface mb-1">
-                    Event Type
-                  </label>
-                  <select
-                    value={ingestType}
-                    onChange={(e) => setIngestType(e.target.value)}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg bg-surface text-xs outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                  >
-                    <option value="usb_connect">usb_connect</option>
-                    <option value="file_download">file_download</option>
-                    <option value="file_upload">file_upload</option>
-                    <option value="data_transfer">data_transfer</option>
-                    <option value="login">login</option>
-                    <option value="privilege_change">privilege_change</option>
-                    <option value="remote_access">remote_access</option>
-                    <option value="email_activity">email_activity</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-on-surface mb-1">
-                    Details JSON Payload
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={ingestDetails}
-                    onChange={(e) => setIngestDetails(e.target.value)}
-                    className="w-full font-mono text-[11px] p-2.5 border border-outline-variant rounded-lg bg-surface outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container transition-colors shadow-xs cursor-pointer active:scale-95 text-xs flex items-center justify-center gap-1.5 mt-2"
-              >
-                <span className="material-symbols-outlined text-[16px]">send</span>
-                Ingest Event into MongoDB
-              </button>
-            </form>
           </div>
         </div>
-      </div>
       </AppLayout>
     </RoleGuard>
   );

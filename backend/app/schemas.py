@@ -85,6 +85,10 @@ class AlertResponse(AlertBase):
     employee_code: Optional[str] = None
     employee_name: Optional[str] = None
     department: Optional[str] = None
+    target_role: Optional[str] = None
+    target_role_title: Optional[str] = None
+    risk_level: Optional[str] = None
+    ml_anomaly_score: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -112,4 +116,3 @@ class RiskPostureResponse(BaseModel):
     asset_tiering: Dict[str, Any]
     department_scores: List[DepartmentSummary]
     compliance_sections: List[Dict[str, Any]]
-

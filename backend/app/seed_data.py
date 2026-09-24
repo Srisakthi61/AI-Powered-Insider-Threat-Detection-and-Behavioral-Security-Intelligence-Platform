@@ -424,8 +424,5 @@ def seed_activity_logs():
 
 
 if __name__ == "__main__":
-    ensure_schema()
-    seed_users()
-    seed_employees()
-    seed_alerts()
-    seed_activity_logs()
+    from app.seed_10k_data import run_full_seeding_and_baseline_generation
+    run_full_seeding_and_baseline_generation()

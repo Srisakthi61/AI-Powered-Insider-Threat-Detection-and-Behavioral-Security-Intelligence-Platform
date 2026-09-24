@@ -10,6 +10,32 @@ router = APIRouter()
 
 
 def _format_alert(alert: Alert) -> dict:
+    msg_lower = (alert.message or "").lower()
+    details_lower = (alert.details or "").lower()
+
+    # Determine stakeholder target role
+    if "sudo" in msg_lower or "privilege" in msg_lower or "root" in msg_lower or "admin" in msg_lower or "cluster" in msg_lower:
+        target_role = "admin"
+        target_role_title = "System Administrator"
+    elif "usb" in msg_lower or "exfiltration" in msg_lower or "brute" in msg_lower or "device" in msg_lower or "mfa" in msg_lower or "failed" in msg_lower:
+        target_role = "soc_engineer"
+        target_role_title = "SOC Incident Response"
+    elif "off-hours" in msg_lower or "login" in msg_lower or "hours" in msg_lower or "download" in msg_lower or "payroll" in msg_lower:
+        target_role = "security_manager"
+        target_role_title = "Department Manager"
+    else:
+        target_role = "security_analyst"
+        target_role_title = "Security Analyst"
+
+    # Extract ML anomaly score if present in details
+    ml_score = None
+    if "Anomaly Score:" in (alert.details or ""):
+        try:
+            score_part = alert.details.split("Anomaly Score:")[1].split("|")[0].strip()
+            ml_score = float(score_part)
+        except Exception:
+            ml_score = None
+
     return {
         "id": alert.id,
         "employee_id": alert.employee_id,
@@ -23,6 +49,10 @@ def _format_alert(alert: Alert) -> dict:
         "employee_code": alert.employee.employee_id if alert.employee else None,
         "employee_name": alert.employee.name if alert.employee else None,
         "department": alert.employee.department if alert.employee else None,
+        "target_role": target_role,
+        "target_role_title": target_role_title,
+        "risk_level": alert.severity,
+        "ml_anomaly_score": ml_score,
     }
 
 
@@ -30,6 +60,7 @@ def _format_alert(alert: Alert) -> dict:
 def list_alerts(
     severity: Optional[str] = None,
     status: Optional[str] = None,
+    target_role: Optional[str] = None,
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
     current_user: dict = Depends(
@@ -37,8 +68,8 @@ def list_alerts(
     ),
 ):
     """
-    Retrieve all alerts from PostgreSQL with joined employee info.
-    Supports filtering by severity and status.
+    Retrieve all alerts from PostgreSQL with joined employee and stakeholder targeting info.
+    Supports filtering by severity, status, and target role.
     """
     query = db.query(Alert).order_by(Alert.id.desc())
     if severity and severity.upper() != "ALL":
@@ -47,7 +78,41 @@ def list_alerts(
         query = query.filter(Alert.status.ilike(status))
 
     alerts = query.limit(limit).all()
-    return [_format_alert(a) for a in alerts]
+    formatted = [_format_alert(a) for a in alerts]
+
+    if target_role and target_role.upper() != "ALL":
+        formatted = [a for a in formatted if a["target_role"] == target_role.lower()]
+
+    return formatted
+
+
+@router.get("/role-targeted")
+def get_role_targeted_alerts(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_role("admin", "security_analyst", "soc_engineer", "security_manager")
+    ),
+):
+    """
+    Returns alerts intelligently prioritized and categorized for the logged-in user's role.
+    """
+    role = current_user.get("role", "security_analyst")
+    all_alerts = db.query(Alert).order_by(Alert.id.desc()).limit(100).all()
+    formatted = [_format_alert(a) for a in all_alerts]
+
+    if role in ["admin", "security_analyst"]:
+        my_role_alerts = formatted
+    else:
+        role_matched = [a for a in formatted if a["target_role"] == role]
+        my_role_alerts = role_matched if role_matched else formatted
+
+    return {
+        "user_role": role,
+        "targeted_alerts_count": len(my_role_alerts),
+        "targeted_alerts": my_role_alerts,
+        "all_alerts_count": len(formatted),
+        "all_alerts": formatted,
+    }
 
 
 @router.get("/my")
@@ -58,17 +123,15 @@ def get_my_alerts(
     ),
 ):
     """
-    Alerts for the logged-in user.
-    Accessible by all four roles: admin, security_analyst, soc_engineer, security_manager.
-    Returns user_id, message, and list of relevant alerts.
+    Alerts assigned to or relevant for the logged-in user.
     """
     user_id = current_user.get("sub")
     query = db.query(Alert)
     try:
         uid_int = int(user_id)
-        my_alerts = query.filter((Alert.assigned_to == uid_int) | (Alert.assigned_to.is_(None))).all()
+        my_alerts = query.filter((Alert.assigned_to == uid_int) | (Alert.assigned_to.is_(None))).order_by(Alert.id.desc()).all()
     except (ValueError, TypeError):
-        my_alerts = query.all()
+        my_alerts = query.order_by(Alert.id.desc()).all()
 
     return {
         "message": f"Alerts for user ID {user_id}",

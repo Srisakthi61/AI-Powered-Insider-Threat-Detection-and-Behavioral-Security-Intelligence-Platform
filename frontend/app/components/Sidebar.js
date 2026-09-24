@@ -46,6 +46,13 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
       roles: ["security_analyst", "security_manager", "soc_engineer", "admin"],
     },
     {
+      label: "Anomalies",
+      icon: "troubleshoot",
+      href: "/anomalies",
+      pattern: /^\/anomalies/,
+      roles: ["security_analyst", "security_manager", "soc_engineer", "admin"],
+    },
+    {
       label: "Reporting",
       icon: "assessment",
       href: "/reports",
@@ -76,8 +83,8 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col p-md gap-base z-50 transition-transform duration-200 ease-in-out md:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col p-md gap-base z-30 transition-transform duration-200 ease-in-out md:translate-x-0 ${
+          mobileOpen ? "translate-x-0 !z-45" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Brand Header */}

@@ -9,6 +9,7 @@ from app.routes.department_routes import router as department_router
 from app.routes.log_routes import router as log_router
 from app.routes.report_routes import router as report_router
 from app.routes.alert_routes import router as alert_router
+from app.routes.anomaly_routes import router as anomaly_router
 
 # Create database tables if database connection is available
 try:
@@ -44,6 +45,7 @@ app.include_router(department_router, prefix="/departments", tags=["Departments"
 app.include_router(log_router, prefix="/logs", tags=["Logs"])
 app.include_router(report_router, prefix="/reports", tags=["Reports"])
 app.include_router(alert_router, prefix="/alerts", tags=["Alerts"])
+app.include_router(anomaly_router, prefix="/anomalies", tags=["Behavioral Anomalies"])
 
 
 @app.get("/")

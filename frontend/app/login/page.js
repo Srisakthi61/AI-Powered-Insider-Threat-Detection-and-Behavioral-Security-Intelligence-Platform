@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useAuth, DEMO_CREDENTIALS } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState("analyst@itbis.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,12 +21,6 @@ export default function LoginPage() {
       setError(result.error);
       setIsLoading(false);
     }
-  };
-
-  const handleSelectDemo = (demoEmail) => {
-    setEmail(demoEmail);
-    setPassword("password123");
-    setError(null);
   };
 
   return (
@@ -146,36 +140,66 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo Credentials Quick Fill */}
-          <div className="mt-6 pt-4 border-t border-[#c3c6d7]/60">
-            <p className="text-[10px] font-bold text-[#737686] uppercase tracking-wider mb-2 text-center">
-              Quick Autofill Credentials
+          {/* 1-Click Demo Personas */}
+          <div className="mt-6 pt-5 border-t border-[#c3c6d7]/60">
+            <p className="text-[11px] font-bold text-[#191b23] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-[#004ac6]">key</span>
+              1-Click Demo Persona Sign-In:
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {DEMO_CREDENTIALS.map((item) => (
-                <button
-                  key={item.role}
-                  type="button"
-                  onClick={() => handleSelectDemo(item.email)}
-                  className={`p-2 border rounded-lg text-left transition-colors cursor-pointer ${
-                    email === item.email
-                      ? "border-[#004ac6] bg-[#faf8ff]"
-                      : "border-[#c3c6d7] hover:bg-[#f3f3fe]"
-                  }`}
-                >
-                  <div className="text-[11px] font-bold text-[#191b23] leading-tight">
-                    {item.title}
-                  </div>
-                  <div className="text-[10px] text-[#585f6c] truncate">
-                    {item.email}
-                  </div>
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("analyst@itbis.com");
+                  setPassword("AnalystPass123!");
+                  login("analyst@itbis.com", "AnalystPass123!");
+                }}
+                className="p-2 border border-[#c3c6d7] rounded-lg bg-[#faf8ff] hover:bg-[#004ac6] hover:text-white transition-all text-left cursor-pointer group"
+              >
+                <div className="font-bold text-[11px] text-[#004ac6] group-hover:text-white">Security Analyst</div>
+                <div className="text-[9px] text-[#737686] group-hover:text-white/80">analyst@itbis.com</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("soc@itbis.com");
+                  setPassword("SocPass123!");
+                  login("soc@itbis.com", "SocPass123!");
+                }}
+                className="p-2 border border-[#c3c6d7] rounded-lg bg-[#faf8ff] hover:bg-[#004ac6] hover:text-white transition-all text-left cursor-pointer group"
+              >
+                <div className="font-bold text-[11px] text-[#004ac6] group-hover:text-white">SOC Engineer</div>
+                <div className="text-[9px] text-[#737686] group-hover:text-white/80">soc@itbis.com</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("manager@itbis.com");
+                  setPassword("MgrPass123!");
+                  login("manager@itbis.com", "MgrPass123!");
+                }}
+                className="p-2 border border-[#c3c6d7] rounded-lg bg-[#faf8ff] hover:bg-[#004ac6] hover:text-white transition-all text-left cursor-pointer group"
+              >
+                <div className="font-bold text-[11px] text-[#004ac6] group-hover:text-white">Security Manager</div>
+                <div className="text-[9px] text-[#737686] group-hover:text-white/80">manager@itbis.com</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@itbis.com");
+                  setPassword("AdminPass123!");
+                  login("admin@itbis.com", "AdminPass123!");
+                }}
+                className="p-2 border border-[#c3c6d7] rounded-lg bg-[#faf8ff] hover:bg-[#004ac6] hover:text-white transition-all text-left cursor-pointer group"
+              >
+                <div className="font-bold text-[11px] text-[#004ac6] group-hover:text-white">Administrator</div>
+                <div className="text-[9px] text-[#737686] group-hover:text-white/80">admin@itbis.com</div>
+              </button>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
+          <div className="mt-5 text-center">
             <p className="text-xs text-[#434655]">
               Don&apos;t have an account?{" "}
               <Link

@@ -1,0 +1,26 @@
+name,department,designation,access_privileges,device_info,employee_id
+Test Manager Lead,Finance,Finance Manager,finance_admin,Dell Latitude 7420,EMP_MGR_106158
+Test Subordinate Analyst,Finance,Senior Finance Analyst,finance_read,ThinkPad X1,EMP_SUB_454393
+Test Manager Lead,Finance,Finance Manager,finance_admin,Dell Latitude 7420,EMP_MGR_414570
+Test Subordinate Analyst,Finance,Senior Finance Analyst,finance_read,ThinkPad X1,EMP_SUB_900063
+Test Manager Lead,Finance,Finance Manager,finance_admin,Dell Latitude 7420,EMP_MGR_632639
+Test Subordinate Analyst,Finance,Senior Finance Analyst,finance_read,ThinkPad X1,EMP_SUB_982581
+Test Manager Lead,Finance,Finance Manager,finance_admin,Dell Latitude 7420,EMP_MGR_634957
+Test Subordinate Analyst,Finance,Senior Finance Analyst,finance_read,ThinkPad X1,EMP_SUB_360189
+Daniel Lee,IT,System Administrator,"domain_admin,cloud_console,ssh_root","ThinkPad T14, Hostname: IT-LT-01",EMP1003
+Sarah Connor,Engineering,Software Architect,"git_admin,aws_deployer,prod_db_read","MacBook Pro 16, Hostname: ENG-MB-01",EMP1005
+John Doe,Engineering,Lead Infrastructure Engineer,"prod_cluster_admin,usb_allowed","Dell Precision 5560, Hostname: ENG-LT-02",EMP1007
+Alex Johnson,Sales,Enterprise Account Exec,"salesforce_admin,crm_export","Lenovo Yoga X1, Hostname: SLS-LT-01",EMP1008
+David Miller,Marketing,Content Strategist,"marketing_cloud,creative_suite","MacBook Air M2, Hostname: MKT-MB-01",EMP1009
+Emily Davis,Human Resources,Talent Acquisition Lead,"hris_admin,workday_user","HP EliteBook 840, Hostname: HR-LT-01",EMP1010
+Robert Jones,Engineering,Senior Backend Engineer,"git_write,k8s_developer","ThinkPad P1, Hostname: ENG-LT-03",EMP1011
+Maria Garcia,Engineering,Senior DevOps Engineer,"ci_cd_admin,docker_registry","MacBook Pro 14, Hostname: ENG-MB-04",EMP1012
+Alice Smith,Finance,Senior Quantitative Analyst,"finance_read_write,payroll_read","Dell Latitude 7420, Hostname: FIN-LT-04",EMP1013
+Ayesha Khan,Finance,Financial Analyst,"finance_read_only,quickbooks_user","HP EliteBook 840, Hostname: FIN-LT-02",EMP1002
+Vikram Patel,IT,Network Engineer,"vpn_admin,firewall_operator","Dell Precision 5560, Hostname: IT-LT-02",EMP1004
+Rajesh Kumar,Finance,Senior Accountant,"finance_read_write,payroll_user","Lenovo Yoga, Hostname: FIN-LT-03",EMP1006
+Test Manager Lead,Finance,Finance Manager,finance_admin,Dell Latitude 7420,EMP_MGR_943312
+Test Manager Lead,Finance,Finance Manager,finance_admin,Dell Latitude 7420,EMP_MGR_309586
+Test Subordinate Analyst,Finance,Senior Finance Analyst,finance_read,ThinkPad X1,EMP_SUB_590096
+Test Subordinate Analyst,Finance,Senior Finance Analyst,finance_read,ThinkPad X1,EMP_SUB_256853
+Rohit Sharma,Finance,Finance Manager,"finance_read_write,erp_admin,payroll_read","Dell Latitude 7420, Hostname: FIN-LT-01",EMP1001

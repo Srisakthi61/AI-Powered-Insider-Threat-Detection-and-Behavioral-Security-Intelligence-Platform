@@ -42,10 +42,10 @@ export const ROLE_CONFIG = {
 };
 
 export const DEMO_CREDENTIALS = [
-  { role: "security_analyst", title: "Security Analyst", email: "analyst@itbis.com" },
-  { role: "security_manager", title: "Security Manager", email: "manager@itbis.com" },
-  { role: "soc_engineer", title: "SOC Engineer", email: "soc@itbis.com" },
-  { role: "admin", title: "Administrator", email: "admin@itbis.com" },
+  { role: "security_analyst", title: "Security Analyst", email: "analyst@itbis.com", password: "AnalystPass123!" },
+  { role: "soc_engineer", title: "SOC Engineer", email: "soc@itbis.com", password: "SocPass123!" },
+  { role: "security_manager", title: "Security Manager", email: "manager@itbis.com", password: "MgrPass123!" },
+  { role: "admin", title: "Administrator", email: "admin@itbis.com", password: "AdminPass123!" },
 ];
 
 export const AuthProvider = ({ children }) => {
@@ -79,9 +79,16 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+
+    const handleExpired = () => {
+      setUser(null);
+    };
+
+    window.addEventListener("itbis-auth-expired", handleExpired);
+    return () => window.removeEventListener("itbis-auth-expired", handleExpired);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, shouldRedirect = true) => {
     try {
       const data = await authApi.login(email, password);
       const role = data.role;
@@ -105,14 +112,21 @@ export const AuthProvider = ({ children }) => {
       };
       setUser(userInfo);
 
-      // Navigate directly to this role's dedicated dashboard
-      router.push(roleInfo.dashboard);
-      return { success: true, data };
+      if (shouldRedirect) {
+        // Navigate directly to this role's dedicated dashboard
+        router.push(roleInfo.dashboard);
+      }
+      return { success: true, data, token };
     } catch (err) {
       const errorMsg =
         err.response?.data?.detail || "Authentication failed. Check your credentials.";
       return { success: false, error: errorMsg };
     }
+  };
+
+  const quickLogin = async (roleName = "security_analyst", shouldRedirect = true) => {
+    const found = DEMO_CREDENTIALS.find((c) => c.role === roleName) || DEMO_CREDENTIALS[0];
+    return await login(found.email, found.password, shouldRedirect);
   };
 
   const signup = async (email, password, role) => {
@@ -140,6 +154,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
+        quickLogin,
         signup,
         logout,
         isAuthenticated: !!user,
