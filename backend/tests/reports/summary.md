@@ -1,8 +1,8 @@
 # ITBIS API Automated Test Execution Summary
 
-- **Execution Time:** 2026-10-07T05:33:10.640Z
+- **Execution Time:** 2026-10-07T09:28:44.880Z
 - **Target Base URL:** `http://127.0.0.1:8000`
-- **Duration:** 10.96s
+- **Duration:** 12.01s
 - **Total Requests:** 51 (0 failed)
 - **Total Assertions:** 80 (0 failed)
 - **HTML Report:** [`tests/reports/api_test_report.html`](file:///C:/Users/srisa/project (clg)/AI-Powered-Insider-Threat-Detection-and-Behavioral-Security-Intelligence-Platform/backend/tests/reports/api_test_report.html)

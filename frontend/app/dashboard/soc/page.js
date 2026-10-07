@@ -208,15 +208,15 @@ export default function SocDashboardPage() {
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     isSimulated
-                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 animate-pulse"
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                       : "bg-surface-container-high text-secondary border-outline-variant"
                   }`}
                 >
-                  {isSimulated ? "● Live Stream Active" : "○ Stream Standby"}
+                  {isSimulated ? "Live Stream Active" : "Stream Standby"}
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Real-time event stream processing, MongoDB persistence, and cross-database behavioral integrity.
+                Real-time event stream monitoring, telemetry analysis, and activity log ingestion.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -242,41 +242,41 @@ export default function SocDashboardPage() {
 
           {/* Standby Banner */}
           {!isSimulated ? (
-            <div className="bg-gradient-to-r from-red-500/10 via-surface-container-lowest to-surface-container-low border border-red-500/25 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-error text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-[28px]">crisis_alert</span>
+            <div className="bg-gradient-to-r from-red-500/10 via-surface-container-lowest to-surface-container-low border border-red-500/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-error text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span className="material-symbols-outlined text-[24px]">crisis_alert</span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-on-surface">
-                      SOC Real-Time Stream in Standby — No Active Threat Scenario
+                      Event Stream in Standby
                     </h3>
-                    <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">
-                      Telemetry Idle
+                    <span className="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200">
+                      Standby
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    Live telemetry stream is waiting for incident events. Use <strong>"Simulate Threat"</strong> in the top navigation bar to inject mass USB data exfiltration or privilege escalation into MongoDB and observe real-time AI outlier detection.
+                    No active threat events currently detected. Use <strong>&quot;Simulate Threat&quot;</strong> in the navigation bar to test live log ingestion and real-time anomaly detection.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
+            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[24px]">sensors</span>
+                <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">sensors</span>
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Live Telemetry Ingestion Active
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full animate-pulse">
-                      MongoDB Stream Live
+                    Live Event Ingestion Active
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full">
+                      Stream Live
                     </span>
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Real-time event stream connected. Evaluating USB transfers, sudo executions, and login drift.
+                    Real-time event stream connected. Monitoring USB transfers, privileges, and logins.
                   </p>
                 </div>
               </div>
@@ -286,33 +286,33 @@ export default function SocDashboardPage() {
           {/* 4 Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
-              title="Total Telemetry Logs"
+              title="Activity Logs"
               value={
                 isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="MongoDB Time-Series"
+              trend="Indexed"
               trendType="up-safe"
               icon="dataset"
               iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-primary" : "text-secondary"}
-              description={isSimulated ? "Indexed security events" : "Standby stream"}
+              description={isSimulated ? "Recorded security events" : "Standby stream"}
             />
             <MetricCard
               title="Behavioral Baselines"
               value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
-              trend="6 Indicators / Emp"
+              trend="6 Indicators"
               trendType="neutral"
               icon="tune"
               iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description={isSimulated ? "MongoDB Baselines Store" : "Standby baselines"}
+              description={isSimulated ? "Statistical baseline profiles" : "Standby baselines"}
             />
             <MetricCard
               title="Active Alerts"
               value={isSimulated ? alertsCount : 0}
-              trend="PostgreSQL Store"
+              trend="Triage Queue"
               trendType={isSimulated && alertsCount > 0 ? "up-danger" : "neutral"}
               icon="warning"
               iconBg={isSimulated && alertsCount > 0 ? "bg-error-container" : "bg-surface-container"}
@@ -322,7 +322,7 @@ export default function SocDashboardPage() {
             <MetricCard
               title="Monitored Employees"
               value={employees.length || 10}
-              trend="Directory Store"
+              trend="Directory"
               trendType="neutral"
               icon="group"
               iconBg="bg-secondary-container"
@@ -338,7 +338,7 @@ export default function SocDashboardPage() {
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                    Live Activity Stream (MongoDB)
+                    Live Activity Stream
                   </h2>
                   {isSimulated && !isPaused && (
                     <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold animate-pulse">
@@ -374,15 +374,15 @@ export default function SocDashboardPage() {
               {/* Scrolling Content Area */}
               {!isSimulated || filteredLogs.length === 0 ? (
                 <div className="flex-1 py-8 px-6 flex flex-col items-center justify-center text-center w-full min-w-0 text-secondary">
-                  <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
-                    <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
-                      <span className="material-symbols-outlined text-[26px]">sensors_off</span>
+                  <div className="w-full max-w-[360px] mx-auto flex flex-col items-center justify-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                      <span className="material-symbols-outlined text-[22px]">sensors_off</span>
                     </div>
                     <h4 className="font-bold text-sm text-on-surface">
-                      No activity logs in stream.
+                      No active stream events
                     </h4>
                     <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
-                      Threat telemetry will stream here after simulation or manual log ingestion.
+                      Activity logs will appear here during live monitoring or after manual log ingestion.
                     </p>
                   </div>
                 </div>

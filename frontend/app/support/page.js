@@ -10,10 +10,10 @@ export default function SupportPage() {
         {/* Header */}
         <div>
           <h1 className="font-page-title text-page-title text-on-surface font-bold">
-            ITBIS Architecture &amp; System Documentation
+            System Documentation
           </h1>
           <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-            Overview of the 4-layer security architecture, dual-database model, and API contracts.
+            Architecture overview, database models, and API reference.
           </p>
         </div>
 
@@ -24,7 +24,7 @@ export default function SupportPage() {
               hub
             </span>
             <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-              Dual-Database Persistence Layer
+              Data Storage Model
             </h2>
           </div>
 
@@ -34,10 +34,10 @@ export default function SupportPage() {
                 <span className="material-symbols-outlined text-primary text-[18px]">
                   database
                 </span>
-                PostgreSQL (Relational / ACID)
+                PostgreSQL (Relational Store)
               </div>
               <p className="text-secondary text-[11px] leading-relaxed">
-                Stores structured relational business entities: <code className="bg-surface-container px-1 py-0.5 rounded">users</code>, <code className="bg-surface-container px-1 py-0.5 rounded">employees</code>, <code className="bg-surface-container px-1 py-0.5 rounded">incidents</code>, and <code className="bg-surface-container px-1 py-0.5 rounded">alerts</code>. Governs identity, manager-subordinate hierarchies, and investigations.
+                Stores users, employees, incidents, and alerts. Governs authentication, employee hierarchies, and case records.
               </p>
             </div>
 
@@ -46,10 +46,10 @@ export default function SupportPage() {
                 <span className="material-symbols-outlined text-primary text-[18px]">
                   storage
                 </span>
-                MongoDB (Time-Series / Events)
+                MongoDB (Activity Telemetry)
               </div>
               <p className="text-secondary text-[11px] leading-relaxed">
-                Stores high-throughput digital security telemetry: <code className="bg-surface-container px-1 py-0.5 rounded">activity_logs</code> and <code className="bg-surface-container px-1 py-0.5 rounded">behavioral_baselines</code>. Enforces cross-database integrity before ingestion.
+                Stores high-throughput activity logs and behavioral baselines with continuous time-series indexing.
               </p>
             </div>
           </div>
@@ -62,7 +62,7 @@ export default function SupportPage() {
               api
             </span>
             <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-              RESTful API Endpoint Directory
+              Core API Endpoints
             </h2>
           </div>
 

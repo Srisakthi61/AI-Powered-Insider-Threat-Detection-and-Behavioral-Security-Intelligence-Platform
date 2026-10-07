@@ -167,20 +167,20 @@ export default function IncidentsPage() {
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-2xl">folder_special</span>
               <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                Incident Management Cases
+                Incident Cases
               </h1>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                   isSimulated
-                    ? "bg-amber-50 text-amber-800 border-amber-300 animate-pulse"
+                    ? "bg-amber-50 text-amber-800 border-amber-300"
                     : "bg-surface-container-high text-secondary border-outline-variant"
                 }`}
               >
-                {isSimulated ? "● Threat Incident Active" : "○ Incident Queue Standby"}
+                {isSimulated ? "Active Case" : "Standby"}
               </span>
             </div>
-            <p className="text-secondary text-sm mt-0.5">
-              Formal insider threat investigation cases, evidence timelines, notes, and audit chains.
+            <p className="text-secondary text-xs mt-0.5">
+              Track, investigate, and resolve security incident cases.
             </p>
           </div>
 
@@ -198,7 +198,7 @@ export default function IncidentsPage() {
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+              className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-container shadow-sm flex items-center gap-2 transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">add_moderator</span>
               Open New Case
@@ -212,49 +212,49 @@ export default function IncidentsPage() {
             title="Total Cases"
             value={displayTotalCases}
             icon="folder_open"
-            trend={displayTotalCases > 0 ? "Active Cases" : "No Cases"}
+            trend={displayTotalCases > 0 ? "Active Cases" : "Nominal"}
           />
           <MetricCard
             title="Open / Triage"
             value={displayOpenCases}
             icon="pending_actions"
             accentColor="#d97706"
-            trend={displayOpenCases > 0 ? "Needs assignment" : "Nominal"}
+            trend={displayOpenCases > 0 ? "Needs Triage" : "Nominal"}
           />
           <MetricCard
             title="Investigating"
             value={displayInvestigatingCases}
             icon="manage_search"
             accentColor="#0284c7"
-            trend={displayInvestigatingCases > 0 ? "Active inquiries" : "Nominal"}
+            trend={displayInvestigatingCases > 0 ? "Under Review" : "Nominal"}
           />
           <MetricCard
             title="Resolved / Closed"
             value={displayResolvedCases}
             icon="verified"
             accentColor="#16a34a"
-            trend={displayResolvedCases > 0 ? "Case closed" : "Nominal"}
+            trend={displayResolvedCases > 0 ? "Closed" : "Nominal"}
           />
           <MetricCard
             title="Critical Severity"
             value={displayCriticalCases}
             icon="warning"
             accentColor="#dc2626"
-            trend={displayCriticalCases > 0 ? "Urgent attention" : "Nominal"}
+            trend={displayCriticalCases > 0 ? "Urgent" : "Nominal"}
           />
         </div>
 
         {/* Incidents Table & Controls */}
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
           {/* Table Toolbar */}
-          <div className="p-4 border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40">
+          <div className="p-3.5 border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40">
             <div className="flex items-center gap-2 flex-1 max-w-md">
               <span className="material-symbols-outlined text-secondary text-lg">search</span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Case ID, Employee, or Case Title..."
+                placeholder="Search by ID, employee, or title..."
                 className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary"
               />
             </div>

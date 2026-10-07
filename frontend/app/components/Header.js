@@ -10,8 +10,8 @@ const THREAT_SCENARIOS = [
   {
     id: "usb_exfiltration",
     title: "1. Mass USB Data Exfiltration",
-    metric: "6.5 GB Bulk Copied",
-    desc: "Unauthorized SanDisk 128GB flash drive connected to engineering workstation. 48 classified files copied.",
+    metric: "6.5 GB Copied",
+    desc: "48 sensitive files copied to an unauthorized USB flash drive.",
     target: "SOC Incident Response",
     badgeStyle: "bg-red-100 text-red-800 border-red-300",
     icon: "usb",
@@ -19,9 +19,9 @@ const THREAT_SCENARIOS = [
   },
   {
     id: "sudo_privilege_abuse",
-    title: "2. Unauthorized Sudo Root Escalation",
-    metric: "Root Shell Execution",
-    desc: "Terminal bash execution attempt against /etc/shadow and root cluster IAM role binding tampering.",
+    title: "2. Unauthorized Sudo Escalation",
+    metric: "Root Shell Attempt",
+    desc: "Unauthorized privilege escalation on system files and IAM roles.",
     target: "System Administrator",
     badgeStyle: "bg-amber-100 text-amber-800 border-amber-300",
     icon: "terminal",
@@ -29,9 +29,9 @@ const THREAT_SCENARIOS = [
   },
   {
     id: "off_hours_mfa_attack",
-    title: "3. Off-Hours Brute-Force Login Drift",
-    metric: "03:15 AM Anomalous Login",
-    desc: "12 consecutive failed MFA authentication drifts from external Kali Linux node outside standard work hours.",
+    title: "3. Off-Hours Login Attack",
+    metric: "03:15 AM Login Drift",
+    desc: "12 consecutive failed login attempts outside normal working hours.",
     target: "Department Manager",
     badgeStyle: "bg-blue-100 text-blue-800 border-blue-300",
     icon: "schedule",
@@ -39,9 +39,9 @@ const THREAT_SCENARIOS = [
   },
   {
     id: "cloud_data_dump",
-    title: "4. High-Volume External SFTP Dump",
-    metric: "4.2 GB Bulk Egress",
-    desc: "Mass outbound data egress transfer stream to unauthorized external staging cloud server destination.",
+    title: "4. High-Volume Cloud Data Egress",
+    metric: "4.2 GB Outbound",
+    desc: "Mass data transfer stream to an unapproved external destination.",
     target: "Security Analyst",
     badgeStyle: "bg-purple-100 text-purple-800 border-purple-300",
     icon: "cloud_upload",
@@ -94,6 +94,15 @@ export default function Header({ onToggleSidebar = () => {} }) {
     }
   };
 
+  const handleQuickSimulate = async (e) => {
+    if (e) e.preventDefault();
+    if (isSimulated) {
+      openSimModal();
+      return;
+    }
+    await handleSimulateSubmit(e);
+  };
+
   return (
     <>
       <header className="flex items-center justify-between px-4 md:px-6 h-16 w-full sticky top-0 z-40 bg-surface border-b border-outline-variant shadow-2xs">
@@ -119,37 +128,28 @@ export default function Header({ onToggleSidebar = () => {} }) {
         </div>
 
         {/* Center: Live Monitoring Status Bar & Search Bar */}
-        <div className="flex-1 max-w-3xl mx-2 sm:mx-4 md:mx-6 flex items-center gap-3">
+        <div className="flex-1 max-w-2xl mx-2 sm:mx-4 md:mx-6 flex items-center gap-3">
           {/* Live Radar Pulse Indicator */}
           <div className="hidden lg:flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl text-xs shrink-0 shadow-2xs">
             <span
-              className={`w-2.5 h-2.5 rounded-full ${
+              className={`w-2 h-2 rounded-full ${
                 isSimulated
                   ? "bg-emerald-500 animate-pulse-emerald"
-                  : "bg-secondary/60 animate-pulse"
+                  : "bg-secondary/60"
               }`}
             />
-            <span className="font-mono font-bold text-[11px] text-on-surface">
-              {isSimulated ? "ML THREAT RADAR ACTIVE" : "AI RADAR STANDBY"}
-            </span>
-            <span
-              className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                isSimulated
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-surface-container-high text-secondary"
-              }`}
-            >
-              {isSimulated ? "15-D Active" : "Standby"}
+            <span className="font-semibold text-xs text-on-surface">
+              {isSimulated ? "Threat Radar Active" : "Radar Standby"}
             </span>
           </div>
 
           <div className="w-full flex items-center bg-surface-container-low hover:bg-surface-container-high/50 rounded-xl px-3.5 py-1.5 border border-outline-variant focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 focus-within:bg-surface-container-lowest transition-all">
-            <span className="material-symbols-outlined text-outline text-[20px] shrink-0">
+            <span className="material-symbols-outlined text-outline text-[18px] shrink-0">
               search
             </span>
             <input
               className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs text-on-surface w-full ml-2 placeholder:text-outline/70"
-              placeholder="Search anomalies, employee IDs, exfiltration events, ML alerts..."
+              placeholder="Search employees, alerts, events..."
               type="text"
             />
           </div>
@@ -158,9 +158,41 @@ export default function Header({ onToggleSidebar = () => {} }) {
         {/* Right: Actions & User Persona */}
         <div className="flex items-center gap-2 md:gap-3 relative shrink-0">
 
+          {/* Dashboard Switcher */}
+          <div className="hidden lg:flex items-center gap-1 bg-surface-container-low border border-outline-variant p-0.5 rounded-lg text-[11px] font-medium">
+            <Link
+              href="/dashboard/analyst"
+              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+              title="Analyst Dashboard"
+            >
+              Analyst
+            </Link>
+            <Link
+              href="/dashboard/soc"
+              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+              title="SOC Stream"
+            >
+              SOC
+            </Link>
+            <Link
+              href="/dashboard/manager"
+              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+              title="Manager Posture"
+            >
+              Manager
+            </Link>
+            <Link
+              href="/dashboard/admin"
+              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+              title="Admin Telemetry"
+            >
+              Admin
+            </Link>
+          </div>
+
           {/* Real-time Threat Trigger Quick Button */}
           <button
-            onClick={openSimModal}
+            onClick={handleQuickSimulate}
             disabled={simLoading}
             className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer transition-all active:scale-95 shadow-xs ${
               simLoading
@@ -187,6 +219,16 @@ export default function Header({ onToggleSidebar = () => {} }) {
             <span className="font-semibold">
               {simLoading ? "Simulating..." : isSimulated ? "Threat Active" : "Simulate Threat"}
             </span>
+          </button>
+
+          {/* Configure Simulation Button */}
+          <button
+            type="button"
+            onClick={openSimModal}
+            className="hidden sm:flex items-center p-2 text-secondary hover:text-primary hover:bg-surface-container-low rounded-xl border border-outline-variant transition-colors cursor-pointer active:scale-95 shadow-xs"
+            title="Configure Threat Simulation"
+          >
+            <span className="material-symbols-outlined text-[16px]">tune</span>
           </button>
 
           {/* Reset Dashboard button (visible if simulated) */}
@@ -223,10 +265,10 @@ export default function Header({ onToggleSidebar = () => {} }) {
                 <div className="flex justify-between items-center px-sm py-1.5 border-b border-outline-variant">
                   <div>
                     <span className="font-bold text-xs text-on-surface block">
-                      Targeted for {roleTitle}
+                      {roleTitle} Alerts
                     </span>
                     <span className="text-[10px] text-secondary">
-                      {targetedAlerts.length} active alerts routed to your persona
+                      {targetedAlerts.length} active alerts
                     </span>
                   </div>
                   <Link
@@ -234,16 +276,16 @@ export default function Header({ onToggleSidebar = () => {} }) {
                     onClick={() => setShowNotifMenu(false)}
                     className="text-[10px] text-primary font-bold hover:underline"
                   >
-                    View All Queue
+                    View All
                   </Link>
                 </div>
 
                 <div className="flex flex-col gap-1 mt-1 text-xs max-h-72 overflow-y-auto">
                   {targetedAlerts.length === 0 ? (
                     <div className="p-4 text-center text-secondary text-xs">
-                      No active alerts targeted for your role right now.
+                      No active alerts for your role.
                       <p className="mt-1 text-[10px] text-secondary/80">
-                        Use "Simulate Threat" in the header to trigger telemetry and model scan.
+                        Use &quot;Simulate Threat&quot; above to generate test alerts.
                       </p>
                     </div>
                   ) : (
@@ -362,10 +404,10 @@ export default function Header({ onToggleSidebar = () => {} }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm sm:text-base text-on-surface leading-tight">
-                    Simulate Live Threat Event &amp; Run AI Risk Pipeline
+                    Simulate Threat Scenario
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Evaluates multi-dimensional behavioral indicators from database telemetry &amp; routes targeted alerts.
+                    Generate realistic threat events to test behavioral anomaly detection and alert routing.
                   </p>
                 </div>
               </div>
@@ -389,7 +431,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
               {/* Target Employee Selection */}
               <div>
                 <label className="font-bold text-on-surface block mb-1.5 text-xs">
-                  1. Target Monitored Employee (Indexed in PostgreSQL):
+                  1. Select Target Employee:
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                   {TARGET_EMPLOYEES.map((emp) => {
@@ -417,7 +459,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
               {/* Threat Scenario Selection: 2-Column Grid */}
               <div>
                 <label className="font-bold text-on-surface block mb-1.5 text-xs">
-                  2. Select Threat Scenario &amp; Targeted Persona Dispatch:
+                  2. Choose Attack Scenario:
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   {THREAT_SCENARIOS.map((s) => {
@@ -464,11 +506,11 @@ export default function Header({ onToggleSidebar = () => {} }) {
                         </div>
 
                         <div className="mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between pl-6">
-                          <span className="text-[10px] text-secondary">Role Recipient:</span>
+                          <span className="text-[10px] text-secondary">Target Role:</span>
                           <span
                             className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${s.badgeStyle}`}
                           >
-                            👤 {s.target}
+                            {s.target}
                           </span>
                         </div>
                       </div>
@@ -496,7 +538,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
                     <span className={`material-symbols-outlined text-[17px] ${simLoading ? "animate-spin" : ""}`}>
                       {simLoading ? "progress_activity" : "crisis_alert"}
                     </span>
-                    <span>{simLoading ? "Running Isolation Forest AI Model..." : "Trigger Live Threat & Run AI Scan"}</span>
+                    <span>{simLoading ? "Simulating..." : "Trigger Simulation"}</span>
                   </button>
                 </div>
               </div>

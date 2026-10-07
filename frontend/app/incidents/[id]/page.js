@@ -388,10 +388,10 @@ export default function IncidentDetailPage() {
                     history_edu
                   </span>
                   <h2 className="font-bold text-sm text-on-surface">
-                    Merged Investigation Timeline
+                    Investigation Timeline
                   </h2>
                   <span className="text-[11px] text-secondary font-mono bg-surface-container px-2 py-0.5 rounded">
-                    {timeline.length} Events (Newest First)
+                    {timeline.length} Events
                   </span>
                 </div>
 
@@ -418,11 +418,11 @@ export default function IncidentDetailPage() {
                     <span className="material-symbols-outlined animate-spin text-primary">
                       progress_activity
                     </span>
-                    Compiling multi-source investigation timeline...
+                    Loading timeline...
                   </div>
                 ) : timeline.length === 0 ? (
                   <div className="py-8 text-center text-secondary text-xs">
-                    No timeline events recorded for this subject yet.
+                    No timeline events recorded yet.
                   </div>
                 ) : (
                   timeline.map((item, idx) => {
@@ -494,19 +494,19 @@ export default function IncidentDetailPage() {
                   edit_note
                 </span>
                 <h3 className="font-bold text-sm text-on-surface">
-                  Add Investigation Note
+                  Add Note
                 </h3>
               </div>
 
               <form onSubmit={handleAddNote} className="space-y-3 text-xs">
                 <div>
                   <label className="font-bold text-secondary block mb-1">
-                    Investigator Observation / Action Taken <span className="text-error">*</span>
+                    Observation or Action Taken <span className="text-error">*</span>
                   </label>
                   <textarea
                     rows={3}
                     required
-                    placeholder="Document findings, interviews, host forensics, or quarantine actions..."
+                    placeholder="Document findings, forensic notes, or actions taken..."
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-on-surface focus:outline-none focus:border-primary"
@@ -529,14 +529,14 @@ export default function IncidentDetailPage() {
                 <button
                   type="submit"
                   disabled={submittingNote || !newNote.trim()}
-                  className="w-full py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                  className="w-full py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-xs"
                 >
                   {submittingNote && (
                     <span className="material-symbols-outlined animate-spin text-sm">
                       progress_activity
                     </span>
                   )}
-                  Submit Investigation Note
+                  Add Note
                 </button>
               </form>
             </div>
@@ -549,7 +549,7 @@ export default function IncidentDetailPage() {
                     sticky_note_2
                   </span>
                   <h3 className="font-bold text-sm text-on-surface">
-                    Case Notes Repository
+                    Evidence Notes
                   </h3>
                 </div>
                 <span className="font-mono text-xs text-secondary">
@@ -560,7 +560,7 @@ export default function IncidentDetailPage() {
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {!incident.notes || incident.notes.length === 0 ? (
                   <div className="p-4 text-center text-secondary text-xs">
-                    No investigation notes recorded yet. Use the form above to add the first note.
+                    No investigation notes recorded yet.
                   </div>
                 ) : (
                   incident.notes.map((n) => (

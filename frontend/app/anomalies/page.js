@@ -231,14 +231,14 @@ export default function AnomaliesPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Behavioral Intelligence & ML Threat Engine
+                  ML Threat Detection
                 </h1>
                 <span className="bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-primary/20">
                   Isolation Forest Active
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Loaded scikit-learn Isolation Forest model evaluating 15 telemetry indicators across 10,000 data points.
+                Unsupervised anomaly detection analyzing 15 behavioral indicators to identify insider threats.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -276,44 +276,44 @@ export default function AnomaliesPage() {
           {/* 4 Summary Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
-              title="Telemetry Data Points"
+              title="Telemetry Events"
               value={isSimulated && stats?.total_activity_logs ? Number(stats.total_activity_logs).toLocaleString() : "0"}
-              trend={isSimulated ? "MongoDB Store" : "Standby"}
+              trend={isSimulated ? "MongoDB Synced" : "Standby"}
               trendType={isSimulated ? "up-safe" : "neutral"}
               icon="dataset"
               iconBg="bg-primary-container"
               iconColor="text-on-primary-container"
-              description="Time-series telemetry events"
+              description="Activity events evaluated"
             />
             <MetricCard
-              title="ML Feature Vector"
+              title="Feature Vector"
               value="15 Indicators"
               trend="Standardized Scale"
               trendType="neutral"
               icon="tune"
               iconBg="bg-tertiary-fixed"
               iconColor="text-tertiary"
-              description="Multi-factor dimensions"
+              description="Behavioral indicators"
             />
             <MetricCard
-              title="ML Flagged Outliers"
+              title="Flagged Outliers"
               value={isSimulated ? (report?.flagged_count ?? 0) : 0}
               trend={isSimulated && (report?.flagged_count || 0) > 0 ? "Threats Detected" : "Standby"}
               trendType={isSimulated && (report?.flagged_count || 0) > 0 ? "up-danger" : "neutral"}
               icon="psychology"
               iconBg="bg-error-container"
               iconColor="text-error"
-              description="Ranked by decision score"
+              description="Anomalous profiles detected"
             />
             <MetricCard
-              title="Contamination Parameter"
+              title="Contamination Rate"
               value="15% (0.15)"
               trend="200 Estimators"
               trendType="neutral"
               icon="ssid_chart"
               iconBg="bg-secondary-container"
               iconColor="text-on-secondary-container"
-              description="Outlier sensitivity threshold"
+              description="Target outlier sensitivity"
             />
           </div>
 
@@ -366,14 +366,14 @@ export default function AnomaliesPage() {
                         verified_user
                       </span>
                       <h2 className="text-sm font-bold text-on-surface">
-                        Loaded Model Artifact: isolation_forest_model.joblib
+                        Model: Isolation Forest
                       </h2>
                       <span className="bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
                         {modelStatus?.status || "LOADED_AND_ACTIVE"}
                       </span>
                     </div>
                     <p className="text-xs text-secondary mt-1 max-w-3xl leading-relaxed">
-                      Trained on 10,000 synthetic multi-indicator activity logs using <strong>scikit-learn Isolation Forest</strong> with standard scaler normalization. Detects subtle combinations of multi-factor outliers across 15 behavioral indicators.
+                      Detects subtle combinations of multi-factor outliers across 15 behavioral indicators using scikit-learn Isolation Forest.
                     </p>
                   </div>
 
@@ -419,14 +419,14 @@ export default function AnomaliesPage() {
                   <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-xs text-on-surface">
-                        Flagged Threat Outliers (Ranked by Decision Score)
+                        Threat Outliers
                       </h3>
                       <span className="text-[10px] bg-error-container text-error px-2 py-0.5 rounded-full font-bold">
                         {isSimulated ? (report?.flagged_count || 0) : 0} Flagged
                       </span>
                     </div>
                     <span className="text-[11px] text-secondary">
-                      Automated Stakeholder Dispatching
+                      Ranked by Decision Score
                     </span>
                   </div>
 
@@ -504,7 +504,7 @@ export default function AnomaliesPage() {
                                   No Threat Outliers Detected
                                 </h4>
                                 <p className="text-xs text-secondary leading-relaxed text-center w-full">
-                                  Isolation Forest model is active in standby mode. Click &ldquo;Simulate Threat&rdquo; in the global header to evaluate live telemetry.
+                                  Model is in standby mode. Click &ldquo;Simulate Threat&rdquo; in the global header to test live telemetry.
                                 </p>
                               </div>
                             </td>
@@ -526,17 +526,17 @@ export default function AnomaliesPage() {
                 <div>
                   <h2 className="text-sm font-bold text-on-surface flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-[20px]">science</span>
-                    Isolation Forest Live Inference Sandbox
+                    Live Inference Sandbox
                   </h2>
                   <p className="text-xs text-secondary mt-0.5">
-                    Adjust multi-dimensional behavioral parameters and run inference in real time through the joblib model artifact.
+                    Test custom behavioral parameters against the Isolation Forest model in real time.
                   </p>
                 </div>
 
                 {/* Presets */}
                 <div>
                   <span className="text-[11px] font-bold text-secondary uppercase tracking-wider block mb-1.5">
-                    Quick Scenario Presets:
+                    Presets:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     <button
@@ -669,7 +669,7 @@ export default function AnomaliesPage() {
                 <div>
                   <div className="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
                     <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                      Isolation Forest Model Verdict
+                      Model Verdict
                     </h3>
                     {sandboxResult && (
                       <span

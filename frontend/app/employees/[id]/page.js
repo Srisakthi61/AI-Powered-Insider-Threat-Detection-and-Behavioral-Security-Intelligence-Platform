@@ -147,12 +147,12 @@ export default function EmployeeInvestigationPage() {
             <div className="flex items-center gap-2 text-xs">
               <Link href="/employees" className="text-secondary hover:text-primary flex items-center gap-1 font-medium">
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                Employees Directory
+                Employees
               </Link>
               <span className="text-outline">/</span>
               <span className="text-on-surface font-bold font-mono">{profile.employee_id}</span>
               <span className="text-outline">/</span>
-              <span className="text-secondary">Security Investigation Profile</span>
+              <span className="text-secondary">Profile</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export default function EmployeeInvestigationPage() {
             <div className="flex items-center gap-4 bg-surface-container-low border border-outline-variant/80 rounded-xl p-3.5 shrink-0">
               <div className="text-right">
                 <div className="text-[10px] uppercase font-bold text-outline tracking-wider">
-                  5-Factor Composite Risk
+                  Composite Risk
                 </div>
                 <div className="text-2xl font-black text-on-surface">
                   {riskScore} <span className="text-xs text-secondary font-normal">/ 100</span>
@@ -255,10 +255,10 @@ export default function EmployeeInvestigationPage() {
           {/* Navigation Tabs */}
           <div className="flex border-b border-outline-variant gap-1 overflow-x-auto text-xs font-semibold">
             {[
-              { key: "overview", label: "5-Factor Risk Breakdown", icon: "donut_large" },
+              { key: "overview", label: "Risk Breakdown", icon: "donut_large" },
               { key: "ueba", label: "UEBA & Peer Comparison", icon: "compare_arrows" },
-              { key: "baselines", label: "Behavioral Baselines (6)", icon: "tune" },
-              { key: "timeline", label: "Investigation Timeline", icon: "history_edu" },
+              { key: "baselines", label: "Behavioral Baselines", icon: "tune" },
+              { key: "timeline", label: "Timeline", icon: "history_edu" },
               { key: "incidents", label: `Incidents (${incidents.length})`, icon: "gavel" },
               { key: "alerts", label: `Alerts (${alerts.length})`, icon: "warning" },
             ].map((tab) => (
@@ -315,7 +315,7 @@ export default function EmployeeInvestigationPage() {
                 <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
                   <h3 className="text-xs font-bold text-on-surface mb-3 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-primary text-[18px]">verified_user</span>
-                    Contributing Security Factors &amp; Telemetry Evidence
+                    Contributing Risk Factors
                   </h3>
                   <div className="space-y-2.5">
                     {breakdown.all_reasons?.map((r, idx) => (
@@ -333,10 +333,10 @@ export default function EmployeeInvestigationPage() {
                   <div>
                     <h3 className="text-xs font-bold text-on-surface mb-3 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-tertiary text-[18px]">gavel</span>
-                      Recommended Remediation Playbook
+                      Recommended Actions
                     </h3>
                     <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs space-y-2">
-                      <div className="font-bold">Automated Security Recommendations:</div>
+                      <div className="font-bold">Suggested Responses:</div>
                       <ul className="list-disc pl-4 space-y-1 text-[11px]">
                         <li>Isolate endpoint host if USB exfiltration or root escalation was confirmed.</li>
                         <li>Audit IAM bindings and revoke unapproved administrative cluster permissions.</li>
@@ -347,7 +347,7 @@ export default function EmployeeInvestigationPage() {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-outline-variant flex justify-between items-center">
-                    <span className="text-[11px] text-secondary">Need formal case tracking?</span>
+                    <span className="text-[11px] text-secondary">Need formal tracking?</span>
                     <button
                       onClick={() => setShowIncidentModal(true)}
                       className="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-container"
@@ -373,7 +373,7 @@ export default function EmployeeInvestigationPage() {
                   icon="groups"
                   iconBg="bg-primary-fixed"
                   iconColor="text-primary"
-                  description={`Calculated across ${peer.peer_count} peer employees`}
+                  description={`Across ${peer.peer_count} peers`}
                 />
                 <MetricCard
                   title="Peer Deviation Delta"
@@ -383,7 +383,7 @@ export default function EmployeeInvestigationPage() {
                   icon="compare_arrows"
                   iconBg={peer.is_above_peer_average ? "bg-error-container" : "bg-emerald-100"}
                   iconColor={peer.is_above_peer_average ? "text-error" : "text-emerald-700"}
-                  description={peer.is_above_peer_average ? "Statistical anomaly relative to peers" : "Normal peer distribution"}
+                  description={peer.is_above_peer_average ? "Higher than peers" : "Normal peer range"}
                 />
                 <MetricCard
                   title="14-Day Trend Direction"
@@ -393,7 +393,7 @@ export default function EmployeeInvestigationPage() {
                   icon="trending_up"
                   iconBg="bg-secondary-container"
                   iconColor="text-on-secondary-container"
-                  description="Computed slope over last 14 days"
+                  description="Slope over last 14 days"
                 />
               </div>
 
@@ -401,11 +401,11 @@ export default function EmployeeInvestigationPage() {
               <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h3 className="text-xs font-bold text-on-surface">14-Day Daily Risk Evolution</h3>
+                    <h3 className="text-xs font-bold text-on-surface">14-Day Risk Trend</h3>
                     <p className="text-[11px] text-secondary">
                       {trend.length > 0
-                        ? `Historical daily composite risk trajectory (${trend.length} snapshot${trend.length > 1 ? "s" : ""} available)`
-                        : "Persisted daily risk snapshots from risk engine"}
+                        ? `Daily composite risk trajectory (${trend.length} snapshot${trend.length > 1 ? "s" : ""})`
+                        : "Daily risk score evolution"}
                     </p>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -421,10 +421,10 @@ export default function EmployeeInvestigationPage() {
                       history_toggle_off
                     </span>
                     <p className="text-xs font-bold text-on-surface">
-                      Insufficient historical risk data
+                      No historical data yet
                     </p>
                     <p className="text-[11px] text-secondary max-w-md">
-                      Daily risk snapshots are persisted as telemetry is processed. Historical trend points will accumulate over monitored calendar days.
+                      Daily risk snapshots will appear here as telemetry is recorded.
                     </p>
                   </div>
                 ) : (
@@ -459,8 +459,8 @@ export default function EmployeeInvestigationPage() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
               <div className="p-4 border-b border-outline-variant bg-surface-bright flex justify-between items-center">
                 <div>
-                  <h3 className="text-xs font-bold text-on-surface">6-Indicator Behavioral Baselines</h3>
-                  <p className="text-[11px] text-secondary">Per-employee normal profiles computed from MongoDB telemetry</p>
+                  <h3 className="text-xs font-bold text-on-surface">Behavioral Baselines</h3>
+                  <p className="text-[11px] text-secondary">Normal activity ranges computed from baseline telemetry</p>
                 </div>
                 <button
                   onClick={handleRecalculate}
@@ -511,8 +511,8 @@ export default function EmployeeInvestigationPage() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
               <div className="flex justify-between items-center mb-4 border-b border-outline-variant pb-3">
                 <div>
-                  <h3 className="text-xs font-bold text-on-surface">Chronological Security Investigation Timeline</h3>
-                  <p className="text-[11px] text-secondary">Unified audit trail merging activity logs, rule anomalies, ML outliers, notes, and alerts</p>
+                  <h3 className="text-xs font-bold text-on-surface">Timeline</h3>
+                  <p className="text-[11px] text-secondary">Recent activity events and telemetry logs for this employee</p>
                 </div>
               </div>
 
