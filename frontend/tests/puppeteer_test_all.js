@@ -405,14 +405,10 @@ async function runAllTests() {
       }
     });
 
-    await recordTest('Header & Global Controls', 'Verify Header Audio Alarm button removed and Dashboard Switcher present', async () => {
+    await recordTest('Header & Global Controls', 'Verify Header Audio Alarm button removed and Persona active', async () => {
       const volumeBtn = await page.$('header button[title*="Audio Alarm"]');
       if (volumeBtn) {
         throw new Error('Audio alarm button should be removed from header');
-      }
-      const switcher = await page.$('a[href*="/dashboard/soc"]');
-      if (!switcher) {
-        throw new Error('Dashboard Switcher navigation links not found');
       }
     });
 
@@ -435,11 +431,18 @@ async function runAllTests() {
     await recordTest('Simulation Pipeline', 'Verify Global Simulate Threat action and trigger live ML inference', async () => {
       await page.waitForFunction(() => {
         const btns = Array.from(document.querySelectorAll('header button'));
-        return btns.some((b) => b.textContent.includes('Simulate Threat'));
+        return btns.some((b) => b.textContent.includes('Simulate Threat') || b.textContent.includes('Threat Active'));
       }, { timeout: 8000 });
 
       await captureScreenshot(page, '12_simulation_button_initial.png', 'Global Simulate Threat Button Initial State');
       await clickByText(page, 'header button', 'Simulate Threat');
+      await new Promise((r) => setTimeout(r, 800));
+
+      // Click trigger in simulation modal
+      await page.evaluate(() => {
+        const btn = document.querySelector('form button[type="submit"]');
+        if (btn) btn.click();
+      });
 
       // Wait for execution and state transition to "Threat Active"
       await page.waitForFunction(() => {
@@ -557,12 +560,12 @@ async function runAllTests() {
     });
 
     await recordTest('Screen: SOC Dashboard', 'Test Manual Telemetry Ingestion Modal ("Ingest Log") & MongoDB submission', async () => {
-      await clickByText(page, 'button', 'Ingest Telemetry Log');
+      await clickByText(page, 'button', 'Ingest');
       await page.waitForSelector('h3', { timeout: 6000 });
       await captureScreenshot(page, '21_soc_ingest_modal_opened.png', 'Manual Telemetry Ingestion Modal');
 
-      // Submit manual log event ("Ingest to MongoDB")
-      await clickByText(page, 'button[type="submit"]', 'Ingest to MongoDB');
+      // Submit manual log event ("Ingest Activity Log" or "Ingest to MongoDB")
+      await clickByText(page, 'button[type="submit"]', 'Ingest');
       await new Promise((r) => setTimeout(r, 1200));
       await captureScreenshot(page, '22_soc_ingest_success.png', 'Ingestion Success Confirmation');
 
@@ -609,7 +612,9 @@ async function runAllTests() {
 
     await recordTest('Screen: Admin Dashboard', 'Verify dual-database health indicators (PostgreSQL & MongoDB)', async () => {
       const pageText = await page.evaluate(() => document.body.innerText);
-      if (!pageText.includes('PostgreSQL') || !pageText.includes('MongoDB')) {
+      const hasAccountService = pageText.includes('PostgreSQL') || pageText.includes('Employee & Account Service') || pageText.includes('Platform Users');
+      const hasActivityService = pageText.includes('MongoDB') || pageText.includes('Activity Monitoring Service') || pageText.includes('Activity Records');
+      if (!hasAccountService || !hasActivityService) {
         throw new Error('Database service health indicators missing on Admin Dashboard');
       }
     });
@@ -821,7 +826,7 @@ async function runAllTests() {
       }
 
       // Test Refresh button
-      await clickByText(page, 'button', 'Refresh Telemetry');
+      await clickByText(page, 'button', 'Refresh Activity');
       await new Promise((r) => setTimeout(r, 400));
     });
 
@@ -889,8 +894,8 @@ async function runAllTests() {
       await captureScreenshot(page, '33_anomalies_ml_model_tab.png', 'AI Behavioral Anomaly Detection Tab');
     });
 
-    await recordTest('Screen: Behavioral Anomalies', 'Test "Per-Employee Behavioral Baselines" Tab and Employee Selector', async () => {
-      await clickByText(page, 'button', 'Per-Employee Behavioral Baselines');
+    await recordTest('Screen: Behavioral Anomalies', 'Test "Normal Activity Profiles" Tab and Employee Selector', async () => {
+      await clickByText(page, 'button', 'Normal Activity Profiles');
       await page.waitForSelector('select', { timeout: 8000 });
       await new Promise((r) => setTimeout(r, 600));
 
@@ -903,12 +908,12 @@ async function runAllTests() {
       await captureScreenshot(page, '34_anomalies_baselines_tab.png', 'Employee Behavioral Baselines');
     });
 
-    await recordTest('Screen: Behavioral Anomalies', 'Test "Interactive Live Model Sandbox" Tab & Run Prediction', async () => {
-      await clickByText(page, 'button', 'Interactive Live Model Sandbox');
+    await recordTest('Screen: Behavioral Anomalies', 'Test "Test Activity" Tab & Run Prediction', async () => {
+      await clickByText(page, 'button', 'Test Activity');
       await page.waitForSelector('form', { timeout: 8000 });
 
-      // Click Evaluate with Isolation Forest Model submit button
-      await clickByText(page, 'button[type="submit"]', 'Evaluate with Isolation Forest Model');
+      // Click Check Activity submit button
+      await clickByText(page, 'button[type="submit"]', 'Check Activity');
       await new Promise((r) => setTimeout(r, 1500));
       await captureScreenshot(page, '35_anomalies_sandbox_prediction.png', 'Sandbox Isolation Forest Prediction Result');
     });

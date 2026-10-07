@@ -64,14 +64,14 @@ export default function AdminPage() {
     {
       role: "SOC Engineer",
       code: "soc_engineer",
-      permissions: "Live event stream ingestion, ingest digital activity logs into MongoDB, anomaly monitor",
+      permissions: "Live event stream ingestion, activity log monitoring, threat investigation",
       count: 1,
       active: true,
     },
     {
       role: "Administrator",
       code: "admin",
-      permissions: "Full superuser privileges across all endpoints, PostgreSQL & MongoDB governance",
+      permissions: "Full administrative privileges across platform configuration and user accounts",
       count: 1,
       active: true,
     },
@@ -87,10 +87,10 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">
           <div>
             <h1 className="font-page-title text-page-title text-on-surface font-bold">
-              Administration & RBAC Governance
+              Administration &amp; Access Control
             </h1>
             <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-              Manage platform credentials, role-based access control, and PostgreSQL database accounts.
+              Manage users, roles and platform access.
             </p>
           </div>
           <button
@@ -115,7 +115,7 @@ export default function AdminPage() {
                 admin_panel_settings
               </span>
               <span>
-                Superuser Authenticated: <strong>{user?.email}</strong> (FastAPI /admin/users)
+                Administrator Authenticated: <strong>{user?.email}</strong>
               </span>
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
@@ -129,32 +129,32 @@ export default function AdminPage() {
           <MetricCard
             title="Registered Platform Users"
             value={adminUsersData?.total_users ?? userList.length}
-            trend="In Database"
+            trend="Platform Accounts"
             trendType="up-good"
             icon="group"
             iconBg="bg-primary-fixed"
             iconColor="text-primary"
-            description="Stored in PostgreSQL users table"
+            description="Registered platform accounts"
           />
           <MetricCard
-            title="Database Stores"
-            value="2 Active"
-            trend="PostgreSQL & MongoDB"
+            title="Data Sources"
+            value="2 Connected"
+            trend="Data Sources"
             trendType="neutral"
             icon="database"
             iconBg="bg-secondary-container"
             iconColor="text-on-secondary-container"
-            description="Dual-database architecture"
+            description="Connected data sources"
           />
           <MetricCard
-            title="Backend Status"
+            title="Platform Status"
             value={systemOnline ? "Operational" : "Offline"}
-            trend="Port 8000"
+            trend="Security Engine"
             trendType={systemOnline ? "up-good" : "up-danger"}
             icon="health_and_safety"
             iconBg="bg-emerald-100"
             iconColor="text-emerald-700"
-            description="FastAPI RESTful API Gateway"
+            description="Security Platform Online"
           />
         </div>
 
@@ -162,7 +162,7 @@ export default function AdminPage() {
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
           <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
             <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-              Registered Platform Users (PostgreSQL ACID)
+              Registered Platform Users
             </h2>
             <span className="text-secondary text-xs">{userList.length} Accounts Found</span>
           </div>
@@ -173,7 +173,7 @@ export default function AdminPage() {
                 <tr className="bg-surface-container-low border-b border-outline-variant text-secondary font-label-caps text-label-caps">
                   <th className="p-sm pl-md">User ID</th>
                   <th className="p-sm">Email Address</th>
-                  <th className="p-sm">Assigned RBAC Role</th>
+                  <th className="p-sm">Assigned Role</th>
                   <th className="p-sm pr-md text-right">Status</th>
                 </tr>
               </thead>
@@ -219,9 +219,8 @@ export default function AdminPage() {
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
           <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
             <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-              Role-Based Access Control (RBAC) Hierarchy
+              Role-Based Access Control
             </h2>
-            <span className="text-secondary text-xs">FastAPI require_role</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -230,8 +229,8 @@ export default function AdminPage() {
                 <tr className="bg-surface-container-low border-b border-outline-variant text-secondary font-label-caps text-label-caps">
                   <th className="p-sm pl-md">Role Name</th>
                   <th className="p-sm">Role Identifier</th>
-                  <th className="p-sm">Endpoint Scope &amp; Permissions</th>
-                  <th className="p-sm">Active Identities</th>
+                  <th className="p-sm">Permissions</th>
+                  <th className="p-sm">Assigned Users</th>
                   <th className="p-sm pr-md text-right">Status</th>
                 </tr>
               </thead>

@@ -95,19 +95,19 @@ export default function ReportsPage() {
       title: "Data Exfiltration Controls (NIST SP 800-53)",
       score: "94% Compliant",
       status: "healthy",
-      findings: "Automated USB telemetry, file download audits, and bulk egress detection active.",
+      findings: "Automated USB monitoring, file download audits, and external data transfer detection active.",
     },
     {
       title: "Access Privileges & Identity Governance (ISO 27001)",
       score: "88% Compliant",
       status: "healthy",
-      findings: "Least privilege enforcement and RBAC verified in PostgreSQL ACID store.",
+      findings: "Least privilege access and role-based permissions verified.",
     },
     {
       title: "Behavioral Deviation Baselines (SOC 2 Type II)",
       score: "91% Compliant",
       status: "healthy",
-      findings: "Dual-database audit logging (PostgreSQL ACID + MongoDB Time-Series) meets retention standards.",
+      findings: "Security audit logging and event tracking meets retention standards.",
     },
   ];
 
@@ -123,11 +123,11 @@ export default function ReportsPage() {
                   summarize
                 </span>
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Organization Risk Posture & Compliance Intelligence
+                  Organization Risk Posture &amp; Compliance
                 </h1>
               </div>
               <p className="text-secondary text-xs mt-0.5">
-                Strategic insider threat posture assessments, regulatory compliance scoring, and executive audit exports.
+                View organization risk posture, compliance standards and export reports.
               </p>
             </div>
 
@@ -182,7 +182,7 @@ export default function ReportsPage() {
                   verified_user
                 </span>
                 <span>
-                  Authorized via Role: <strong>{user?.role || "Security Officer"}</strong> (FastAPI /reports/risk-posture)
+                  Authorized: <strong>{user?.role || "Security Officer"}</strong>
                 </span>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
@@ -194,25 +194,25 @@ export default function ReportsPage() {
           {/* KPI Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-gutter">
             <MetricCard
-              title="Composite Organization Risk Index"
+              title="Organization Risk Score"
               value={`${reportResponse?.org_risk_score ?? 0} / 100`}
-              trend="5-Factor Model Average"
+              trend="5-Factor Average"
               trendType="neutral"
               icon="verified_user"
               accentColor="#0284c7"
-              description="Mean weighted risk score across all monitored personnel"
+              description="Average risk score across all monitored employees"
             />
             <MetricCard
-              title="Monitored Endpoint Personnel"
+              title="Monitored Employees"
               value={reportResponse?.total_assets ?? reportResponse?.total_employees ?? 13}
-              trend="PostgreSQL Directory"
+              trend="Active Directory"
               trendType="neutral"
               icon="group"
               accentColor="#16a34a"
-              description="Entities tracked across identity and MongoDB event stores"
+              description="Employees monitored across organization"
             />
             <MetricCard
-              title="Active Critical Alerts & Cases"
+              title="Critical Alerts &amp; Cases"
               value={reportResponse?.critical_alerts ?? 0}
               trend={reportResponse?.critical_alerts > 0 ? "Requires Review" : "Queue Clear"}
               trendType={reportResponse?.critical_alerts > 0 ? "up-danger" : "neutral"}
@@ -228,7 +228,7 @@ export default function ReportsPage() {
               <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
                 Regulatory Framework Compliance Breakdown
               </h2>
-              <span className="text-[11px] text-secondary">Verified against dual-database stores</span>
+              <span className="text-[11px] text-secondary">Audited against security policies</span>
             </div>
 
             <div className="space-y-3">

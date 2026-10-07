@@ -87,14 +87,14 @@ export default function LogsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Activity Logs & Telemetry Stream
+                  Activity Logs
                 </h1>
                 <span className="bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-primary/20">
                   {Number(totalCount).toLocaleString()} Total Events
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                High-throughput time-series digital events stored in MongoDB with pagination across 10,000+ data points.
+                View employee activity and security events.
               </p>
             </div>
             <button
@@ -102,7 +102,7 @@ export default function LogsPage() {
               className="bg-secondary-container text-on-secondary-container px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-secondary-fixed transition-colors flex items-center gap-1.5 shadow-xs self-start cursor-pointer active:scale-95"
             >
               <span className="material-symbols-outlined text-[16px]">refresh</span>
-              Refresh Telemetry
+              Refresh Activity
             </button>
           </div>
 
@@ -114,7 +114,7 @@ export default function LogsPage() {
                   manage_search
                 </span>
                 <span className="font-semibold text-xs text-on-surface">
-                  Filter &amp; Query MongoDB Logs
+                  Filter Activity
                 </span>
               </div>
 
@@ -171,7 +171,7 @@ export default function LogsPage() {
                     <th className="p-sm">Event Type</th>
                     <th className="p-sm">Employee</th>
                     <th className="p-sm">Risk Assessment</th>
-                    <th className="p-sm pr-md">Metadata Details</th>
+                    <th className="p-sm pr-md">Activity Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/60 text-on-surface">
@@ -181,7 +181,7 @@ export default function LogsPage() {
                         <span className="material-symbols-outlined animate-spin text-[28px]">
                           progress_activity
                         </span>
-                        <p className="mt-2 text-xs">Querying MongoDB activity logs...</p>
+                        <p className="mt-2 text-xs">Loading activity logs...</p>
                       </td>
                     </tr>
                   ) : logs.length === 0 ? (
@@ -189,7 +189,7 @@ export default function LogsPage() {
                       <td colSpan={5} className="p-8 text-center text-secondary">
                         <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
                           <p className="text-xs text-secondary leading-relaxed text-center w-full">
-                            No activity logs matching this query in MongoDB.
+                            No activity logs matching this query.
                           </p>
                         </div>
                       </td>
@@ -237,7 +237,7 @@ export default function LogsPage() {
                               </span>
                             ) : (
                               <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
-                                Normal Baseline
+                                Normal Activity
                               </span>
                             )}
                           </td>

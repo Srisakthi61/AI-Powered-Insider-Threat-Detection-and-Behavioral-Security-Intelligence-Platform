@@ -180,7 +180,7 @@ export default function IncidentsPage() {
               </span>
             </div>
             <p className="text-secondary text-sm mt-0.5">
-              Formal insider threat investigation cases, evidence timelines, notes, and audit chains.
+              Security investigation cases, evidence timelines and notes.
             </p>
           </div>
 
@@ -247,48 +247,44 @@ export default function IncidentsPage() {
         {/* Incidents Table & Controls */}
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
           {/* Table Toolbar */}
-          <div className="p-4 border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40">
-            <div className="flex items-center gap-2 flex-1 max-w-md">
-              <span className="material-symbols-outlined text-secondary text-lg">search</span>
+          <div className="p-3 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/40">
+            <div className="relative flex-1 max-w-sm">
+              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px] pointer-events-none">
+                search
+              </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Case ID, Employee, or Case Title..."
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-1.5 text-xs text-on-surface focus:outline-none focus:border-primary"
+                placeholder="Search cases..."
+                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 py-1.5 text-xs text-on-surface placeholder:text-secondary/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1 text-xs">
-                <span className="text-secondary font-medium">Status:</span>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1 text-xs text-on-surface focus:outline-none focus:border-primary"
-                >
-                  <option value="ALL">All Statuses</option>
-                  <option value="OPEN">Open</option>
-                  <option value="INVESTIGATING">Investigating</option>
-                  <option value="RESOLVED">Resolved</option>
-                  <option value="CLOSED">Closed</option>
-                </select>
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="OPEN">Open</option>
+                <option value="INVESTIGATING">Investigating</option>
+                <option value="RESOLVED">Resolved</option>
+                <option value="CLOSED">Closed</option>
+              </select>
 
-              <div className="flex items-center gap-1 text-xs">
-                <span className="text-secondary font-medium">Severity:</span>
-                <select
-                  value={filterSeverity}
-                  onChange={(e) => setFilterSeverity(e.target.value)}
-                  className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1 text-xs text-on-surface focus:outline-none focus:border-primary"
-                >
-                  <option value="ALL">All Severities</option>
-                  <option value="CRITICAL">Critical</option>
-                  <option value="HIGH">High</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="LOW">Low</option>
-                </select>
-              </div>
+              <select
+                value={filterSeverity}
+                onChange={(e) => setFilterSeverity(e.target.value)}
+                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium"
+              >
+                <option value="ALL">All Severities</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+              </select>
 
               <button
                 onClick={() => {
@@ -296,7 +292,7 @@ export default function IncidentsPage() {
                   setFilterSeverity("ALL");
                   setSearchQuery("");
                 }}
-                className="px-2.5 py-1 text-xs text-secondary hover:text-on-surface bg-surface-container rounded-lg border border-outline-variant cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-secondary hover:text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-lg border border-outline-variant transition-colors cursor-pointer"
               >
                 Reset
               </button>

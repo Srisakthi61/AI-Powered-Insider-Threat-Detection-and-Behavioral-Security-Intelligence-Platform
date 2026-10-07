@@ -87,7 +87,7 @@ export default function EmployeeInvestigationPage() {
     try {
       await anomalyApi.calculateBaselines(employeeId);
       await fetchProfile();
-      setActionSuccess("Behavioral baselines recalculated from latest MongoDB telemetry.");
+      setActionSuccess("Behavioral baselines recalculated from latest activity records.");
       setTimeout(() => setActionSuccess(null), 5000);
     } catch (err) {
       console.error("Baseline calculation error:", err);
@@ -102,7 +102,7 @@ export default function EmployeeInvestigationPage() {
             progress_activity
           </span>
           <p className="text-xs font-semibold text-secondary">
-            Loading Employee Behavioral Intelligence Dossier...
+            Loading Employee Security Profile...
           </p>
         </div>
       </AppLayout>
@@ -152,7 +152,7 @@ export default function EmployeeInvestigationPage() {
               <span className="text-outline">/</span>
               <span className="text-on-surface font-bold font-mono">{profile.employee_id}</span>
               <span className="text-outline">/</span>
-              <span className="text-secondary">Security Investigation Profile</span>
+              <span className="text-secondary">Security Profile</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export default function EmployeeInvestigationPage() {
             <div className="flex items-center gap-4 bg-surface-container-low border border-outline-variant/80 rounded-xl p-3.5 shrink-0">
               <div className="text-right">
                 <div className="text-[10px] uppercase font-bold text-outline tracking-wider">
-                  5-Factor Composite Risk
+                  Overall Risk Score
                 </div>
                 <div className="text-2xl font-black text-on-surface">
                   {riskScore} <span className="text-xs text-secondary font-normal">/ 100</span>
@@ -255,9 +255,9 @@ export default function EmployeeInvestigationPage() {
           {/* Navigation Tabs */}
           <div className="flex border-b border-outline-variant gap-1 overflow-x-auto text-xs font-semibold">
             {[
-              { key: "overview", label: "5-Factor Risk Breakdown", icon: "donut_large" },
+              { key: "overview", label: "Risk Breakdown", icon: "donut_large" },
               { key: "ueba", label: "UEBA & Peer Comparison", icon: "compare_arrows" },
-              { key: "baselines", label: "Behavioral Baselines (6)", icon: "tune" },
+              { key: "baselines", label: "Normal Activity Profiles (6)", icon: "tune" },
               { key: "timeline", label: "Investigation Timeline", icon: "history_edu" },
               { key: "incidents", label: `Incidents (${incidents.length})`, icon: "gavel" },
               { key: "alerts", label: `Alerts (${alerts.length})`, icon: "warning" },
@@ -277,7 +277,7 @@ export default function EmployeeInvestigationPage() {
             ))}
           </div>
 
-          {/* TAB 1: 5-Factor Risk Breakdown */}
+          {/* TAB 1: Risk Breakdown */}
           {activeTab === "overview" && (
             <div className="space-y-gutter">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-gutter">
@@ -315,7 +315,7 @@ export default function EmployeeInvestigationPage() {
                 <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
                   <h3 className="text-xs font-bold text-on-surface mb-3 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-primary text-[18px]">verified_user</span>
-                    Contributing Security Factors &amp; Telemetry Evidence
+                    Why This Risk Score?
                   </h3>
                   <div className="space-y-2.5">
                     {breakdown.all_reasons?.map((r, idx) => (
@@ -333,10 +333,10 @@ export default function EmployeeInvestigationPage() {
                   <div>
                     <h3 className="text-xs font-bold text-on-surface mb-3 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-tertiary text-[18px]">gavel</span>
-                      Recommended Remediation Playbook
+                      Recommended Actions
                     </h3>
                     <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs space-y-2">
-                      <div className="font-bold">Automated Security Recommendations:</div>
+                      <div className="font-bold">Recommended Actions:</div>
                       <ul className="list-disc pl-4 space-y-1 text-[11px]">
                         <li>Isolate endpoint host if USB exfiltration or root escalation was confirmed.</li>
                         <li>Audit IAM bindings and revoke unapproved administrative cluster permissions.</li>
@@ -459,8 +459,8 @@ export default function EmployeeInvestigationPage() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
               <div className="p-4 border-b border-outline-variant bg-surface-bright flex justify-between items-center">
                 <div>
-                  <h3 className="text-xs font-bold text-on-surface">6-Indicator Behavioral Baselines</h3>
-                  <p className="text-[11px] text-secondary">Per-employee normal profiles computed from MongoDB telemetry</p>
+                  <h3 className="text-xs font-bold text-on-surface">Normal Activity Profiles</h3>
+                  <p className="text-[11px] text-secondary">Per-employee normal profiles calculated from employee activity</p>
                 </div>
                 <button
                   onClick={handleRecalculate}
@@ -475,9 +475,9 @@ export default function EmployeeInvestigationPage() {
                   <thead>
                     <tr className="bg-surface-container-low border-b border-outline-variant text-[10px] uppercase font-bold text-outline">
                       <th className="p-3 pl-4">Indicator Name</th>
-                      <th className="p-3">Typical Baseline Value</th>
-                      <th className="p-3">Normal Spread (±2σ)</th>
-                      <th className="p-3">Sample Telemetry Events</th>
+                      <th className="p-3">Typical Value</th>
+                      <th className="p-3">Normal Range</th>
+                      <th className="p-3">Activity Records</th>
                       <th className="p-3 pr-4 text-right">Status</th>
                     </tr>
                   </thead>
@@ -511,8 +511,8 @@ export default function EmployeeInvestigationPage() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-xs">
               <div className="flex justify-between items-center mb-4 border-b border-outline-variant pb-3">
                 <div>
-                  <h3 className="text-xs font-bold text-on-surface">Chronological Security Investigation Timeline</h3>
-                  <p className="text-[11px] text-secondary">Unified audit trail merging activity logs, rule anomalies, ML outliers, notes, and alerts</p>
+                  <h3 className="text-xs font-bold text-on-surface">Activity & Investigation Timeline</h3>
+                  <p className="text-[11px] text-secondary">Timeline of activity events, alerts, and investigation notes</p>
                 </div>
               </div>
 

@@ -9,9 +9,9 @@ import RealtimeAlertNotification from "./RealtimeAlertNotification";
 const THREAT_SCENARIOS = [
   {
     id: "usb_exfiltration",
-    title: "1. Mass USB Data Exfiltration",
-    metric: "6.5 GB Bulk Copied",
-    desc: "Unauthorized SanDisk 128GB flash drive connected to engineering workstation. 48 classified files copied.",
+    title: "1. Large File Copy to USB",
+    metric: "6.5 GB Copied",
+    desc: "6.5 GB of company data was copied to a USB device.",
     target: "SOC Incident Response",
     badgeStyle: "bg-red-100 text-red-800 border-red-300",
     icon: "usb",
@@ -19,9 +19,9 @@ const THREAT_SCENARIOS = [
   },
   {
     id: "sudo_privilege_abuse",
-    title: "2. Unauthorized Sudo Root Escalation",
-    metric: "Root Shell Execution",
-    desc: "Terminal bash execution attempt against /etc/shadow and root cluster IAM role binding tampering.",
+    title: "2. Unauthorized Admin Access",
+    metric: "Higher Access Attempt",
+    desc: "An attempt was made to gain higher system access.",
     target: "System Administrator",
     badgeStyle: "bg-amber-100 text-amber-800 border-amber-300",
     icon: "terminal",
@@ -29,9 +29,9 @@ const THREAT_SCENARIOS = [
   },
   {
     id: "off_hours_mfa_attack",
-    title: "3. Off-Hours Brute-Force Login Drift",
-    metric: "03:15 AM Anomalous Login",
-    desc: "12 consecutive failed MFA authentication drifts from external Kali Linux node outside standard work hours.",
+    title: "3. Unusual Login Attempts",
+    metric: "Unusual Time Login",
+    desc: "Multiple login attempts were detected at an unusual time.",
     target: "Department Manager",
     badgeStyle: "bg-blue-100 text-blue-800 border-blue-300",
     icon: "schedule",
@@ -39,9 +39,9 @@ const THREAT_SCENARIOS = [
   },
   {
     id: "cloud_data_dump",
-    title: "4. High-Volume External SFTP Dump",
-    metric: "4.2 GB Bulk Egress",
-    desc: "Mass outbound data egress transfer stream to unauthorized external staging cloud server destination.",
+    title: "4. Large External Data Transfer",
+    metric: "Large Data Transfer",
+    desc: "A large amount of company data was sent outside the organization.",
     target: "Security Analyst",
     badgeStyle: "bg-purple-100 text-purple-800 border-purple-300",
     icon: "cloud_upload",
@@ -149,7 +149,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
             </span>
             <input
               className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs text-on-surface w-full ml-2 placeholder:text-outline/70"
-              placeholder="Search anomalies, employee IDs, exfiltration events, ML alerts..."
+              placeholder="Search employees, alerts and activity..."
               type="text"
             />
           </div>
@@ -174,7 +174,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
                 ? "Executing AI threat pipeline..."
                 : isSimulated
                 ? "Simulated threat scenario active"
-                : "Inject simulated threat event & run AI Isolation Forest model"
+                : "Simulate security event & run AI threat detection"
             }
           >
             <span
@@ -362,10 +362,10 @@ export default function Header({ onToggleSidebar = () => {} }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm sm:text-base text-on-surface leading-tight">
-                    Simulate Live Threat Event &amp; Run AI Risk Pipeline
+                    Simulate Threat Event &amp; Run AI Detection
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Evaluates multi-dimensional behavioral indicators from database telemetry &amp; routes targeted alerts.
+                    Evaluates employee behavior indicators &amp; generates targeted security alerts.
                   </p>
                 </div>
               </div>
@@ -389,7 +389,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
               {/* Target Employee Selection */}
               <div>
                 <label className="font-bold text-on-surface block mb-1.5 text-xs">
-                  1. Target Monitored Employee (Indexed in PostgreSQL):
+                  1. Target Monitored Employee:
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                   {TARGET_EMPLOYEES.map((emp) => {
@@ -417,7 +417,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
               {/* Threat Scenario Selection: 2-Column Grid */}
               <div>
                 <label className="font-bold text-on-surface block mb-1.5 text-xs">
-                  2. Select Threat Scenario &amp; Targeted Persona Dispatch:
+                  2. Select Threat Scenario &amp; Suggested Owner:
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   {THREAT_SCENARIOS.map((s) => {
@@ -464,7 +464,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
                         </div>
 
                         <div className="mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between pl-6">
-                          <span className="text-[10px] text-secondary">Role Recipient:</span>
+                          <span className="text-[10px] text-secondary">Suggested Owner:</span>
                           <span
                             className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${s.badgeStyle}`}
                           >
@@ -496,7 +496,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
                     <span className={`material-symbols-outlined text-[17px] ${simLoading ? "animate-spin" : ""}`}>
                       {simLoading ? "progress_activity" : "crisis_alert"}
                     </span>
-                    <span>{simLoading ? "Running Isolation Forest AI Model..." : "Trigger Live Threat & Run AI Scan"}</span>
+                    <span>{simLoading ? "Running AI Detection..." : "Trigger Live Threat & Run AI Scan"}</span>
                   </button>
                 </div>
               </div>

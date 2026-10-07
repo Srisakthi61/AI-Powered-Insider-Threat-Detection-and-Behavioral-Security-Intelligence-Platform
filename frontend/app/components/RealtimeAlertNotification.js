@@ -92,7 +92,7 @@ export default function RealtimeAlertNotification({
               <span className="material-symbols-outlined text-[16px]">
                 {isCritical ? "crisis_alert" : "warning"}
               </span>
-              REAL-TIME ML THREAT DETECTED
+              REAL-TIME THREAT DETECTED
             </span>
           </div>
 
@@ -126,7 +126,7 @@ export default function RealtimeAlertNotification({
 
           {/* Stakeholder Target Badge */}
           <div className="mt-2 pt-1 border-t border-white/10 flex items-center justify-between text-[11px]">
-            <span className="text-white/70">Recommended Responder:</span>
+            <span className="text-white/70">Suggested Owner:</span>
             <span className="bg-primary-container text-white px-2 py-0.5 rounded font-bold text-[10px] tracking-wide">
               👤 {alert.target_role_title || "Security Analyst"}
             </span>

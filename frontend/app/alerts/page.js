@@ -107,7 +107,7 @@ export default function AlertsPage() {
               />
             </div>
             <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-              Automated multi-stakeholder alert dispatch powered by Isolation Forest unsupervised anomaly detection.
+              Security alerts are automatically created when unusual activity is detected.
             </p>
           </div>
 
@@ -229,7 +229,7 @@ export default function AlertsPage() {
 
           {/* Target Stakeholder Role */}
           <div className="flex items-center gap-1.5">
-            <span className="text-secondary text-[11px]">Recommended Responder:</span>
+            <span className="text-secondary text-[11px]">Suggested Owner:</span>
             {[
               { id: "ALL", label: "All Roles" },
               { id: "soc_engineer", label: "SOC Engineer" },
@@ -260,7 +260,7 @@ export default function AlertsPage() {
                 <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps text-[10px]">
                   <th className="w-24 p-3 pl-4 font-semibold">Priority</th>
                   <th className="w-80 p-3 font-semibold">Message &amp; Root Cause</th>
-                  <th className="w-44 p-3 font-semibold">Recommended Responder</th>
+                  <th className="w-44 p-3 font-semibold">Suggested Owner</th>
                   <th className="w-44 p-3 font-semibold">Employee / Dept</th>
                   <th className="w-28 p-3 font-semibold">Status</th>
                   <th className="w-32 p-3 pr-4 font-semibold text-right">Actions</th>
@@ -399,7 +399,7 @@ export default function AlertsPage() {
                   <p className="text-on-surface">{selectedAlert.department || "General"}</p>
                 </div>
                 <div>
-                  <span className="font-bold text-secondary">Recommended Responder:</span>
+                  <span className="font-bold text-secondary">Suggested Owner:</span>
                   <p className="text-primary font-bold">{selectedAlert.target_role_title || "Security Analyst"}</p>
                 </div>
                 <div>

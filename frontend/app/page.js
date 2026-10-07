@@ -22,7 +22,7 @@ export default function Home() {
         }
       })
       .catch(() => {
-        setBackendStatus("Backend offline (FastAPI port 8000)");
+        setBackendStatus("Platform service offline");
         setIsOnline(false);
       });
   }, []);
@@ -32,7 +32,7 @@ export default function Home() {
       key: "security_analyst",
       title: "Security Analyst",
       icon: "monitoring",
-      desc: "Triage behavioral anomalies, manage priority alert queues, and investigate mass exfiltration incidents.",
+      desc: "Review unusual behavior, prioritize security alerts, and investigate threat incidents.",
       badge: "Tier-1 SOC",
       path: "/dashboard/analyst",
       color: "border-primary/30 hover:border-primary",
@@ -50,7 +50,7 @@ export default function Home() {
       key: "soc_engineer",
       title: "SOC Engineer",
       icon: "speed",
-      desc: "High-throughput live event stream monitoring, anomaly spike detection, and real-time MongoDB log ingestion.",
+      desc: "Monitor live activity streams, detect unusual spikes, and ingest security events.",
       badge: "Real-Time Telemetry",
       path: "/dashboard/soc",
       color: "border-error/30 hover:border-error",
@@ -59,7 +59,7 @@ export default function Home() {
       key: "admin",
       title: "Administrator",
       icon: "admin_panel_settings",
-      desc: "Full platform governance, RBAC access matrix enforcement, and dual-database infrastructure health.",
+      desc: "Full platform administration, user access control, and system health governance.",
       badge: "Superuser",
       path: "/dashboard/admin",
       color: "border-secondary/30 hover:border-secondary",
@@ -128,7 +128,7 @@ export default function Home() {
         </h1>
 
         <p className="mt-md text-on-surface-variant text-sm md:text-base max-w-2xl leading-relaxed">
-          Comprehensive full-stack enterprise defense system utilizing a 4-layer architecture, dual-database persistence (PostgreSQL + MongoDB), and role-based operational intelligence.
+          Comprehensive security platform providing behavioral intelligence, automated threat detection, and role-based operational dashboards.
         </p>
 
         {/* Role Personas Showcase */}
@@ -197,11 +197,11 @@ export default function Home() {
             <div className="flex items-center gap-2 mb-1.5 text-primary">
               <span className="material-symbols-outlined text-[20px]">database</span>
               <h4 className="font-semibold text-xs text-on-surface">
-                Dual-Database Integrity
+                Connected Data Sources
               </h4>
             </div>
             <p className="text-secondary text-xs leading-relaxed">
-              PostgreSQL for relational identity and org structure; MongoDB for high-throughput time-series digital activity logs.
+              Integrated employee directories with high-throughput security event records.
             </p>
           </div>
 
@@ -209,11 +209,11 @@ export default function Home() {
             <div className="flex items-center gap-2 mb-1.5 text-primary">
               <span className="material-symbols-outlined text-[20px]">lock</span>
               <h4 className="font-semibold text-xs text-on-surface">
-                Strict RBAC Enforcement
+                Role-Based Access Control
               </h4>
             </div>
             <p className="text-secondary text-xs leading-relaxed">
-              Protected endpoints via FastAPI <code className="bg-surface-container px-1 py-0.5 rounded text-[10px]">require_role</code> and frontend RoleGuard route barriers.
+              Fine-grained role permissions safeguarding sensitive security operations and investigation cases.
             </p>
           </div>
 
@@ -233,7 +233,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-outline-variant bg-surface-container-lowest py-4 text-center text-xs text-secondary mt-auto">
-        <p>ITBIS Security Intelligence Platform — Built with Next.js App Router, FastAPI, PostgreSQL &amp; MongoDB</p>
+        <p>ITBIS Security Intelligence Platform — Behavioral Threat Detection</p>
       </footer>
     </div>
   );

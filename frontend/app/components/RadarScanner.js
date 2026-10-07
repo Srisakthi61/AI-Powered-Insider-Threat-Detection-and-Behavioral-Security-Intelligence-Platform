@@ -64,14 +64,14 @@ export default function RadarScanner({
               }`}
             />
             <h3 className="font-card-title text-card-title text-on-surface text-sm font-bold flex items-center gap-1.5">
-              Isolation Forest Threat Radar
+              AI Threat Radar
             </h3>
             <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded-full border border-primary/20">
-              15-D Spatial Projection
+              Behavioral Mapping
             </span>
           </div>
           <p className="text-[11px] text-secondary mt-0.5">
-            Radial distance corresponds to anomaly severity and multi-indicator drift.
+            Radial distance corresponds to anomaly severity and behavioral deviation.
           </p>
         </div>
 
@@ -86,7 +86,7 @@ export default function RadarScanner({
                 displayFlaggedCount > 0 ? "bg-error animate-pulse" : "bg-secondary/40"
               }`}
             />
-            <span>{displayFlaggedCount} Outliers Flagged</span>
+            <span>{displayFlaggedCount} Suspicious Activity Detected</span>
           </div>
           <div className="h-4 w-px bg-outline-variant hidden sm:block" />
           <div className="text-[11px] text-secondary font-mono">
@@ -107,7 +107,7 @@ export default function RadarScanner({
             {/* Ring 1 - Outer Danger Perimeter (80%) */}
             <div className="w-[85%] h-[85%] rounded-full border border-red-500/20 absolute flex items-start justify-center">
               <span className="text-[8px] font-mono text-red-400/60 uppercase tracking-widest mt-1">
-                Critical Perimeter (&gt;2.5σ)
+                Critical Perimeter
               </span>
             </div>
             {/* Ring 2 - High Risk Drift (60%) */}
@@ -149,7 +149,7 @@ export default function RadarScanner({
                   THREAT RADAR STANDBY
                 </span>
                 <p className="text-[10px] text-slate-400 mt-1 w-full leading-relaxed text-center">
-                  Click &ldquo;Simulate Threat&rdquo; in header to stream telemetry &amp; project behavioral drift.
+                  Click &ldquo;Simulate Threat&rdquo; in header to view behavioral activity.
                 </p>
               </div>
             </div>

@@ -135,7 +135,7 @@ export default function SocDashboardPage() {
 
   const handleIngestSubmit = async (e) => {
     e.preventDefault();
-    setIngestStatus("Ingesting log into MongoDB...");
+    setIngestStatus("Ingesting activity log...");
 
     try {
       let parsedDetails = {};
@@ -146,7 +146,7 @@ export default function SocDashboardPage() {
       }
 
       const res = await logApi.ingest(ingestEmpId, ingestEventType, parsedDetails);
-      setIngestStatus(`Success! MongoDB Log ID: ${res.log_id}`);
+      setIngestStatus(`Success! Log ID: ${res.log_id}`);
 
       // Refresh stream directly from database
       const latest = await logApi.getAll(filterType !== "ALL" ? filterType : null, null, 25);
@@ -216,7 +216,7 @@ export default function SocDashboardPage() {
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Real-time event stream processing, MongoDB persistence, and cross-database behavioral integrity.
+                Monitor security activity, alerts and unusual employee behavior in real time.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export default function SocDashboardPage() {
                 className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
               >
                 <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                Ingest Telemetry Log
+                Ingest Activity Log
               </button>
             </div>
           </div>
@@ -250,14 +250,14 @@ export default function SocDashboardPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-on-surface">
-                      SOC Real-Time Stream in Standby — No Active Threat Scenario
+                      Activity Stream in Standby
                     </h3>
                     <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">
-                      Telemetry Idle
+                      Standby
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    Live telemetry stream is waiting for incident events. Use <strong>"Simulate Threat"</strong> in the top navigation bar to inject mass USB data exfiltration or privilege escalation into MongoDB and observe real-time AI outlier detection.
+                    Live activity stream is waiting for security events. Use <strong>&ldquo;Simulate Threat&rdquo;</strong> in the top navigation bar to test security scenarios and observe real-time AI detection.
                   </p>
                 </div>
               </div>
@@ -270,13 +270,13 @@ export default function SocDashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Live Telemetry Ingestion Active
+                    Live Activity Stream Active
                     <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full animate-pulse">
-                      MongoDB Stream Live
+                      Stream Active
                     </span>
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Real-time event stream connected. Evaluating USB transfers, sudo executions, and login drift.
+                    Real-time activity stream connected. Monitoring file transfers, access changes, and login patterns.
                   </p>
                 </div>
               </div>
@@ -286,13 +286,13 @@ export default function SocDashboardPage() {
           {/* 4 Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
-              title="Total Telemetry Logs"
+              title="Activity Records"
               value={
                 isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="MongoDB Time-Series"
+              trend="Activity Records"
               trendType="up-safe"
               icon="dataset"
               iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
@@ -300,19 +300,19 @@ export default function SocDashboardPage() {
               description={isSimulated ? "Indexed security events" : "Standby stream"}
             />
             <MetricCard
-              title="Behavioral Baselines"
+              title="Normal Activity Profiles"
               value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
               trend="6 Indicators / Emp"
               trendType="neutral"
               icon="tune"
               iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description={isSimulated ? "MongoDB Baselines Store" : "Standby baselines"}
+              description={isSimulated ? "Monitored employee profiles" : "Standby profiles"}
             />
             <MetricCard
               title="Active Alerts"
               value={isSimulated ? alertsCount : 0}
-              trend="PostgreSQL Store"
+              trend="Priority Queue"
               trendType={isSimulated && alertsCount > 0 ? "up-danger" : "neutral"}
               icon="warning"
               iconBg={isSimulated && alertsCount > 0 ? "bg-error-container" : "bg-surface-container"}
@@ -322,7 +322,7 @@ export default function SocDashboardPage() {
             <MetricCard
               title="Monitored Employees"
               value={employees.length || 10}
-              trend="Directory Store"
+              trend="Directory"
               trendType="neutral"
               icon="group"
               iconBg="bg-secondary-container"
@@ -338,7 +338,7 @@ export default function SocDashboardPage() {
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                    Live Activity Stream (MongoDB)
+                    Live Activity Stream
                   </h2>
                   {isSimulated && !isPaused && (
                     <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold animate-pulse">
@@ -382,7 +382,7 @@ export default function SocDashboardPage() {
                       No activity logs in stream.
                     </h4>
                     <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
-                      Threat telemetry will stream here after simulation or manual log ingestion.
+                      Activity will appear here when security events occur or when threat simulation is running.
                     </p>
                   </div>
                 </div>
@@ -444,7 +444,7 @@ export default function SocDashboardPage() {
               <div className="bg-surface-container-lowest border border-outline-variant rounded-xl flex-1 flex flex-col p-md shadow-xs">
                 <div className="mb-2 border-b border-outline-variant pb-2">
                   <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                    Event Distribution
+                    Activity Summary
                   </h3>
                 </div>
                 <div className="flex-1 flex items-center justify-around">
@@ -478,7 +478,7 @@ export default function SocDashboardPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded bg-error" />
-                      <span className="text-error font-semibold">USB / Privilege Anomalies</span>
+                      <span className="text-error font-semibold">Unusual Activity</span>
                     </div>
                   </div>
                 </div>
@@ -488,7 +488,7 @@ export default function SocDashboardPage() {
               <div className="bg-surface-container-lowest border border-outline-variant rounded-xl flex-1 flex flex-col p-md shadow-xs">
                 <div className="mb-2 border-b border-outline-variant pb-2 flex justify-between items-center">
                   <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                    Anomaly Spike Detection
+                    Unusual Activity Trends
                   </h3>
                   <span
                     className={`font-label-caps text-label-caps px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -509,7 +509,7 @@ export default function SocDashboardPage() {
                     {isSimulated ? (
                       <div className="w-full bg-error rounded-t h-[85%] relative group cursor-pointer animate-pulse">
                         <div className="absolute -top-7 left-1/2 transform -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
-                          Spike: Exfiltration Detection
+                          Spike: Unusual Activity
                         </div>
                       </div>
                     ) : (
@@ -533,7 +533,7 @@ export default function SocDashboardPage() {
                       cloud_upload
                     </span>
                     <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                      Simulate &amp; Ingest Digital Activity Log
+                      Ingest Activity Log
                     </h3>
                   </div>
                   <button
@@ -567,7 +567,7 @@ export default function SocDashboardPage() {
                       ))}
                     </select>
                     <span className="text-[10px] text-secondary mt-0.5 block">
-                      Validates against PostgreSQL employees table.
+                      Validates against active employee records.
                     </span>
                   </div>
 
@@ -593,7 +593,7 @@ export default function SocDashboardPage() {
 
                   <div>
                     <label className="block font-semibold text-on-surface mb-1">
-                      JSON Details / Metadata
+                      Event Details / Activity Information
                     </label>
                     <textarea
                       rows={3}
@@ -615,7 +615,7 @@ export default function SocDashboardPage() {
                       type="submit"
                       className="px-3.5 py-1.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container cursor-pointer"
                     >
-                      Ingest to MongoDB
+                      Ingest Activity Log
                     </button>
                   </div>
                 </form>

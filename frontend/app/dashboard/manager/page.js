@@ -91,7 +91,7 @@ export default function ManagerDashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Executive Threat Overview
+                  Security Risk Overview
                 </h1>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
@@ -104,7 +104,7 @@ export default function ManagerDashboardPage() {
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Strategic risk posture, department comparisons, and organizational threat posture from PostgreSQL ACID store.
+                View organization-wide security risk, department trends and high-risk employees.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -135,14 +135,14 @@ export default function ManagerDashboardPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-on-surface">
-                      Executive Risk Posture Standby — Awaiting AI Threat Simulation
+                      Security Risk Posture in Standby
                     </h3>
                     <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
-                      Clean Baseline
+                      Standby
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    No departmental threat vectors are currently flagged. Use <strong>"Simulate Threat"</strong> in the top navigation bar to evaluate employee risk profiles, department benchmarks, and generate manager-targeted alerts.
+                    No departmental security threats are currently flagged. Use <strong>&ldquo;Simulate Threat&rdquo;</strong> in the top navigation bar to test security scenarios and view department risk benchmarks.
                   </p>
                 </div>
               </div>
@@ -155,13 +155,13 @@ export default function ManagerDashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Organizational Risk Intelligence Evaluated
+                    Organizational Risk Evaluated
                     <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full">
-                      PostgreSQL + MongoDB Synced
+                      All Data Synced
                     </span>
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Strategic threat posture computed across all business departments and user roles.
+                    Security risk posture computed across all business departments and user roles.
                   </p>
                 </div>
               </div>
@@ -180,13 +180,13 @@ export default function ManagerDashboardPage() {
           {/* 4 Key Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
-              title="Telemetry Data Points"
+              title="Activity Records"
               value={
                 isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="MongoDB Time-Series"
+              trend="Activity Records"
               trendType="up-safe"
               icon="dataset"
               iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
@@ -194,34 +194,34 @@ export default function ManagerDashboardPage() {
               description={isSimulated ? "Indexed security events" : "Standby baseline"}
             />
             <MetricCard
-              title="ML Flagged Outliers"
+              title="Suspicious Activity"
               value={isSimulated ? (anomalyReport?.flagged_count ?? (reportData?.high_risk_profiles || 0)) : 0}
-              trend="Isolation Forest"
+              trend={isSimulated && (anomalyReport?.flagged_count || 0) > 0 ? "Requires Review" : "Standby"}
               trendType="neutral"
               icon="psychology"
               iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-error" : "text-secondary"}
-              description="High risk insider profiles"
+              description="High risk employee profiles"
             />
             <MetricCard
-              title="Behavioral Baselines"
+              title="Normal Activity Profiles"
               value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
               trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
               iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description="Statistical baseline profiles"
+              description="Standard behavior patterns"
             />
             <MetricCard
               title="Monitored Employees"
               value={employees.length || 10}
-              trend="Active Directory"
+              trend="Directory"
               trendType="neutral"
               icon="person_alert"
               iconBg="bg-secondary-container"
               iconColor="text-on-secondary-container"
-              description="Indexed in PostgreSQL"
+              description="Active monitored profiles"
             />
           </div>
 
@@ -231,10 +231,10 @@ export default function ManagerDashboardPage() {
             <div className="lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col shadow-xs">
               <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
                 <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                  Organization Risk Posture
+                  Organization Risk Breakdown
                 </h3>
                 <span className="text-[11px] text-secondary font-semibold">
-                  {isSimulated ? "Asset Tiering" : "Baseline"}
+                  {isSimulated ? "Risk Tiers" : "Baseline"}
                 </span>
               </div>
 
@@ -312,7 +312,7 @@ export default function ManagerDashboardPage() {
                       {isSimulated ? employees.length : 0}
                     </span>
                     <span className="font-label-caps text-label-caps text-secondary text-[9px] mt-0.5">
-                      Monitored Assets
+                      Monitored Employees
                     </span>
                   </div>
                 </div>
@@ -350,7 +350,7 @@ export default function ManagerDashboardPage() {
             <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col shadow-xs">
               <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
                 <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                  Department Risk Comparison (PostgreSQL)
+                  Department Risk Comparison
                 </h3>
                 <span className="font-label-caps text-label-caps bg-surface-container-high px-2 py-0.5 rounded text-secondary text-[10px]">
                   Avg Score
@@ -387,7 +387,7 @@ export default function ManagerDashboardPage() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col overflow-hidden shadow-xs">
             <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
               <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                Top Risk Profiles ({isSimulated ? topRisks.length : 0})
+                High-Risk Profiles ({isSimulated ? topRisks.length : 0})
               </h3>
               <Link href="/employees" className="text-primary text-xs font-semibold hover:underline">
                 View All Directory

@@ -111,7 +111,7 @@ export default function AnalystDashboardPage() {
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Multi-indicator threat telemetry from PostgreSQL ACID tables &amp; MongoDB document store.
+                Monitor employee activity, unusual behavior, alerts and security risks.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -154,13 +154,13 @@ export default function AnalystDashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    No active threat scenarios are loaded yet. Use <strong>"Simulate Threat"</strong> in the top navigation bar to fetch telemetry from the database, execute the Isolation Forest AI risk engine on 15 behavioral indicators, and generate role-targeted alerts.
+                    No active threat scenarios are loaded yet. Use <strong>"Simulate Threat"</strong> in the top navigation bar to generate security events, run AI threat detection, and view role-targeted alerts.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            /* Active Milestone 2 Banner */
+            /* Active Banner */
             <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -168,13 +168,13 @@ export default function AnalystDashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Milestone 2: Behavioral Analytics &amp; Anomaly Detection Operational
+                    Behavioral Analytics &amp; Anomaly Detection Active
                     <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full">
-                      10,000 Data Points Indexed
+                      10,000 Records Analyzed
                     </span>
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Isolation Forest ML model &amp; 15 baseline indicators active. Evaluated multi-dimensional threat vectors.
+                    AI detection model and behavior baselines active. Evaluated employee activity.
                   </p>
                 </div>
               </div>
@@ -203,38 +203,38 @@ export default function AnalystDashboardPage() {
               description={isSimulated && activeAlerts.length > 0 ? "Requires analyst triage" : "No active alerts in queue"}
             />
             <MetricCard
-              title="ML Flagged Outliers"
+              title="Suspicious Activity Detected"
               value={isSimulated ? (anomalyStats?.ml_flagged_threats ?? activeAlerts.filter(a => (a.severity || "").toUpperCase() === "CRITICAL" || (a.severity || "").toUpperCase() === "HIGH").length) : 0}
-              trend="Isolation Forest"
+              trend="AI Detection"
               trendType="neutral"
               icon="psychology"
               iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-error" : "text-secondary"}
-              description="15 behavioral risk indicators"
+              description="Behavior risk indicators"
             />
             <MetricCard
-              title="Behavioral Baselines"
+              title="Normal Activity Profiles"
               value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
-              trend="6 Indicators / Person"
+              trend="6 Behavior Indicators"
               trendType="neutral"
               icon="tune"
               iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description="Mean & std dev statistical profiles"
+              description="Normal behavior patterns"
             />
             <MetricCard
-              title="Total Telemetry Data Points"
+              title="Activity Records"
               value={
                 isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="MongoDB Time-Series"
+              trend="Activity Records"
               trendType="up-safe"
               icon="dataset"
               iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Indexed security events" : "Standby baseline monitoring"}
+              description={isSimulated ? "Recorded security events" : "Baseline activity monitoring"}
             />
           </div>
 
@@ -245,7 +245,7 @@ export default function AnalystDashboardPage() {
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-                    Alerts / Priority Queue (PostgreSQL)
+                    Alerts / Priority Queue
                   </h2>
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
@@ -278,7 +278,7 @@ export default function AnalystDashboardPage() {
                       No active security alerts.
                     </h4>
                     <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
-                      Threat telemetry will appear here after simulation.
+                      Security alerts will appear here after simulation.
                     </p>
                   </div>
                 </div>
@@ -353,7 +353,7 @@ export default function AnalystDashboardPage() {
             <div className="lg:col-span-4 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col shadow-xs">
               <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
                 <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-                  Recent Security Events (MongoDB)
+                  Recent Security Events
                 </h2>
                 <span
                   className={`w-2 h-2 rounded-full ${
@@ -367,9 +367,9 @@ export default function AnalystDashboardPage() {
                     <span className="material-symbols-outlined text-[28px] text-outline">
                       dataset
                     </span>
-                    <p className="text-xs font-medium">Awaiting Telemetry Stream</p>
+                    <p className="text-xs font-medium">Waiting for Activity</p>
                     <p className="text-[10px] text-secondary/80 text-center leading-relaxed w-full">
-                      Telemetry logs will stream live once threat events are initiated.
+                      Activity will appear here when security events are detected.
                     </p>
                   </div>
                 ) : (
@@ -412,7 +412,7 @@ export default function AnalystDashboardPage() {
                 </h2>
                 <p className="text-[11px] text-secondary">
                   {isSimulated
-                    ? "Real-time telemetry analysis across monitored organizational endpoints"
+                    ? "Real-time activity analysis across monitored endpoints"
                     : "Standby baseline monitoring mode"}
                 </p>
               </div>
@@ -526,7 +526,7 @@ export default function AnalystDashboardPage() {
                     <p className="text-on-surface">{selectedAlert.department || "General"}</p>
                   </div>
                   <div>
-                    <span className="font-bold text-secondary">Target Stakeholder Role:</span>
+                    <span className="font-bold text-secondary">Suggested Owner:</span>
                     <p className="text-primary font-bold">{selectedAlert.target_role_title || "Security Analyst"}</p>
                   </div>
                   <div>

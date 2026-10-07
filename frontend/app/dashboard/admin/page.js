@@ -83,29 +83,29 @@ export default function AdminDashboardPage() {
 
   const systemServices = [
     {
-      name: "API Gateway (FastAPI)",
-      metric: "Port 8000 (Active)",
+      name: "Application Service",
+      metric: "Active (Operational)",
       status: systemHealthy ? "Online" : "Offline",
       level: systemHealthy ? "healthy" : "critical",
       icon: "api",
     },
     {
-      name: "Main Relational DB (PostgreSQL)",
-      metric: "Port 5432 (ACID)",
+      name: "Employee & Account Service",
+      metric: "Connected (Verified)",
       status: "Online",
       level: "healthy",
       icon: "database",
     },
     {
-      name: "Document Store (MongoDB)",
-      metric: "Port 27017 (Time-Series)",
+      name: "Activity Monitoring Service",
+      metric: "Connected (Active)",
       status: "Online",
       level: "healthy",
       icon: "storage",
     },
     {
-      name: "Identity & RBAC Governance",
-      metric: "JWT Bearer Authentication",
+      name: "Access & Governance Service",
+      metric: "Active (Enforced)",
       status: "Online",
       level: "healthy",
       icon: "verified_user",
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Platform administration, RBAC access governance, and PostgreSQL database accounts.
+                Manage platform users, access roles and security administration.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -167,14 +167,14 @@ export default function AdminDashboardPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold text-on-surface">
-                    Platform Governance Active &bull; Dual-Database Integrity Verified
+                    Platform Administration Active
                   </h3>
                   <span className="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200">
-                    RBAC Enforced
+                    Access Controls Active
                   </span>
                 </div>
                 <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                  PostgreSQL ACID relational store and MongoDB time-series activity telemetry are healthy. Platform administrators govern system identities, role bindings, and platform telemetry.
+                  All core security platform services and activity storage are operating normally. Administrators manage user roles, account permissions, and platform settings.
                 </p>
               </div>
             </div>
@@ -194,12 +194,12 @@ export default function AdminDashboardPage() {
             <MetricCard
               title="Platform Users"
               value={adminData?.total_users ?? 4}
-              trend="RBAC Store"
+              trend="User Accounts"
               trendType="up-good"
               icon="group"
               iconBg="bg-primary-fixed"
               iconColor="text-primary"
-              description="Active accounts in PostgreSQL"
+              description="Active user accounts"
             />
             <MetricCard
               title="Monitored Employees"
@@ -222,13 +222,13 @@ export default function AdminDashboardPage() {
               description={isSimulated ? "Formal investigation cases" : "No active incident cases"}
             />
             <MetricCard
-              title="Telemetry Activity Logs"
+              title="Activity Records"
               value={
                 isSimulated && adminData?.audit_activity?.total_activity_logs
                   ? Number(adminData.audit_activity.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="MongoDB Time-Series"
+              trend="Activity Records"
               trendType="up-good"
               icon="dataset"
               iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
@@ -236,14 +236,14 @@ export default function AdminDashboardPage() {
               description={isSimulated ? "High-throughput security logs" : "Standby monitoring"}
             />
             <MetricCard
-              title="System Platform Health"
+              title="System Health"
               value={systemHealthy ? "Operational" : "Degraded"}
               trend="100% Uptime"
               trendType={systemHealthy ? "up-good" : "up-danger"}
               icon="health_and_safety"
               iconBg="bg-emerald-100"
               iconColor="text-emerald-700"
-              description="PostgreSQL + MongoDB Online"
+              description="All Services Online"
             />
           </div>
 
@@ -254,10 +254,10 @@ export default function AdminDashboardPage() {
               <div className="p-md border-b border-outline-variant flex justify-between items-center">
                 <div>
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                    User &amp; Role Management (RBAC)
+                    User &amp; Role Management
                   </h2>
                   <p className="text-[11px] text-secondary">
-                    Enforced via FastAPI require_role and PostgreSQL identity persistence
+                    Role permissions and account access control
                   </p>
                 </div>
                 <Link

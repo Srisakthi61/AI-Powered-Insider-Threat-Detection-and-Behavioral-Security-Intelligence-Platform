@@ -231,14 +231,14 @@ export default function AnomaliesPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Behavioral Intelligence & ML Threat Engine
+                  Suspicious Activity Detection
                 </h1>
                 <span className="bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-primary/20">
-                  Isolation Forest Active
+                  AI Detection Active
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Loaded scikit-learn Isolation Forest model evaluating 15 telemetry indicators across 10,000 data points.
+                Review unusual behavior detected across monitored employees and test activity.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export default function AnomaliesPage() {
                 <span className={`material-symbols-outlined text-[16px] ${dispatchingAlerts ? "animate-spin" : ""}`}>
                   {dispatchingAlerts ? "sync" : "forward_to_inbox"}
                 </span>
-                {dispatchingAlerts ? "Dispatching..." : "Dispatch ML Alerts"}
+                {dispatchingAlerts ? "Dispatching..." : "Dispatch Security Alerts"}
               </button>
             </div>
           </div>
@@ -276,44 +276,44 @@ export default function AnomaliesPage() {
           {/* 4 Summary Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
-              title="Telemetry Data Points"
+              title="Activity Reviewed"
               value={isSimulated && stats?.total_activity_logs ? Number(stats.total_activity_logs).toLocaleString() : "0"}
-              trend={isSimulated ? "MongoDB Store" : "Standby"}
+              trend={isSimulated ? "Activity Records" : "Standby"}
               trendType={isSimulated ? "up-safe" : "neutral"}
               icon="dataset"
               iconBg="bg-primary-container"
               iconColor="text-on-primary-container"
-              description="Time-series telemetry events"
+              description="Activity records analyzed"
             />
             <MetricCard
-              title="ML Feature Vector"
-              value="15 Indicators"
-              trend="Standardized Scale"
-              trendType="neutral"
-              icon="tune"
-              iconBg="bg-tertiary-fixed"
-              iconColor="text-tertiary"
-              description="Multi-factor dimensions"
-            />
-            <MetricCard
-              title="ML Flagged Outliers"
+              title="Suspicious Activity"
               value={isSimulated ? (report?.flagged_count ?? 0) : 0}
-              trend={isSimulated && (report?.flagged_count || 0) > 0 ? "Threats Detected" : "Standby"}
+              trend={isSimulated && (report?.flagged_count || 0) > 0 ? "Requires Review" : "Standby"}
               trendType={isSimulated && (report?.flagged_count || 0) > 0 ? "up-danger" : "neutral"}
               icon="psychology"
               iconBg="bg-error-container"
               iconColor="text-error"
-              description="Ranked by decision score"
+              description="Unusual activity flagged"
             />
             <MetricCard
-              title="Contamination Parameter"
-              value="15% (0.15)"
-              trend="200 Estimators"
-              trendType="neutral"
-              icon="ssid_chart"
+              title="Employees at Risk"
+              value={isSimulated ? (report?.all_analyzed?.filter(e => e.risk_level === "Critical" || e.risk_level === "High").length ?? 0) : 0}
+              trend={isSimulated && (report?.flagged_count || 0) > 0 ? "High Priority" : "Standby"}
+              trendType={isSimulated && (report?.flagged_count || 0) > 0 ? "up-danger" : "neutral"}
+              icon="person_alert"
+              iconBg="bg-tertiary-fixed"
+              iconColor="text-tertiary"
+              description="Employees requiring attention"
+            />
+            <MetricCard
+              title="AI Detection Status"
+              value="Active"
+              trend="Continuous Analysis"
+              trendType="up-safe"
+              icon="security"
               iconBg="bg-secondary-container"
               iconColor="text-on-secondary-container"
-              description="Outlier sensitivity threshold"
+              description="AI threat detection active"
             />
           </div>
 
@@ -328,7 +328,7 @@ export default function AnomaliesPage() {
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-              Isolation Forest ML Threat Engine & Radar
+              AI Activity Detection &amp; Radar
             </button>
             <button
               onClick={() => setActiveTab("sandbox")}
@@ -339,7 +339,7 @@ export default function AnomaliesPage() {
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">biotech</span>
-              Interactive Live Model Sandbox
+              Test Activity
             </button>
             <button
               onClick={() => setActiveTab("baselines")}
@@ -350,14 +350,14 @@ export default function AnomaliesPage() {
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">account_box</span>
-              Per-Employee Behavioral Baselines
+              Normal Activity Profiles
             </button>
           </div>
 
           {/* TAB 1: Isolation Forest ML Model & Threat Radar */}
           {activeTab === "ml_model" && (
             <div className="flex flex-col gap-gutter">
-              {/* Joblib Model Metadata Bar */}
+              {/* Model Info Bar */}
               <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-md">
                   <div>
@@ -366,34 +366,34 @@ export default function AnomaliesPage() {
                         verified_user
                       </span>
                       <h2 className="text-sm font-bold text-on-surface">
-                        Loaded Model Artifact: isolation_forest_model.joblib
+                        AI Behavioral Detection Engine
                       </h2>
                       <span className="bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
-                        {modelStatus?.status || "LOADED_AND_ACTIVE"}
+                        ACTIVE
                       </span>
                     </div>
                     <p className="text-xs text-secondary mt-1 max-w-3xl leading-relaxed">
-                      Trained on 10,000 synthetic multi-indicator activity logs using <strong>scikit-learn Isolation Forest</strong> with standard scaler normalization. Detects subtle combinations of multi-factor outliers across 15 behavioral indicators.
+                      Analyzes employee behavior to detect unusual activity, data transfers, off-hours access, and permission misuse across monitored activity records.
                     </p>
                   </div>
 
                   {/* Model Telemetry Pills */}
                   <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
                     <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">FEATURES</span>
-                      <span className="font-bold text-primary">15 Dimensions</span>
+                      <span className="text-secondary text-[9px] block">ANALYSIS</span>
+                      <span className="font-bold text-primary">Active</span>
                     </div>
                     <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">CONTAMINATION</span>
-                      <span className="font-bold text-primary">0.15 (15%)</span>
+                      <span className="text-secondary text-[9px] block">BEHAVIOR FACTORS</span>
+                      <span className="font-bold text-primary">15 Factors</span>
                     </div>
                     <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">ESTIMATORS</span>
-                      <span className="font-bold text-primary">200 Trees</span>
-                    </div>
-                    <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">CV ACCURACY</span>
+                      <span className="text-secondary text-[9px] block">DETECTION ACCURACY</span>
                       <span className="font-bold text-emerald-600">80.0%</span>
+                    </div>
+                    <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
+                      <span className="text-secondary text-[9px] block">STATUS</span>
+                      <span className="font-bold text-primary">Ready</span>
                     </div>
                   </div>
                 </div>
@@ -419,14 +419,14 @@ export default function AnomaliesPage() {
                   <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-xs text-on-surface">
-                        Flagged Threat Outliers (Ranked by Decision Score)
+                        Suspicious Activity Detected
                       </h3>
                       <span className="text-[10px] bg-error-container text-error px-2 py-0.5 rounded-full font-bold">
                         {isSimulated ? (report?.flagged_count || 0) : 0} Flagged
                       </span>
                     </div>
                     <span className="text-[11px] text-secondary">
-                      Automated Stakeholder Dispatching
+                      Automated Incident Dispatching
                     </span>
                   </div>
 
@@ -436,9 +436,9 @@ export default function AnomaliesPage() {
                         <tr>
                           <th className="w-16 p-sm pl-md">Rank</th>
                           <th className="w-44 p-sm">Employee</th>
-                          <th className="w-24 p-sm">ML Score</th>
-                          <th className="w-48 p-sm">Primary Threat Vector</th>
-                          <th className="w-36 p-sm">Recommended Responder</th>
+                          <th className="w-24 p-sm">Detection Score</th>
+                          <th className="w-48 p-sm">Primary Reason</th>
+                          <th className="w-36 p-sm">Suggested Owner</th>
                           <th className="w-24 p-sm">Risk</th>
                           <th className="w-24 p-sm pr-md text-right">Inspect</th>
                         </tr>
@@ -469,7 +469,7 @@ export default function AnomaliesPage() {
                                   </span>
                                 </td>
                                 <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
-                                  {row.primary_reason || "Normal Baseline"}
+                                  {row.primary_reason || "Normal Activity"}
                                 </td>
                                 <td className="p-sm">
                                   <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-bold border border-outline-variant">
@@ -501,10 +501,10 @@ export default function AnomaliesPage() {
                                   <span className="material-symbols-outlined text-2xl">radar</span>
                                 </div>
                                 <h4 className="text-sm font-bold text-on-surface mb-1">
-                                  No Threat Outliers Detected
+                                  No Suspicious Activity Detected
                                 </h4>
                                 <p className="text-xs text-secondary leading-relaxed text-center w-full">
-                                  Isolation Forest model is active in standby mode. Click &ldquo;Simulate Threat&rdquo; in the global header to evaluate live telemetry.
+                                  AI detection is active in standby mode. Click &ldquo;Simulate Threat&rdquo; in the global header to test security scenarios.
                                 </p>
                               </div>
                             </td>
@@ -526,10 +526,10 @@ export default function AnomaliesPage() {
                 <div>
                   <h2 className="text-sm font-bold text-on-surface flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-[20px]">science</span>
-                    Isolation Forest Live Inference Sandbox
+                    Test Security Activity
                   </h2>
                   <p className="text-xs text-secondary mt-0.5">
-                    Adjust multi-dimensional behavioral parameters and run inference in real time through the joblib model artifact.
+                    Test security scenarios against normal behavior to see how the system responds.
                   </p>
                 </div>
 
@@ -544,28 +544,28 @@ export default function AnomaliesPage() {
                       onClick={() => applySandboxPreset("usb_exfiltration")}
                       className="text-[11px] bg-red-50 text-red-700 border border-red-300 hover:bg-red-100 px-2.5 py-1 rounded-md font-semibold cursor-pointer active:scale-95"
                     >
-                      ⚠️ Mass USB Transfer (6.5 GB)
+                      ⚠️ Large File Copy to USB (6.5 GB)
                     </button>
                     <button
                       type="button"
                       onClick={() => applySandboxPreset("sudo_escalation")}
                       className="text-[11px] bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 px-2.5 py-1 rounded-md font-semibold cursor-pointer active:scale-95"
                     >
-                      ⚠️ Sudo Root Escalation (62x)
+                      ⚠️ Unauthorized Admin Access (62x)
                     </button>
                     <button
                       type="button"
                       onClick={() => applySandboxPreset("off_hours_mfa")}
                       className="text-[11px] bg-purple-50 text-purple-800 border border-purple-300 hover:bg-purple-100 px-2.5 py-1 rounded-md font-semibold cursor-pointer active:scale-95"
                     >
-                      ⚠️ 3:15 AM MFA Drift (29x)
+                      ⚠️ Unusual Login Attempts (29x)
                     </button>
                     <button
                       type="button"
                       onClick={() => applySandboxPreset("normal_baseline")}
                       className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-semibold cursor-pointer active:scale-95"
                     >
-                      ✓ 9:15 AM Normal Inlier
+                      ✓ Normal Activity (9:15 AM)
                     </button>
                   </div>
                 </div>
@@ -588,7 +588,7 @@ export default function AnomaliesPage() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-on-surface block mb-1">Avg Login Hour (0-24):</label>
+                    <label className="font-semibold text-on-surface block mb-1">Login Hour (0-24):</label>
                     <input
                       type="number"
                       step="0.1"
@@ -599,7 +599,7 @@ export default function AnomaliesPage() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-on-surface block mb-1">Off-Hours Logins (10PM-5AM):</label>
+                    <label className="font-semibold text-on-surface block mb-1">Off-Hours Logins:</label>
                     <input
                       type="number"
                       value={sandboxValues.off_hours_logins}
@@ -609,7 +609,7 @@ export default function AnomaliesPage() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-on-surface block mb-1">USB Total Transfer (MB):</label>
+                    <label className="font-semibold text-on-surface block mb-1">USB Transfer (MB):</label>
                     <input
                       type="number"
                       step="any"
@@ -620,7 +620,7 @@ export default function AnomaliesPage() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-on-surface block mb-1">Sudo / Root Attempts:</label>
+                    <label className="font-semibold text-on-surface block mb-1">Admin / Privilege Attempts:</label>
                     <input
                       type="number"
                       value={sandboxValues.sudo_attempts}
@@ -630,7 +630,7 @@ export default function AnomaliesPage() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-on-surface block mb-1">Denied / Failed Access Events:</label>
+                    <label className="font-semibold text-on-surface block mb-1">Failed Access Attempts:</label>
                     <input
                       type="number"
                       value={sandboxValues.denied_events}
@@ -640,7 +640,7 @@ export default function AnomaliesPage() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-on-surface block mb-1">Critical Security Flags:</label>
+                    <label className="font-semibold text-on-surface block mb-1">Security Warning Flags:</label>
                     <input
                       type="number"
                       value={sandboxValues.critical_flags}
@@ -658,7 +658,7 @@ export default function AnomaliesPage() {
                       <span className="material-symbols-outlined text-[18px]">
                         {sandboxLoading ? "progress_activity" : "psychology"}
                       </span>
-                      <span>{sandboxLoading ? "Running Model Inference..." : "Evaluate with Isolation Forest Model"}</span>
+                      <span>{sandboxLoading ? "Checking Activity..." : "Check Activity"}</span>
                     </button>
                   </div>
                 </form>
@@ -669,7 +669,7 @@ export default function AnomaliesPage() {
                 <div>
                   <div className="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
                     <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                      Isolation Forest Model Verdict
+                      AI Detection Result
                     </h3>
                     {sandboxResult && (
                       <span
@@ -679,7 +679,7 @@ export default function AnomaliesPage() {
                             : "bg-emerald-100 text-emerald-800"
                         }`}
                       >
-                        {sandboxResult.is_outlier ? "OUTLIER FLAGGED (-1)" : "NORMAL INLIER (+1)"}
+                        {sandboxResult.is_outlier ? "SUSPICIOUS ACTIVITY" : "NORMAL ACTIVITY"}
                       </span>
                     )}
                   </div>
@@ -689,7 +689,7 @@ export default function AnomaliesPage() {
                       <span className="material-symbols-outlined text-[40px] text-outline opacity-40 block mb-2">
                         psychology
                       </span>
-                      Select a scenario above or enter custom feature values and click <strong>Evaluate with Isolation Forest Model</strong>.
+                      Select a scenario above or enter activity values and click <strong>Check Activity</strong>.
                     </div>
                   ) : (
                     <div className="flex flex-col gap-3 text-xs">
@@ -713,19 +713,19 @@ export default function AnomaliesPage() {
                       {/* Decision Score Metric */}
                       <div className="bg-surface-container-low p-3 rounded-lg border border-outline-variant grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
                         <div>
-                          <span className="text-[10px] text-secondary block">DECISION SCORE</span>
+                          <span className="text-[10px] text-secondary block">DETECTION SCORE</span>
                           <span className={`text-base font-bold ${sandboxResult.anomaly_score < 0 ? "text-error" : "text-emerald-700"}`}>
                             {sandboxResult.anomaly_score}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-secondary block">OUTLIER STATUS</span>
+                          <span className="text-[10px] text-secondary block">STATUS</span>
                           <span className="text-base font-bold text-on-surface">
-                            {sandboxResult.is_outlier ? "-1 (Outlier)" : "+1 (Normal)"}
+                            {sandboxResult.is_outlier ? "Flagged" : "Normal"}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-secondary block">DISPATCH TARGET</span>
+                          <span className="text-[10px] text-secondary block">SUGGESTED OWNER</span>
                           <span className="text-xs font-bold text-primary truncate block mt-1">
                             👤 {sandboxResult.target_role_title}
                           </span>
@@ -784,7 +784,7 @@ export default function AnomaliesPage() {
               {baselineLoading ? (
                 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-12 text-center text-secondary">
                   <span className="material-symbols-outlined animate-spin text-[32px]">progress_activity</span>
-                  <p className="text-xs mt-2">Loading behavioral baselines from MongoDB...</p>
+                  <p className="text-xs mt-2">Loading normal activity profiles...</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
@@ -822,7 +822,7 @@ export default function AnomaliesPage() {
                     );
                   })()}
 
-                  {/* Indicator 2: Resource Access Frequency */}
+                  {/* Indicator 2: File & Resource Access */}
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "resource_access_freq");
                     return (
@@ -831,7 +831,7 @@ export default function AnomaliesPage() {
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">folder_managed</span>
-                              2. Resource Access Frequency
+                              2. File &amp; Resource Access
                             </span>
                             <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
                               N = {b?.sample_size || 0}
@@ -841,7 +841,7 @@ export default function AnomaliesPage() {
                             {b?.typical_value ?? 6.8} <span className="text-xs font-sans text-secondary font-normal">events/day</span>
                           </div>
                           <p className="text-xs text-secondary mt-1">
-                            Average file/endpoint accesses per active shift (<strong className="text-on-surface font-mono">±{b?.std_deviation || 2.5}</strong> sigma).
+                            Average file and system accesses per active shift (<strong className="text-on-surface font-mono">±{b?.std_deviation || 2.5}</strong> sigma).
                           </p>
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
@@ -912,7 +912,7 @@ export default function AnomaliesPage() {
                     );
                   })()}
 
-                  {/* Indicator 5: Data Transfer Volume */}
+                  {/* Indicator 5: Data Transfer */}
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "avg_data_transfer_mb");
                     return (
@@ -921,7 +921,7 @@ export default function AnomaliesPage() {
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">cloud_sync</span>
-                              5. Data Transfer Volume
+                              5. Data Transfer
                             </span>
                             <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
                               N = {b?.sample_size || 0}
@@ -942,7 +942,7 @@ export default function AnomaliesPage() {
                     );
                   })()}
 
-                  {/* Indicator 6: Communication Patterns */}
+                  {/* Indicator 6: Communication Activity */}
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "communication_patterns");
                     return (
@@ -951,7 +951,7 @@ export default function AnomaliesPage() {
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">mail</span>
-                              6. Communication Patterns
+                              6. Communication Activity
                             </span>
                             <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
                               N = {b?.sample_size || 0}
