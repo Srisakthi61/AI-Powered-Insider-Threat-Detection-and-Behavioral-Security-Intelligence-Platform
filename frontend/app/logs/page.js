@@ -55,6 +55,17 @@ export default function LogsPage() {
   useEffect(() => {
     setPage(1);
     fetchLogs(employeeId, eventType, 1, pageSize);
+
+    const handleThreatSimulated = () => fetchLogs(employeeId, eventType, 1, pageSize);
+    const handleReset = () => fetchLogs(employeeId, eventType, 1, pageSize);
+
+    window.addEventListener("threat-simulated", handleThreatSimulated);
+    window.addEventListener("simulation-reset", handleReset);
+
+    return () => {
+      window.removeEventListener("threat-simulated", handleThreatSimulated);
+      window.removeEventListener("simulation-reset", handleReset);
+    };
   }, [employeeId, eventType, pageSize]);
 
   const handlePageChange = (newPage) => {
@@ -181,15 +192,17 @@ export default function LogsPage() {
                     </tr>
                   ) : (
                     logs.map((log) => {
-                      const isRisk =
-                        log.event_type === "usb_connect" ||
-                        log.details?.risk_flag ||
-                        (log.event_type === "login" && log.timestamp && (new Date(log.timestamp).getUTCHours() < 6 || new Date(log.timestamp).getUTCHours() > 22));
+                      const isThreat =
+                        Boolean(log.details?.risk_flag) ||
+                        Boolean(log.is_simulation) ||
+                        (log.event_type === "usb_connect" && parseFloat(log.details?.transferred_mb || 0) > 500) ||
+                        (log.event_type === "privilege_change" && (log.details?.status === "denied" || String(log.details?.command || "").toLowerCase().includes("sudo"))) ||
+                        (log.details?.status === "failed_mfa_bruteforce");
                       return (
                         <tr
                           key={log._id || log.id}
                           className={`hover:bg-surface-container-low transition-colors ${
-                            isRisk ? "bg-error-container/5" : ""
+                            isThreat ? "bg-error-container/5" : ""
                           }`}
                         >
                           <td className="p-sm pl-md text-secondary font-mono text-[11px] whitespace-nowrap">
@@ -198,10 +211,8 @@ export default function LogsPage() {
                           <td className="p-sm">
                             <span
                               className={`px-2 py-0.5 rounded font-mono font-semibold text-[11px] ${
-                                log.event_type === "usb_connect"
+                                isThreat
                                   ? "bg-error-container text-error font-bold"
-                                  : log.event_type === "privilege_change"
-                                  ? "bg-amber-100 text-amber-900 font-bold"
                                   : "bg-primary-fixed text-primary-container"
                               }`}
                             >
@@ -216,7 +227,7 @@ export default function LogsPage() {
                               <span className="text-[10px] font-bold bg-error-container text-error px-2 py-0.5 rounded">
                                 {log.details.risk_flag}
                               </span>
-                            ) : isRisk ? (
+                            ) : isThreat ? (
                               <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
                                 Unusual
                               </span>

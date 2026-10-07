@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta, date
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 import pandas as pd
 
 from app.database import get_mongo_db, get_db, SessionLocal
-from app.models import Alert, Employee, User
+from app.models import Alert, Employee, User, Incident, InvestigationNote, RiskSnapshot
 from app.behavioral_profiling import (
     calculate_all_baselines_for_employee,
     calculate_all_system_baselines,
@@ -68,7 +68,7 @@ class LiveEvaluationRequest(BaseModel):
 
 
 class ThreatSimulationRequest(BaseModel):
-    employee_id: str = "EMP1007"
+    employee_id: Optional[str] = None
     threat_scenario: str = "usb_exfiltration"  # "usb_exfiltration", "sudo_privilege_abuse", "off_hours_mfa_attack", "cloud_data_dump"
     custom_message: Optional[str] = None
 
@@ -263,6 +263,86 @@ def generate_alerts_from_ml_model(
     }
 
 
+SCENARIO_TARGET_MAP = {
+    "usb_exfiltration": "EMP1007",
+    "sudo_privilege_abuse": "EMP1011",
+    "off_hours_mfa_attack": "EMP1008",
+    "cloud_data_dump": "EMP1005",
+}
+
+ALL_THREAT_VECTORS = [
+    {
+        "scenario": "usb_exfiltration",
+        "default_emp": "EMP1007",
+        "event_type": "usb_connect",
+        "details": {
+            "device_name": "UltraSpeed SanDisk 128GB Flash",
+            "transferred_mb": 6500.0,
+            "file_count": 48,
+            "risk_flag": "mass_usb_exfiltration",
+        },
+        "severity": "Critical",
+        "alert_msg": "[ML Anomaly] Mass USB Data Exfiltration (6.5 GB copied)",
+        "target_role": "soc_engineer",
+        "target_role_title": "SOC Incident Response",
+        "recommended_action": "Immediately revoke USB endpoint storage access and isolate host.",
+        "incident_title_prefix": "Mass USB Data Exfiltration",
+    },
+    {
+        "scenario": "sudo_privilege_abuse",
+        "default_emp": "EMP1011",
+        "event_type": "privilege_change",
+        "details": {
+            "command": "sudo -u root /bin/bash; cat /etc/shadow",
+            "status": "denied",
+            "requested_privilege": "root_cluster_admin",
+            "risk_flag": "unauthorized_sudo_escalation",
+        },
+        "severity": "Critical",
+        "alert_msg": "[ML Anomaly] Unauthorized Privilege Escalation (sudo root execution attempt)",
+        "target_role": "admin",
+        "target_role_title": "System Administrator",
+        "recommended_action": "Lock sudo root execution privileges and audit IAM role bindings.",
+        "incident_title_prefix": "Unauthorized Sudo Root Escalation",
+    },
+    {
+        "scenario": "off_hours_mfa_attack",
+        "default_emp": "EMP1008",
+        "event_type": "login",
+        "details": {
+            "ip_address": "185.220.101.5",
+            "device": "Unknown Kali Linux 6.1 Terminal",
+            "status": "failed_mfa_bruteforce",
+            "attempt_count": 12,
+            "risk_flag": "off_hours_brute_force_attack",
+        },
+        "severity": "High",
+        "alert_msg": "[ML Anomaly] Anomalous Off-Hours Brute-Force Activity (03:15 AM login drift)",
+        "target_role": "security_manager",
+        "target_role_title": "Department Manager",
+        "recommended_action": "Verify MFA telemetry, enforce credential reset, and notify manager.",
+        "incident_title_prefix": "Off-Hours Brute-Force Login Drift",
+    },
+    {
+        "scenario": "cloud_data_dump",
+        "default_emp": "EMP1005",
+        "event_type": "data_transfer",
+        "details": {
+            "destination": "external-mega-s3-upload.ru",
+            "transferred_mb": 4200.0,
+            "protocol": "SFTP",
+            "risk_flag": "bulk_egress_exfiltration",
+        },
+        "severity": "Critical",
+        "alert_msg": "[ML Anomaly] High-Volume Data Egress (4.2 GB external dump)",
+        "target_role": "security_analyst",
+        "target_role_title": "Security Analyst",
+        "recommended_action": "Inspect outbound firewall sessions and restrict cloud upload endpoints.",
+        "incident_title_prefix": "High-Volume External SFTP Dump",
+    },
+]
+
+
 @router.post("/simulate-threat-event")
 def simulate_threat_event(
     req: ThreatSimulationRequest,
@@ -271,131 +351,176 @@ def simulate_threat_event(
     user=Depends(require_role("admin", "soc_engineer", "security_analyst", "security_manager")),
 ):
     """
-    Simulates an instant high-risk threat event into MongoDB, immediately executes
-    inference through the joblib model, and creates a real-time animated alert in PostgreSQL
-    targeted to the right persona.
+    Simulates high-risk threat telemetry across all four operational domains (SOC, Admin,
+    Manager, Analyst), immediately executes inference through the joblib model, updates
+    5-factor risk & daily risk snapshots, and creates real-time animated alerts in PostgreSQL
+    targeted to all dashboards simultaneously.
     """
-    emp = db.query(Employee).filter(Employee.employee_id == req.employee_id).first()
-    if not emp:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Employee {req.employee_id} not found in database directory",
-        )
+    primary_scenario = (req.threat_scenario or "usb_exfiltration").lower().strip()
+    if primary_scenario not in SCENARIO_TARGET_MAP and primary_scenario != "all":
+        primary_scenario = "usb_exfiltration"
 
-    scenario = req.threat_scenario.lower().strip()
     now = datetime.now(timezone.utc)
+    user_id = None
+    if isinstance(user, dict):
+        try:
+            candidate_id = int(user.get("sub"))
+            if db.query(User).filter(User.id == candidate_id).first():
+                user_id = candidate_id
+        except (ValueError, TypeError):
+            pass
 
-    # 1. Build scenario log document and features
-    if scenario == "usb_exfiltration":
-        event_type = "usb_connect"
-        details = {
-            "device_name": "UltraSpeed SanDisk 128GB Flash",
-            "transferred_mb": 6500.0,
-            "file_count": 48,
-            "risk_flag": "mass_usb_exfiltration",
+    if user_id is None:
+        first_user = db.query(User).first()
+        if first_user:
+            user_id = first_user.id
+
+    author_display = user.get("email", "ITBIS Automated Threat Engine") if isinstance(user, dict) else "ITBIS Automated Threat Engine"
+
+    created_role_alerts = []
+    primary_alert_id = None
+    primary_incident_id = None
+    primary_incident_title = ""
+    primary_log_id = None
+    primary_emp_id = None
+    primary_emp_name = ""
+    primary_department = ""
+    primary_severity = "Critical"
+    primary_alert_message = ""
+    primary_target_role = "security_analyst"
+    primary_target_role_title = "Security Analyst"
+    primary_recommended_action = "Initiate triage and review telemetry."
+
+    # Process all four threat vectors to populate all four dashboards
+    for vec in ALL_THREAT_VECTORS:
+        vec_scenario = vec["scenario"]
+        is_primary = (primary_scenario == "all" and vec_scenario == "usb_exfiltration") or (vec_scenario == primary_scenario)
+
+        # Allow employee override if this vector matches requested scenario
+        target_emp_code = vec["default_emp"]
+        if is_primary and req.employee_id and req.employee_id.strip():
+            target_emp_code = req.employee_id.strip()
+
+        emp = db.query(Employee).filter(Employee.employee_id == target_emp_code).first()
+        if not emp:
+            try:
+                numeric_id = int(target_emp_code)
+                emp = db.query(Employee).filter(Employee.id == numeric_id).first()
+            except (ValueError, TypeError):
+                pass
+
+        if not emp:
+            # Fallback to any valid employee
+            emp = db.query(Employee).first()
+            if not emp:
+                continue
+
+        # 1. Insert telemetry event into MongoDB activity_logs
+        mongo_doc = {
+            "employee_id": emp.employee_id,
+            "event_type": vec["event_type"],
+            "timestamp": now,
+            "details": vec["details"],
+            "is_simulation": True,
         }
-        severity = "Critical"
-        alert_msg = f"[ML Anomaly] Mass USB Data Exfiltration (6.5 GB copied)"
-        target_role = "soc_engineer"
-        target_role_title = "SOC Incident Response"
-        recommended_action = "Immediately revoke USB endpoint storage access and isolate host."
+        mongo_res = mongo["activity_logs"].insert_one(mongo_doc)
 
-    elif scenario == "sudo_privilege_abuse":
-        event_type = "privilege_change"
-        details = {
-            "command": "sudo -u root /bin/bash; cat /etc/shadow",
-            "status": "denied",
-            "requested_privilege": "root_cluster_admin",
-            "risk_flag": "unauthorized_sudo_escalation",
-        }
-        severity = "Critical"
-        alert_msg = f"[ML Anomaly] Unauthorized Privilege Escalation (sudo root execution attempt)"
-        target_role = "admin"
-        target_role_title = "System Administrator"
-        recommended_action = "Lock sudo root execution privileges and audit IAM role bindings."
+        # 2. Create Alert in PostgreSQL
+        custom_msg = req.custom_message if (is_primary and req.custom_message) else vec["alert_msg"]
+        new_alert = Alert(
+            employee_id=emp.id,
+            severity=vec["severity"],
+            message=custom_msg,
+            status="UNASSIGNED",
+            details=f"Scenario: {vec_scenario} | Timestamp: {now.isoformat()} | Log ID: {mongo_res.inserted_id} | Payload: {vec['details']}",
+            recommended_action=vec["recommended_action"],
+        )
+        db.add(new_alert)
+        db.commit()
+        db.refresh(new_alert)
 
-    elif scenario == "off_hours_mfa_attack":
-        event_type = "login"
-        details = {
-            "ip_address": "185.220.101.5",
-            "device": "Unknown Kali Linux 6.1 Terminal",
-            "status": "failed_mfa_bruteforce",
-            "attempt_count": 12,
-            "risk_flag": "off_hours_brute_force_attack",
-        }
-        severity = "High"
-        alert_msg = f"[ML Anomaly] Anomalous Off-Hours Brute-Force Activity (03:15 AM login drift)"
-        target_role = "security_manager"
-        target_role_title = "Department Manager"
-        recommended_action = "Verify MFA telemetry, enforce credential reset, and notify manager."
+        # 3. Create Formal Incident Case in PostgreSQL
+        incident_title = f"{vec['incident_title_prefix']} - {emp.name}"
+        incident_summary = f"[Simulated Incident] {new_alert.message}. Target: {emp.name} ({emp.employee_id}), Department: {emp.department}. Automated incident case generated from high-risk threat event."
+        new_incident = Incident(
+            employee_id=emp.id,
+            status="OPEN",
+            severity=vec["severity"].upper(),
+            summary=incident_summary,
+            created_by=user_id,
+        )
+        db.add(new_incident)
+        db.commit()
+        db.refresh(new_incident)
 
-    else:  # cloud_data_dump
-        event_type = "data_transfer"
-        details = {
-            "destination": "external-mega-s3-upload.ru",
-            "transferred_mb": 4200.0,
-            "protocol": "SFTP",
-            "risk_flag": "bulk_egress_exfiltration",
-        }
-        severity = "Critical"
-        alert_msg = f"[ML Anomaly] High-Volume Data Egress (4.2 GB external dump)"
-        target_role = "security_analyst"
-        target_role_title = "Security Analyst"
-        recommended_action = "Inspect outbound firewall sessions and restrict cloud upload endpoints."
+        # Link alert to incident
+        new_alert.incident_id = new_incident.id
+        new_alert.status = "IN_PROGRESS"
+        db.commit()
 
-    # 2. Insert into MongoDB activity_logs
-    mongo_doc = {
-        "employee_id": emp.employee_id,
-        "event_type": event_type,
-        "timestamp": now,
-        "details": details,
-    }
-    mongo_res = mongo["activity_logs"].insert_one(mongo_doc)
+        # Add Investigation Note
+        sim_note = InvestigationNote(
+            incident_id=new_incident.id,
+            author_user_id=user_id,
+            author_name=author_display,
+            note=f"Automated incident opened following high-risk telemetry event ({vec['event_type']}) in {emp.department}. Recommended response: {vec['recommended_action']}",
+            evidence_reference=f"LogID: {mongo_res.inserted_id} | Payload: {vec['details']}",
+        )
+        db.add(sim_note)
+        db.commit()
 
-    # 3. Create Primary Scenario Alert in PostgreSQL
-    new_alert = Alert(
-        employee_id=emp.id,
-        severity=severity,
-        message=req.custom_message or alert_msg,
-        status="UNASSIGNED",
-        details=f"Scenario: {scenario} | Timestamp: {now.isoformat()} | Log ID: {mongo_res.inserted_id} | Payload: {details}",
-        recommended_action=recommended_action,
-    )
-    db.add(new_alert)
-    db.commit()
-    db.refresh(new_alert)
+        # 4. Update behavioral baselines in MongoDB for target employee
+        try:
+            calculate_all_baselines_for_employee(emp.employee_id, mongo)
+        except Exception as e:
+            print(f"Baseline calculation warning ({emp.employee_id}): {e}")
 
-    # 4. Update behavioral baselines in MongoDB for the target employee
-    try:
-        calculate_all_baselines_for_employee(emp.employee_id, mongo)
-    except Exception as e:
-        print(f"Baseline calculation warning: {e}")
+        # 5. Calculate 5-factor risk and persist daily RiskSnapshot in PostgreSQL
+        try:
+            from app.risk_scoring import record_daily_risk_snapshot
+            record_daily_risk_snapshot(emp.employee_id, db=db, mongo=mongo)
+        except Exception as e:
+            print(f"Risk snapshot warning ({emp.employee_id}): {e}")
 
-    # 5. Run Isolation Forest Machine Learning model inference across database data
-    created_role_alerts = [
-        {
+        alert_item = {
             "id": new_alert.id,
             "employee_code": emp.employee_id,
             "employee_name": emp.name,
             "department": emp.department,
-            "severity": severity,
+            "severity": vec["severity"],
             "message": new_alert.message,
             "status": new_alert.status,
-            "target_role": target_role,
-            "target_role_title": target_role_title,
-            "recommended_action": recommended_action,
-            "is_primary": True,
+            "target_role": vec["target_role"],
+            "target_role_title": vec["target_role_title"],
+            "recommended_action": vec["recommended_action"],
+            "is_primary": is_primary,
         }
-    ]
+        created_role_alerts.append(alert_item)
 
+        if is_primary:
+            primary_alert_id = new_alert.id
+            primary_incident_id = new_incident.id
+            primary_incident_title = incident_title
+            primary_log_id = str(mongo_res.inserted_id)
+            primary_emp_id = emp.employee_id
+            primary_emp_name = emp.name
+            primary_department = emp.department
+            primary_severity = vec["severity"]
+            primary_alert_message = new_alert.message
+            primary_target_role = vec["target_role"]
+            primary_target_role_title = vec["target_role_title"]
+            primary_recommended_action = vec["recommended_action"]
+
+    # 6. Run Isolation Forest Machine Learning model inference across full database
     try:
-        report = get_enriched_anomaly_report(mongo=mongo, force_retrain=True)
+        report = get_enriched_anomaly_report(mongo=mongo, force_retrain=False)
         flagged = report.get("flagged_employees", [])
 
+        simulated_codes = {v["default_emp"] for v in ALL_THREAT_VECTORS}
         for item in flagged:
             emp_code = item.get("employee_id")
-            if emp_code == emp.employee_id:
-                continue  # already created primary alert
+            if emp_code in simulated_codes:
+                continue
 
             emp_record = db.query(Employee).filter(Employee.employee_id == emp_code).first()
             if not emp_record:
@@ -445,21 +570,30 @@ def simulate_threat_event(
     except Exception as e:
         print(f"ML evaluation warning: {e}")
 
+    # Synchronize all daily risk snapshots across all departments and employees
+    try:
+        from app.risk_scoring import record_all_daily_risk_snapshots
+        record_all_daily_risk_snapshots(db=db, mongo=mongo)
+    except Exception as e:
+        print(f"Organization risk snapshot synchronization warning: {e}")
+
     total_logs = mongo["activity_logs"].count_documents({})
     total_baselines = mongo["behavioral_baselines"].count_documents({})
 
     return {
-        "message": f"Real-time threat simulated successfully for {emp.name} ({emp.employee_id}). AI risk analysis evaluated and alerts dispatched to target personas.",
-        "alert_id": new_alert.id,
-        "log_id": str(mongo_res.inserted_id),
-        "employee_id": emp.employee_id,
-        "employee_name": emp.name,
-        "department": emp.department,
-        "severity": severity,
-        "alert_message": new_alert.message,
-        "target_role": target_role,
-        "target_role_title": target_role_title,
-        "recommended_action": recommended_action,
+        "message": f"Real-time multi-vector threat simulated successfully. AI risk analysis evaluated and all 4 operational dashboards populated.",
+        "alert_id": primary_alert_id,
+        "incident_id": primary_incident_id,
+        "incident_title": primary_incident_title,
+        "log_id": primary_log_id,
+        "employee_id": primary_emp_id,
+        "employee_name": primary_emp_name,
+        "department": primary_department,
+        "severity": primary_severity,
+        "alert_message": primary_alert_message,
+        "target_role": primary_target_role,
+        "target_role_title": primary_target_role_title,
+        "recommended_action": primary_recommended_action,
         "timestamp": now.isoformat(),
         "created_alerts": created_role_alerts,
         "total_activity_logs": total_logs,
@@ -474,20 +608,49 @@ def reset_simulation(
     user=Depends(require_role("admin", "soc_engineer", "security_analyst", "security_manager")),
 ):
     """
-    Resets simulated threat state and clears active alerts so all 4 dashboards return to empty standby.
+    Resets simulated threat state, clears simulation telemetry, alerts, and incidents,
+    re-computes clean baselines and nominal risk snapshots.
     """
     try:
+        db.query(InvestigationNote).delete()
         db.query(Alert).delete()
+        db.query(Incident).delete()
+        db.query(RiskSnapshot).delete()
         db.commit()
     except Exception as e:
         db.rollback()
-        print(f"Alert reset error: {e}")
+        print(f"Alert/Incident/RiskSnapshot reset error: {e}")
+
+    try:
+        # Delete simulated logs from MongoDB
+        mongo["activity_logs"].delete_many({
+            "$or": [
+                {"is_simulation": True},
+                {"details.risk_flag": {"$in": [
+                    "mass_usb_exfiltration",
+                    "unauthorized_sudo_escalation",
+                    "off_hours_brute_force_attack",
+                    "bulk_egress_exfiltration",
+                    "critical_exfiltration",
+                    "unauthorized_sudo",
+                    "brute_force_attack",
+                ]}},
+            ]
+        })
+        # Recalculate clean baselines
+        calculate_all_system_baselines(mongo)
+        # Refresh risk snapshots for all employees to nominal baseline
+        from app.risk_scoring import record_all_daily_risk_snapshots
+        record_all_daily_risk_snapshots(db=db, mongo=mongo)
+    except Exception as e:
+        print(f"Simulation telemetry clean error: {e}")
 
     return {
-        "message": "Simulation reset successfully. Dashboards returned to empty standby state.",
+        "message": "Simulation reset successfully. Dashboards returned to clean standby state.",
         "status": "RESET_COMPLETE",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
 
 
 @router.get("/live-stream")
@@ -662,15 +825,121 @@ def get_anomaly_stats(
     distinct_emps_baselined = len(mongo["behavioral_baselines"].distinct("employee_id"))
 
     ml_report = get_enriched_anomaly_report(mongo=mongo)
+    sim_logs_count = mongo["activity_logs"].count_documents({"is_simulation": True})
+    flagged_threats = ml_report.get("flagged_count", 0) if sim_logs_count > 0 else 0
 
     return {
         "total_activity_logs": total_logs,
         "total_baselines_calculated": total_baselines,
         "monitored_employees": distinct_emps_logged,
         "baselined_employees": distinct_emps_baselined,
-        "ml_flagged_threats": ml_report.get("flagged_count", 0),
+        "ml_flagged_threats": flagged_threats,
         "indicators_tracked": DEFAULT_FEATURE_NAMES,
         "ml_model_type": "Isolation Forest (15-Indicator Ensemble)",
         "contamination_rate": 0.15,
         "z_score_threshold": 2.5,
+    }
+
+
+@router.get("/trend")
+def get_anomalies_trend(
+    days: int = Query(7, ge=1, le=30),
+    db: Session = Depends(get_db),
+    mongo: Database = Depends(get_mongo_db),
+    user=Depends(require_role("admin", "security_analyst", "soc_engineer", "security_manager")),
+):
+    """
+    Aggregates real security anomaly and telemetry activity information by calendar day.
+    Queries actual stored Alerts from PostgreSQL and Activity Logs from MongoDB.
+    Returns daily breakdown of total anomalies, rule anomalies, ML anomalies, severity levels,
+    and total activity logs.
+    """
+    today = datetime.now(timezone.utc).date()
+    start_date = today - timedelta(days=days - 1)
+    start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_dt = datetime.combine(today + timedelta(days=1), datetime.min.time()).replace(tzinfo=timezone.utc)
+
+    # 1. Fetch real alerts within the date range from PostgreSQL
+    alerts = (
+        db.query(Alert)
+        .filter(Alert.created_at >= start_dt, Alert.created_at < end_dt)
+        .all()
+    )
+
+    # Group alerts by calendar date string (YYYY-MM-DD)
+    alerts_by_date: Dict[str, List[Alert]] = {}
+    for a in alerts:
+        if a.created_at:
+            dt = a.created_at
+            d_str = dt.strftime("%Y-%m-%d") if hasattr(dt, "strftime") else str(dt)[:10]
+            if d_str not in alerts_by_date:
+                alerts_by_date[d_str] = []
+            alerts_by_date[d_str].append(a)
+
+    # 2. Fetch activity logs count by day from MongoDB using real aggregation
+    log_counts_by_date: Dict[str, int] = {}
+    try:
+        pipeline = [
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_dt, "$lt": end_dt}
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}
+                    },
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        agg_results = list(mongo["activity_logs"].aggregate(pipeline))
+        for item in agg_results:
+            d_key = item.get("_id")
+            if d_key:
+                log_counts_by_date[d_key] = item.get("count", 0)
+    except Exception as e:
+        print(f"[get_anomalies_trend] Mongo aggregation warning: {e}")
+
+    # Build chronological daily trend for the requested number of days
+    trend = []
+    total_anomalies_sum = 0
+
+    for offset in range(days - 1, -1, -1):
+        target_d = today - timedelta(days=offset)
+        d_str = target_d.strftime("%Y-%m-%d")
+        day_label = target_d.strftime("%a")
+
+        day_alerts = alerts_by_date.get(d_str, [])
+        crit = sum(1 for a in day_alerts if (a.severity or "").upper() == "CRITICAL")
+        high = sum(1 for a in day_alerts if (a.severity or "").upper() == "HIGH")
+        med = sum(1 for a in day_alerts if (a.severity or "").upper() == "MEDIUM")
+        low = sum(1 for a in day_alerts if (a.severity or "").upper() == "LOW")
+
+        ml_count = sum(1 for a in day_alerts if "[ML" in (a.message or "") or (a.details and "ML" in a.details))
+        rule_count = len(day_alerts) - ml_count
+        day_total = len(day_alerts)
+        total_anomalies_sum += day_total
+
+        day_logs = log_counts_by_date.get(d_str, 0)
+
+        trend.append({
+            "date": d_str,
+            "day": day_label,
+            "total_anomalies": day_total,
+            "rule_anomalies": rule_count,
+            "ml_anomalies": ml_count,
+            "critical": crit,
+            "high": high,
+            "medium": med,
+            "low": low,
+            "total_activity_logs": day_logs,
+        })
+
+    return {
+        "days": days,
+        "total_anomalies": total_anomalies_sum,
+        "has_data": total_anomalies_sum > 0 or any(t["total_activity_logs"] > 0 for t in trend),
+        "trend": trend,
     }

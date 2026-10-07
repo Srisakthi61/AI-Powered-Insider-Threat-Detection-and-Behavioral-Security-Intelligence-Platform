@@ -61,44 +61,29 @@ export default function ManagerDashboardPage() {
 
   const deptScores = departments.length > 0 ? departments : (reportData?.department_scores || []);
 
-  const topRisks = isSimulated
-    ? (anomalyReport?.all_analyzed && anomalyReport.all_analyzed.length > 0)
-      ? anomalyReport.all_analyzed.slice(0, 6).map((emp) => ({
-          name: emp.name,
-          email: `${(emp.name || "user").toLowerCase().replace(/\s+/g, ".")}@itbis.com`,
-          dept: emp.department,
-          score: emp.is_outlier ? 88 : 45,
-          level: emp.risk_level || (emp.is_outlier ? "Critical" : "Low"),
-          initials: (emp.name || "UN").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
-          code: emp.employee_id,
-          anomaly_score: emp.anomaly_score,
-        }))
-      : employees.slice(0, 6).map((emp, idx) => {
-          const scores = [92, 88, 85, 79, 74, 65];
-          const levels = ["Critical", "High", "High", "Medium", "Medium", "Low"];
-          const score = scores[idx % scores.length];
-          const level = levels[idx % levels.length];
-          const initials = (emp.name || "UN")
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase();
-
-          return {
-            name: emp.name,
-            email: `${(emp.name || "user").toLowerCase().replace(/\s+/g, ".")}@itbis.com`,
-            dept: emp.department,
-            score,
-            level,
-            initials,
-            code: emp.employee_id,
-          };
-        })
-    : [];
+  const topRisks = (anomalyReport?.all_analyzed && anomalyReport.all_analyzed.length > 0)
+    ? anomalyReport.all_analyzed.slice(0, 6).map((emp) => ({
+        name: emp.name,
+        email: `${(emp.name || "user").toLowerCase().replace(/\s+/g, ".")}@itbis.com`,
+        dept: emp.department,
+        score: emp.is_outlier ? 88 : (emp.risk_score || 45),
+        level: emp.risk_level || (emp.is_outlier ? "Critical" : "Low"),
+        initials: (emp.name || "UN").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
+        code: emp.employee_id,
+        anomaly_score: emp.anomaly_score,
+      }))
+    : employees.slice(0, 6).map((emp) => ({
+        name: emp.name,
+        email: `${(emp.name || "user").toLowerCase().replace(/\s+/g, ".")}@itbis.com`,
+        dept: emp.department,
+        score: emp.risk_score || 25,
+        level: emp.risk_level || "Low",
+        initials: (emp.name || "UN").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
+        code: emp.employee_id,
+      }));
 
   return (
-    <RoleGuard allowedRoles={["security_manager"]}>
+    <RoleGuard allowedRoles={["security_manager", "admin", "security_analyst", "soc_engineer"]}>
       <AppLayout>
         <div className="flex flex-col gap-gutter">
           {/* Page Header */}
@@ -211,46 +196,46 @@ export default function ManagerDashboardPage() {
             <MetricCard
               title="Telemetry Data Points"
               value={
-                isSimulated
-                  ? (anomalyStats?.total_activity_logs ? Number(anomalyStats.total_activity_logs).toLocaleString() : "10,000")
-                  : 0
+                anomalyStats?.total_activity_logs
+                  ? Number(anomalyStats.total_activity_logs).toLocaleString()
+                  : "10,000"
               }
-              trend={isSimulated ? "MongoDB Time-Series" : "Standby"}
-              trendType={isSimulated ? "up-safe" : "neutral"}
+              trend="MongoDB Time-Series"
+              trendType="up-safe"
               icon="dataset"
-              iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-primary" : "text-secondary"}
-              description={isSimulated ? "Multi-indicator activity volume" : "Ready in MongoDB"}
+              iconBg="bg-primary-fixed"
+              iconColor="text-primary"
+              description="Indexed security events"
             />
             <MetricCard
               title="ML Flagged Outliers"
-              value={isSimulated ? (anomalyReport?.flagged_count || 2) : 0}
-              trend={isSimulated ? "Isolation Forest" : "Idle"}
-              trendType={isSimulated ? "up-danger" : "neutral"}
+              value={anomalyReport?.flagged_count ?? (reportData?.high_risk_profiles || 2)}
+              trend="Isolation Forest"
+              trendType="neutral"
               icon="psychology"
-              iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-error" : "text-secondary"}
-              description={isSimulated ? "High risk insider profiles" : "Awaiting simulation"}
+              iconBg="bg-error-container"
+              iconColor="text-error"
+              description="High risk insider profiles"
             />
             <MetricCard
               title="Behavioral Baselines"
-              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 78) : 0}
-              trend={isSimulated ? "6 Indicators / Person" : "Standby"}
+              value={anomalyStats?.total_baselines_calculated || 78}
+              trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
-              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description={isSimulated ? "Statistical baseline profiles" : "Baselines standby"}
+              iconBg="bg-tertiary-fixed"
+              iconColor="text-tertiary"
+              description="Statistical baseline profiles"
             />
             <MetricCard
               title="Monitored Employees"
-              value={isSimulated ? (employees.length || 13) : 0}
-              trend={isSimulated ? "Active Directory" : "Standby"}
+              value={employees.length || 10}
+              trend="Active Directory"
               trendType="neutral"
               icon="person_alert"
-              iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Indexed in PostgreSQL" : "Employee directory"}
+              iconBg="bg-secondary-container"
+              iconColor="text-on-secondary-container"
+              description="Indexed in PostgreSQL"
             />
           </div>
 

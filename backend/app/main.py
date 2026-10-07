@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine, Base
+from app.database import engine, Base, init_db
 import app.models  # Register SQLAlchemy models with Base metadata
 from app.routes.auth_routes import router as auth_router
 from app.routes.admin_routes import router as admin_router
@@ -10,12 +10,12 @@ from app.routes.log_routes import router as log_router
 from app.routes.report_routes import router as report_router
 from app.routes.alert_routes import router as alert_router
 from app.routes.anomaly_routes import router as anomaly_router
+from app.routes.incident_routes import router as incident_router
+from app.routes.ueba_routes import router as ueba_router
+from app.routes.dashboard_routes import router as dashboard_router
 
-# Create database tables if database connection is available
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception:
-    pass
+# Ensure database tables and columns are initialized
+init_db()
 
 app = FastAPI(
     title="ITBIS API",
@@ -46,6 +46,10 @@ app.include_router(log_router, prefix="/logs", tags=["Logs"])
 app.include_router(report_router, prefix="/reports", tags=["Reports"])
 app.include_router(alert_router, prefix="/alerts", tags=["Alerts"])
 app.include_router(anomaly_router, prefix="/anomalies", tags=["Behavioral Anomalies"])
+app.include_router(incident_router, prefix="/incidents", tags=["Threat Incidents & Investigations"])
+app.include_router(ueba_router, prefix="/ueba", tags=["UEBA & Risk Scoring"])
+app.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboards"])
+
 
 
 @app.get("/")

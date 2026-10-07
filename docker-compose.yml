@@ -1,0 +1,105 @@
+version: '3.8'
+
+# ==============================================================================
+# ITBIS - Insider Threat Behavioral Intelligence System
+# Multi-Container Production Docker Compose Configuration
+# Services:
+#   1. postgres (Relational DB - ACID metadata, users, employees, alerts, incidents)
+#   2. mongo    (Document DB - High-throughput telemetry & behavioral baselines)
+#   3. backend  (FastAPI Python 3.12 + ML Engine & UEBA Profiler)
+#   4. frontend (Next.js 16 + React 19 + Tailwind CSS Dashboard)
+# ==============================================================================
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: itbis-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-itbis}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-itbis}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - itbis-network
+
+  mongo:
+    image: mongo:6.0
+    container_name: itbis-mongo
+    restart: always
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - itbis-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: itbis-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-itbis}
+      MONGO_URL: mongodb://mongo:27017/${MONGO_DB:-itbis}
+      SECRET_KEY: ${SECRET_KEY:-itbis-production-super-secret-key-2026-ueba-platform}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - itbis-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: itbis-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8000}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - itbis-network
+
+volumes:
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+
+networks:
+  itbis-network:
+    driver: bridge

@@ -1,8 +1,8 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Employee
+from app.database import get_db, get_mongo_db
+from app.models import Employee, Alert, Incident, InvestigationNote, RiskSnapshot
 from app.schemas import (
     EmployeeCreate,
     EmployeeUpdate,
@@ -162,3 +162,64 @@ def update_employee(
     db.commit()
     db.refresh(employee)
     return employee
+
+
+@router.delete("/{employee_id}", status_code=status.HTTP_200_OK)
+def delete_employee(
+    employee_id: str,
+    db: Session = Depends(get_db),
+    mongo=Depends(get_mongo_db),
+    current_user: dict = Depends(require_role("admin")),
+):
+    """
+    Delete a monitored employee and safely handle all related data.
+    Restricted to 'admin' role only.
+    """
+    employee = db.query(Employee).filter(Employee.employee_id == employee_id).first()
+    if not employee:
+        try:
+            nid = int(employee_id)
+            employee = db.query(Employee).filter(Employee.id == nid).first()
+        except (ValueError, TypeError):
+            pass
+
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found",
+        )
+
+    emp_id = employee.id
+    emp_code = employee.employee_id
+
+    # 1. Nullify manager references in subordinates
+    db.query(Employee).filter(Employee.manager_id == emp_id).update({Employee.manager_id: None})
+
+    # 2. Safely remove linked alerts
+    db.query(Alert).filter(Alert.employee_id == emp_id).delete()
+
+    # 3. Safely remove linked incidents and notes
+    emp_incidents = db.query(Incident).filter(Incident.employee_id == emp_id).all()
+    for inc in emp_incidents:
+        db.query(InvestigationNote).filter(InvestigationNote.incident_id == inc.id).delete()
+        db.delete(inc)
+
+    # 4. Remove risk snapshots
+    db.query(RiskSnapshot).filter(RiskSnapshot.employee_id == emp_id).delete()
+
+    # 5. Delete employee record from PostgreSQL
+    db.delete(employee)
+    db.commit()
+
+    # 6. Clean up MongoDB activity logs and behavioral baselines
+    try:
+        if mongo is not None:
+            mongo["activity_logs"].delete_many({"employee_id": {"$in": [emp_id, emp_code, str(emp_id), str(emp_code)]}})
+            mongo["behavioral_baselines"].delete_many({"employee_id": {"$in": [emp_id, emp_code, str(emp_id), str(emp_code)]}})
+    except Exception as e:
+        print(f"[delete_employee] Mongo cleanup warning: {e}")
+
+    return {
+        "message": f"Employee '{emp_code}' and associated data successfully deleted.",
+        "employee_id": emp_code,
+    }

@@ -8,7 +8,7 @@ import { alertApi, anomalyApi } from "../lib/api";
 import { useSimulation } from "../context/SimulationContext";
 
 export default function AlertsPage() {
-  const { isSimulated, openSimModal, resetSimulation } = useSimulation();
+  const { isSimulated, resetSimulation } = useSimulation();
   const [filterPriority, setFilterPriority] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [filterTargetRole, setFilterTargetRole] = useState("ALL");
@@ -122,29 +122,6 @@ export default function AlertsPage() {
                 Reset
               </button>
             )}
-
-            {/* Generate ML Alerts Button */}
-            <button
-              onClick={handleRunMlAlertGenerator}
-              disabled={mlGenerating}
-              className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-primary-container transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
-            >
-              <span className={`material-symbols-outlined text-[16px] ${mlGenerating ? "animate-spin" : ""}`}>
-                {mlGenerating ? "sync" : "psychology"}
-              </span>
-              <span>{mlGenerating ? "Scanning Model..." : "Run ML Alert Generator"}</span>
-            </button>
-
-            {/* Simulate Threat Button */}
-            <button
-              onClick={openSimModal}
-              className="bg-error-container text-error hover:bg-red-200 border border-error/30 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[16px] animate-pulse">
-                crisis_alert
-              </span>
-              <span>Simulate Threat Event</span>
-            </button>
           </div>
         </div>
 
@@ -252,7 +229,7 @@ export default function AlertsPage() {
 
           {/* Target Stakeholder Role */}
           <div className="flex items-center gap-1.5">
-            <span className="text-secondary text-[11px]">Target Persona:</span>
+            <span className="text-secondary text-[11px]">Recommended Responder:</span>
             {[
               { id: "ALL", label: "All Roles" },
               { id: "soc_engineer", label: "SOC Engineer" },
@@ -283,7 +260,7 @@ export default function AlertsPage() {
                 <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps text-[10px]">
                   <th className="p-3 pl-4 font-semibold">Priority</th>
                   <th className="p-3 font-semibold">Message &amp; Root Cause</th>
-                  <th className="p-3 font-semibold">Target Persona</th>
+                  <th className="p-3 font-semibold">Recommended Responder</th>
                   <th className="p-3 font-semibold">Employee / Dept</th>
                   <th className="p-3 font-semibold">Status</th>
                   <th className="p-3 pr-4 font-semibold text-right">Actions</th>
@@ -307,7 +284,7 @@ export default function AlertsPage() {
                         </span>
                         <h4 className="font-bold text-xs text-on-surface">No Alerts in Queue</h4>
                         <p className="text-[11px] text-secondary">
-                          No alerts matching your criteria. Click "Simulate Threat Event" to trigger an AI threat scenario.
+                          No alerts matching your criteria. Use "Simulate Threat" in the top navigation bar to trigger a threat scenario.
                         </p>
                       </div>
                     </td>
@@ -422,7 +399,7 @@ export default function AlertsPage() {
                   <p className="text-on-surface">{selectedAlert.department || "General"}</p>
                 </div>
                 <div>
-                  <span className="font-bold text-secondary">Target Stakeholder Role:</span>
+                  <span className="font-bold text-secondary">Recommended Responder:</span>
                   <p className="text-primary font-bold">{selectedAlert.target_role_title || "Security Analyst"}</p>
                 </div>
                 <div>

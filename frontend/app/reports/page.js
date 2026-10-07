@@ -12,6 +12,7 @@ export default function ReportsPage() {
   const { user } = useAuth();
   const [reportResponse, setReportResponse] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchReport = async () => {
@@ -32,20 +33,75 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReport();
+
+    const handleThreatSimulated = () => fetchReport();
+    const handleReset = () => fetchReport();
+
+    window.addEventListener("threat-simulated", handleThreatSimulated);
+    window.addEventListener("simulation-reset", handleReset);
+
+    return () => {
+      window.removeEventListener("threat-simulated", handleThreatSimulated);
+      window.removeEventListener("simulation-reset", handleReset);
+    };
   }, [user]);
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const csvData = await reportApi.exportCsv();
+      const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ITBIS_Threat_Risk_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Export CSV failed:", err);
+      alert("Failed to download CSV export.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      await reportApi.exportExcel();
+    } catch (err) {
+      console.error("Export Excel failed:", err);
+      alert(err.response?.data?.detail || "Failed to download Excel report.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      await reportApi.exportPdf();
+    } catch (err) {
+      console.error("Export PDF failed:", err);
+      alert(err.response?.data?.detail || "Failed to download PDF report.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const complianceSections = reportResponse?.compliance_sections || [
     {
       title: "Data Exfiltration Controls (NIST SP 800-53)",
       score: "94% Compliant",
       status: "healthy",
-      findings: "Automated USB telemetry and bulk egress detection active across all endpoints.",
+      findings: "Automated USB telemetry, file download audits, and bulk egress detection active.",
     },
     {
       title: "Access Privileges & Identity Governance (ISO 27001)",
       score: "88% Compliant",
       status: "healthy",
-      findings: "Least privilege enforcement verified in PostgreSQL ACID store.",
+      findings: "Least privilege enforcement and RBAC verified in PostgreSQL ACID store.",
     },
     {
       title: "Behavioral Deviation Baselines (SOC 2 Type II)",
@@ -56,120 +112,150 @@ export default function ReportsPage() {
   ];
 
   return (
-    <RoleGuard allowedRoles={["admin", "security_manager"]}>
+    <RoleGuard allowedRoles={["admin", "security_manager", "soc_engineer", "security_analyst"]}>
       <AppLayout>
-      <div className="flex flex-col gap-gutter">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">
-          <div>
-            <h1 className="font-page-title text-page-title text-on-surface font-bold">
-              Organization Risk Posture & Compliance Reports
-            </h1>
-            <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-              Strategic risk assessments, regulatory compliance scoring, and executive summaries from database.
-            </p>
-          </div>
-          <button
-            onClick={() => alert("Downloading Executive Risk Intelligence PDF...")}
-            className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs self-start cursor-pointer active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
-            Export PDF Report
-          </button>
-        </div>
+        <div className="flex flex-col gap-gutter">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-2xl">
+                  summarize
+                </span>
+                <h1 className="font-page-title text-page-title text-on-surface font-bold">
+                  Organization Risk Posture & Compliance Intelligence
+                </h1>
+              </div>
+              <p className="text-secondary text-xs mt-0.5">
+                Strategic insider threat posture assessments, regulatory compliance scoring, and executive audit exports.
+              </p>
+            </div>
 
-        {/* Access Status Banner */}
-        {error ? (
-          <div className="p-3 bg-error-container text-on-error-container rounded-xl border border-error/20 text-xs flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-error">
-              lock
-            </span>
-            <span>{error}</span>
-          </div>
-        ) : (
-          <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm text-emerald-600">
-                verified_user
+              <button
+                onClick={handleExportCsv}
+                disabled={exporting}
+                className="bg-surface-container-high border border-outline-variant text-on-surface px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  download
+                </span>
+                Export CSV
+              </button>
+              {(user?.role === "admin" || user?.role === "security_manager") && (
+                <>
+                  <button
+                    onClick={handleExportExcel}
+                    disabled={exporting}
+                    className="bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-800 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                    title="Download official Excel insider threat intelligence report"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">table_view</span>
+                    Download Excel
+                  </button>
+                  <button
+                    onClick={handleExportPdf}
+                    disabled={exporting}
+                    className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                    title="Download official PDF insider threat intelligence report"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                    Download PDF
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Access Status Banner */}
+          {error ? (
+            <div className="p-3 bg-error-container text-on-error-container rounded-xl border border-error/20 text-xs flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm text-error">
+                lock
               </span>
-              <span>
-                Authorized via Role: <strong>{user?.role}</strong> (FastAPI /reports/risk-posture)
+              <span>{error}</span>
+            </div>
+          ) : (
+            <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-emerald-600">
+                  verified_user
+                </span>
+                <span>
+                  Authorized via Role: <strong>{user?.role || "Security Officer"}</strong> (FastAPI /reports/risk-posture)
+                </span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+                Live Data Synchronized
               </span>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-              ACID Verified
-            </span>
-          </div>
-        )}
+          )}
 
-        {/* KPI Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-gutter">
-          <MetricCard
-            title="Composite Security Index"
-            value={`${reportResponse?.org_risk_score || 72} / 100`}
-            trend="Calculated"
-            trendType="neutral"
-            icon="verified_user"
-            iconBg="bg-primary-fixed"
-            iconColor="text-primary"
-            description="Weighted risk formula across all nodes"
-          />
-          <MetricCard
-            title="Monitored Assets"
-            value={reportResponse?.total_assets || "21"}
-            trend="Active in DB"
-            trendType="neutral"
-            icon="timer"
-            iconBg="bg-emerald-100"
-            iconColor="text-emerald-700"
-            description="PostgreSQL employees store"
-          />
-          <MetricCard
-            title="Critical Open Incidents"
-            value={reportResponse?.critical_alerts ?? 3}
-            trend="Action Req."
-            trendType="up-danger"
-            icon="bolt"
-            iconBg="bg-secondary-container"
-            iconColor="text-on-secondary-container"
-            description="Triage lifecycle in progress"
-          />
-        </div>
-
-        {/* Compliance Evaluation Breakdown */}
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs">
-          <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
-            <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-              Regulatory Compliance Posture Breakdown
-            </h2>
-            <span className="text-[11px] text-secondary">Updated from database</span>
+          {/* KPI Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-gutter">
+            <MetricCard
+              title="Composite Organization Risk Index"
+              value={`${reportResponse?.org_risk_score ?? 0} / 100`}
+              trend="5-Factor Model Average"
+              trendType="neutral"
+              icon="verified_user"
+              accentColor="#0284c7"
+              description="Mean weighted risk score across all monitored personnel"
+            />
+            <MetricCard
+              title="Monitored Endpoint Personnel"
+              value={reportResponse?.total_assets ?? reportResponse?.total_employees ?? 13}
+              trend="PostgreSQL Directory"
+              trendType="neutral"
+              icon="group"
+              accentColor="#16a34a"
+              description="Entities tracked across identity and MongoDB event stores"
+            />
+            <MetricCard
+              title="Active Critical Alerts & Cases"
+              value={reportResponse?.critical_alerts ?? 0}
+              trend={reportResponse?.critical_alerts > 0 ? "Requires Review" : "Queue Clear"}
+              trendType={reportResponse?.critical_alerts > 0 ? "up-danger" : "neutral"}
+              icon="warning"
+              accentColor="#dc2626"
+              description="High and Critical risk indicators in progress"
+            />
           </div>
 
-          <div className="space-y-3">
-            {complianceSections.map((sec, idx) => (
-              <div
-                key={idx}
-                className="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-3"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-on-surface">
-                      {sec.title}
-                    </span>
-                    <span className="bg-primary-fixed text-primary-container px-2 py-0.5 rounded text-[10px] font-bold">
-                      {sec.score}
-                    </span>
+          {/* Compliance Evaluation Breakdown */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm">
+            <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
+              <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
+                Regulatory Framework Compliance Breakdown
+              </h2>
+              <span className="text-[11px] text-secondary">Verified against dual-database stores</span>
+            </div>
+
+            <div className="space-y-3">
+              {complianceSections.map((sec, idx) => (
+                <div
+                  key={idx}
+                  className="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-3"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-on-surface">
+                        {sec.title}
+                      </span>
+                      <span className="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded text-[10px] font-bold">
+                        {sec.score}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-secondary mt-1">
+                      {sec.findings}
+                    </p>
                   </div>
-                  <p className="text-[11px] text-secondary mt-1">
-                    {sec.findings}
-                  </p>
+                  <RiskBadge status="Passed" level="healthy" />
                 </div>
-                <RiskBadge status="Passed" level="healthy" />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
       </AppLayout>
     </RoleGuard>
   );

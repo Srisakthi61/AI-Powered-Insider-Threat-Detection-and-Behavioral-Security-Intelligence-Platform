@@ -35,7 +35,7 @@ function playAlertChime(isCritical = true) {
 export default function RealtimeAlertNotification({
   alert = null,
   onDismiss = () => {},
-  soundEnabled = true,
+  soundEnabled = false,
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -98,7 +98,7 @@ export default function RealtimeAlertNotification({
           </div>
         </div>
 
-        {/* Message and target persona */}
+        {/* Message and responder */}
         <div className="space-y-1.5">
           <h4 className="font-bold text-sm leading-snug">
             {alert.alert_message || alert.message || "Behavioral Anomaly Triggered"}
@@ -114,7 +114,7 @@ export default function RealtimeAlertNotification({
 
           {/* Stakeholder Target Badge */}
           <div className="mt-2 pt-1 border-t border-white/10 flex items-center justify-between text-[11px]">
-            <span className="text-white/70">Dispatched To:</span>
+            <span className="text-white/70">Recommended Responder:</span>
             <span className="bg-primary-container text-white px-2 py-0.5 rounded font-bold text-[10px] tracking-wide">
               👤 {alert.target_role_title || "Security Analyst"}
             </span>

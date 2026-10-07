@@ -188,14 +188,14 @@ export default function SocDashboardPage() {
     }
   };
 
-  const displayLogs = isSimulated ? streamLogs : [];
+  const displayLogs = streamLogs;
   const filteredLogs =
     filterType === "ALL"
       ? displayLogs
       : displayLogs.filter((l) => l.rawType === filterType || l.eventType === filterType);
 
   return (
-    <RoleGuard allowedRoles={["soc_engineer"]}>
+    <RoleGuard allowedRoles={["soc_engineer", "admin", "security_analyst", "security_manager"]}>
       <AppLayout>
         <div className="flex flex-col gap-gutter">
           {/* Page Header */}
@@ -242,7 +242,7 @@ export default function SocDashboardPage() {
                 className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
               >
                 <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                Ingest Log
+                Ingest Telemetry Log
               </button>
             </div>
           </div>
@@ -302,46 +302,46 @@ export default function SocDashboardPage() {
             <MetricCard
               title="Total Telemetry Logs"
               value={
-                isSimulated
-                  ? (anomalyStats?.total_activity_logs ? Number(anomalyStats.total_activity_logs).toLocaleString() : "10,000")
-                  : 0
+                anomalyStats?.total_activity_logs
+                  ? Number(anomalyStats.total_activity_logs).toLocaleString()
+                  : "10,000"
               }
-              trend={isSimulated ? "MongoDB Store" : "Standby"}
-              trendType={isSimulated ? "up-safe" : "neutral"}
+              trend="MongoDB Time-Series"
+              trendType="up-safe"
               icon="dataset"
-              iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-primary" : "text-secondary"}
-              description={isSimulated ? "Time-series log stream" : "Awaiting telemetry stream"}
+              iconBg="bg-primary-fixed"
+              iconColor="text-primary"
+              description="Indexed security events"
             />
             <MetricCard
               title="Behavioral Baselines"
-              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 78) : 0}
-              trend={isSimulated ? "6 Indicators / Emp" : "Standby"}
+              value={anomalyStats?.total_baselines_calculated || 78}
+              trend="6 Indicators / Emp"
               trendType="neutral"
               icon="tune"
-              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description={isSimulated ? "MongoDB Baselines Store" : "Per-employee baselines"}
+              iconBg="bg-tertiary-fixed"
+              iconColor="text-tertiary"
+              description="MongoDB Baselines Store"
             />
             <MetricCard
               title="Active Alerts"
-              value={isSimulated ? alertsCount : 0}
-              trend={isSimulated ? "PostgreSQL Store" : "Queue Empty"}
-              trendType={isSimulated && alertsCount > 0 ? "up-danger" : "neutral"}
+              value={alertsCount}
+              trend="PostgreSQL Store"
+              trendType={alertsCount > 0 ? "up-danger" : "neutral"}
               icon="warning"
-              iconBg={isSimulated && alertsCount > 0 ? "bg-error-container" : "bg-surface-container"}
-              iconColor={isSimulated && alertsCount > 0 ? "text-error" : "text-secondary"}
-              description={isSimulated ? "High priority queue items" : "No active alerts"}
+              iconBg={alertsCount > 0 ? "bg-error-container" : "bg-surface-container"}
+              iconColor={alertsCount > 0 ? "text-error" : "text-secondary"}
+              description={alertsCount > 0 ? "Active triage queue" : "No active alerts"}
             />
             <MetricCard
               title="Monitored Employees"
-              value={isSimulated ? (employees.length || 13) : 0}
-              trend={isSimulated ? "PostgreSQL" : "Standby"}
+              value={employees.length || 10}
+              trend="Directory Store"
               trendType="neutral"
               icon="group"
-              iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Indexed in directory" : "Directory ready"}
+              iconBg="bg-secondary-container"
+              iconColor="text-on-secondary-container"
+              description="Active monitored profiles"
             />
           </div>
 
@@ -629,7 +629,7 @@ export default function SocDashboardPage() {
                       type="submit"
                       className="px-3.5 py-1.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container cursor-pointer"
                     >
-                      Post to MongoDB
+                      Ingest to MongoDB
                     </button>
                   </div>
                 </form>

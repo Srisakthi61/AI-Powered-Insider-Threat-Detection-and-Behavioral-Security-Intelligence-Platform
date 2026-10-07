@@ -63,17 +63,8 @@ def train_anomaly_model(force_retrain: bool = False, mongo=None) -> pd.DataFrame
     """
     Evaluates / retrains Isolation Forest on 15 behavioral telemetry features.
     Returns DataFrame with employee_id, anomaly_score, is_outlier, threat_rank, risk_tier, target_role.
+    Reuses in-memory model artifact for inference when force_retrain=False.
     """
-    current_time = time.time()
-
-    # Return cached results if valid and not forcing retrain
-    if (
-        not force_retrain
-        and _MODEL_CACHE["results_df"] is not None
-        and (current_time - _MODEL_CACHE["last_trained"] < _MODEL_CACHE["cache_ttl_seconds"])
-    ):
-        return _MODEL_CACHE["results_df"]
-
     df = build_feature_table(mongo)
 
     if df.empty or len(df) == 0:
@@ -122,14 +113,7 @@ def train_anomaly_model(force_retrain: bool = False, mongo=None) -> pd.DataFrame
         except FileNotFoundError:
             return train_anomaly_model(force_retrain=True, mongo=mongo)
 
-    results_df = run_model(df, artifact)
-
-    # Update cache
-    _MODEL_CACHE["last_trained"] = current_time
-    _MODEL_CACHE["results_df"] = results_df
-    _MODEL_CACHE["artifact"] = artifact
-
-    return results_df
+    return run_model(df, artifact)
 
 
 def get_enriched_anomaly_report(mongo=None, force_retrain: bool = False) -> Dict[str, Any]:
@@ -178,7 +162,8 @@ def get_enriched_anomaly_report(mongo=None, force_retrain: bool = False) -> Dict
         record["risk_level"] = record.get("risk_tier", "Normal")
         enriched_records.append(record)
 
-    flagged = [r for r in enriched_records if r.get("is_outlier") is True or r.get("risk_level") in ["Critical", "High"]]
+    flagged = [r for r in enriched_records if r.get("risk_level") in ["Critical", "High"] or r.get("is_outlier") is True or r.get("threat_rank", 999) <= 2]
+
 
     model_meta = {}
     try:

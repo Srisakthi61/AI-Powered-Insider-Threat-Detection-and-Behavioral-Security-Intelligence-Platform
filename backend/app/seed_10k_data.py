@@ -11,7 +11,7 @@ if backend_dir not in sys.path:
 
 from sqlalchemy import text
 from app.database import engine, Base, SessionLocal, get_mongo_db
-from app.models import User, Employee, Alert, Incident
+from app.models import User, Employee, Alert, Incident, InvestigationNote, RiskSnapshot
 from app.security import hash_password
 from app.behavioral_profiling import calculate_all_system_baselines
 from app.ml_anomaly_model import train_anomaly_model, get_enriched_anomaly_report
@@ -42,9 +42,9 @@ EMPLOYEE_PROFILES = [
         "device_info": "HP EliteBook 840, Hostname: FIN-LT-02",
         "access_privileges": "finance_read_only,quickbooks_user",
         "login_mean": 9.00,
-        "login_std": 0.40,
-        "transfer_mean": 15.0,
-        "transfer_std": 5.0,
+        "login_std": 0.35,
+        "transfer_mean": 20.0,
+        "transfer_std": 6.0,
         "is_threat": False,
     },
     {
@@ -54,10 +54,10 @@ EMPLOYEE_PROFILES = [
         "designation": "System Administrator",
         "device_info": "ThinkPad T14, Hostname: IT-LT-01",
         "access_privileges": "domain_admin,cloud_console,ssh_root",
-        "login_mean": 8.50,
+        "login_mean": 8.85,
         "login_std": 0.30,
-        "transfer_mean": 45.0,
-        "transfer_std": 12.0,
+        "transfer_mean": 30.0,
+        "transfer_std": 8.0,
         "is_threat": False,
     },
     {
@@ -67,12 +67,11 @@ EMPLOYEE_PROFILES = [
         "designation": "Network Engineer",
         "device_info": "Dell Precision 5560, Hostname: IT-LT-02",
         "access_privileges": "vpn_admin,firewall_operator",
-        "login_mean": 8.75,
-        "login_std": 0.45,
-        "transfer_mean": 60.0,
-        "transfer_std": 20.0,
-        "is_threat": True,  # Network & VPN anomaly
-        "threat_type": "vpn_anomaly",
+        "login_mean": 8.90,
+        "login_std": 0.35,
+        "transfer_mean": 30.0,
+        "transfer_std": 10.0,
+        "is_threat": False,
     },
     {
         "employee_id": "EMP1005",
@@ -81,10 +80,10 @@ EMPLOYEE_PROFILES = [
         "designation": "Software Architect",
         "device_info": "MacBook Pro 16, Hostname: ENG-MB-01",
         "access_privileges": "git_admin,aws_deployer,prod_db_read",
-        "login_mean": 9.75,
-        "login_std": 0.50,
-        "transfer_mean": 80.0,
-        "transfer_std": 25.0,
+        "login_mean": 9.25,
+        "login_std": 0.35,
+        "transfer_mean": 35.0,
+        "transfer_std": 10.0,
         "is_threat": False,
     },
     {
@@ -96,7 +95,7 @@ EMPLOYEE_PROFILES = [
         "access_privileges": "finance_read_write,payroll_user",
         "login_mean": 9.10,
         "login_std": 0.30,
-        "transfer_mean": 18.0,
+        "transfer_mean": 22.0,
         "transfer_std": 6.0,
         "is_threat": False,
     },
@@ -108,11 +107,10 @@ EMPLOYEE_PROFILES = [
         "device_info": "Dell Precision 5560, Hostname: ENG-LT-02",
         "access_privileges": "prod_cluster_admin,usb_allowed",
         "login_mean": 9.20,
-        "login_std": 0.40,
-        "transfer_mean": 50.0,
-        "transfer_std": 15.0,
-        "is_threat": True,  # High risk: Mass USB exfiltration + off-hours egress
-        "threat_type": "usb_exfiltration",
+        "login_std": 0.35,
+        "transfer_mean": 35.0,
+        "transfer_std": 10.0,
+        "is_threat": False,
     },
     {
         "employee_id": "EMP1008",
@@ -121,12 +119,11 @@ EMPLOYEE_PROFILES = [
         "designation": "Enterprise Account Exec",
         "device_info": "Lenovo Yoga X1, Hostname: SLS-LT-01",
         "access_privileges": "salesforce_admin,crm_export",
-        "login_mean": 9.50,
-        "login_std": 0.60,
-        "transfer_mean": 20.0,
+        "login_mean": 9.15,
+        "login_std": 0.35,
+        "transfer_mean": 25.0,
         "transfer_std": 8.0,
-        "is_threat": True,  # Medium risk: Failed brute-force logins + bulk CRM dumps
-        "threat_type": "brute_force_crm",
+        "is_threat": False,
     },
     {
         "employee_id": "EMP1009",
@@ -135,10 +132,10 @@ EMPLOYEE_PROFILES = [
         "designation": "Content Strategist",
         "device_info": "MacBook Air M2, Hostname: MKT-MB-01",
         "access_privileges": "marketing_cloud,creative_suite",
-        "login_mean": 10.00,
-        "login_std": 0.70,
-        "transfer_mean": 90.0,
-        "transfer_std": 35.0,
+        "login_mean": 9.20,
+        "login_std": 0.35,
+        "transfer_mean": 28.0,
+        "transfer_std": 8.0,
         "is_threat": False,
     },
     {
@@ -148,10 +145,10 @@ EMPLOYEE_PROFILES = [
         "designation": "Talent Acquisition Lead",
         "device_info": "HP EliteBook 840, Hostname: HR-LT-01",
         "access_privileges": "hris_admin,workday_user",
-        "login_mean": 9.00,
-        "login_std": 0.35,
-        "transfer_mean": 12.0,
-        "transfer_std": 4.0,
+        "login_mean": 9.05,
+        "login_std": 0.30,
+        "transfer_mean": 20.0,
+        "transfer_std": 5.0,
         "is_threat": False,
     },
     {
@@ -161,12 +158,11 @@ EMPLOYEE_PROFILES = [
         "designation": "Senior Backend Engineer",
         "device_info": "ThinkPad P1, Hostname: ENG-LT-03",
         "access_privileges": "git_write,k8s_developer",
-        "login_mean": 9.30,
-        "login_std": 0.45,
-        "transfer_mean": 40.0,
-        "transfer_std": 14.0,
-        "is_threat": True,  # High risk: Privilege escalation attempts (unauthorized sudo/root)
-        "threat_type": "privilege_escalation",
+        "login_mean": 9.15,
+        "login_std": 0.35,
+        "transfer_mean": 32.0,
+        "transfer_std": 9.0,
+        "is_threat": False,
     },
     {
         "employee_id": "EMP1012",
@@ -175,10 +171,10 @@ EMPLOYEE_PROFILES = [
         "designation": "Senior DevOps Engineer",
         "device_info": "MacBook Pro 14, Hostname: ENG-MB-04",
         "access_privileges": "ci_cd_admin,docker_registry",
-        "login_mean": 9.25,
-        "login_std": 0.40,
-        "transfer_mean": 110.0,
-        "transfer_std": 40.0,
+        "login_mean": 9.20,
+        "login_std": 0.35,
+        "transfer_mean": 35.0,
+        "transfer_std": 10.0,
         "is_threat": False,
     },
     {
@@ -190,12 +186,13 @@ EMPLOYEE_PROFILES = [
         "access_privileges": "finance_read_write,payroll_read",
         "login_mean": 9.10,
         "login_std": 0.35,
-        "transfer_mean": 30.0,
-        "transfer_std": 10.0,
-        "is_threat": True,  # Critical risk: 3:15 AM off-hours sensitive DB query & payroll export
-        "threat_type": "off_hours_payroll_db",
+        "transfer_mean": 25.0,
+        "transfer_std": 7.0,
+        "is_threat": False,
     },
 ]
+
+
 
 
 def ensure_database_schema():
@@ -209,7 +206,7 @@ def ensure_database_schema():
 
 
 def seed_users():
-    """Seed default administrative & role-specific test users."""
+    """Seed default administrative & role-specific test users, removing any test/ephemeral users."""
     db = SessionLocal()
     try:
         default_users = [
@@ -218,6 +215,10 @@ def seed_users():
             ("soc@itbis.com", "SocPass123!", "soc_engineer"),
             ("manager@itbis.com", "MgrPass123!", "security_manager"),
         ]
+        default_emails = [u[0] for u in default_users]
+
+        # Clean up ephemeral test accounts
+        db.query(User).filter(~User.email.in_(default_emails)).delete(synchronize_session=False)
 
         for email, pwd, role in default_users:
             existing = db.query(User).filter(User.email == email).first()
@@ -228,16 +229,25 @@ def seed_users():
                     role=role,
                 )
                 db.add(user)
+            else:
+                existing.role = role
+                existing.password_hash = hash_password(pwd)
         db.commit()
-        print("[OK] Users verified and seeded in PostgreSQL.")
+        print("[OK] Users verified and seeded in PostgreSQL (4 official users).")
     finally:
         db.close()
 
 
 def seed_employees():
-    """Ensure all official employees exist in PostgreSQL."""
+    """Ensure only official 13 employees exist in PostgreSQL, removing leftover test entities."""
     db = SessionLocal()
     try:
+        valid_emp_ids = [emp["employee_id"] for emp in EMPLOYEE_PROFILES]
+
+        # Remove ephemeral test employees that have no official profile
+        db.query(Employee).filter(~Employee.employee_id.in_(valid_emp_ids)).delete(synchronize_session=False)
+        db.commit()
+
         for emp_data in EMPLOYEE_PROFILES:
             existing = db.query(Employee).filter(Employee.employee_id == emp_data["employee_id"]).first()
             if not existing:
@@ -469,8 +479,8 @@ def generate_10000_activity_logs() -> List[Dict[str, Any]]:
                     details = {
                         "device_name": "Corporate Encrypted Key 16GB",
                         "vendor_id": "0930",
-                        "transferred_mb": round(random.uniform(5.0, 45.0), 2),
-                        "file_count": random.randint(1, 5)
+                        "transferred_mb": round(random.uniform(1.0, 15.0), 2),
+                        "file_count": random.randint(1, 3)
                     }
                 else:
                     details = {"action": "standard_event"}
@@ -493,84 +503,16 @@ def generate_10000_activity_logs() -> List[Dict[str, Any]]:
     return logs
 
 
-def seed_alerts_in_postgres():
-    """Seed comprehensive security alerts matching the generated anomalies."""
+def seed_clean_state_in_postgres():
+    """Ensure PostgreSQL starts completely clean: 0 alerts, 0 incidents, 0 notes, 0 stale risk snapshots."""
     db = SessionLocal()
     try:
-        # Clear old alerts to ensure clean state
+        db.query(InvestigationNote).delete()
         db.query(Alert).delete()
+        db.query(Incident).delete()
+        db.query(RiskSnapshot).delete()
         db.commit()
-
-        def get_emp(emp_code):
-            return db.query(Employee).filter(Employee.employee_id == emp_code).first()
-
-        analyst_user = db.query(User).filter(User.role == "security_analyst").first()
-        analyst_id = analyst_user.id if analyst_user else None
-
-        alerts_to_seed = [
-            {
-                "emp_code": "EMP1007",
-                "severity": "Critical",
-                "message": "Mass USB Data Exfiltration Detected",
-                "status": "UNASSIGNED",
-                "details": "Transferred 6,840 MB to external USB storage drive. Destination volume: SanDisk_Extreme_128G. 340 source code and architecture artifacts copied.",
-                "recommended_action": "Immediately revoke USB write permissions, disconnect endpoint from network, and freeze active Active Directory session.",
-                "assigned_to": None,
-            },
-            {
-                "emp_code": "EMP1013",
-                "severity": "Critical",
-                "message": "Off-hours Sensitive DB & Payroll Query",
-                "status": "INVESTIGATING",
-                "details": "Direct SQL query executed on payroll_2026 table at 03:15 AM from residential IP subnet (203.0.113.88). High volume data egress (1,240 MB).",
-                "recommended_action": "Contact employee manager to confirm on-call approval; verify MFA telemetry and reset database credentials.",
-                "assigned_to": analyst_id,
-            },
-            {
-                "emp_code": "EMP1011",
-                "severity": "High",
-                "message": "Privilege Escalation Attempt (Unauthorized Sudo)",
-                "status": "INVESTIGATING",
-                "details": "Repeated unauthorized 'sudo -u root /bin/bash' and Kubernetes master clusterrole modifications on prod-k8s-master-01.",
-                "recommended_action": "Review IAM role bindings, lock sudo privileges, and audit SSH session logs.",
-                "assigned_to": analyst_id,
-            },
-            {
-                "emp_code": "EMP1008",
-                "severity": "High",
-                "message": "Brute Force MFA & Bulk CRM Data Export",
-                "status": "INVESTIGATING",
-                "details": "12 failed MFA authentication attempts from unrecognized Linux client (198.51.100.24) followed by 5,000 CRM record export.",
-                "recommended_action": "Force password change, invalidate active refresh tokens, and verify out-of-band identity.",
-                "assigned_to": analyst_id,
-            },
-            {
-                "emp_code": "EMP1004",
-                "severity": "Medium",
-                "message": "Anomalous Extended VPN Session & Archive Egress",
-                "status": "RESOLVED",
-                "details": "Continuous 980-minute VPN tunnel active outside standard shifts with 3.2 GB data egress.",
-                "recommended_action": "Confirmed scheduled overnight network backup maintenance window.",
-                "assigned_to": analyst_id,
-            },
-        ]
-
-        for item in alerts_to_seed:
-            emp = get_emp(item["emp_code"])
-            if emp:
-                new_alert = Alert(
-                    employee_id=emp.id,
-                    severity=item["severity"],
-                    message=item["message"],
-                    status=item["status"],
-                    details=item["details"],
-                    recommended_action=item["recommended_action"],
-                    assigned_to=item["assigned_to"],
-                )
-                db.add(new_alert)
-
-        db.commit()
-        print("[OK] High-fidelity alerts seeded in PostgreSQL.")
+        print("[OK] PostgreSQL alerts, incidents, notes, and risk snapshots cleared (clean standby state).")
     finally:
         db.close()
 
@@ -585,6 +527,7 @@ def run_full_seeding_and_baseline_generation():
     ensure_database_schema()
 
     # 2. Seed Users & Employees in PostgreSQL
+    seed_clean_state_in_postgres()
     seed_users()
     seed_employees()
 
@@ -592,10 +535,12 @@ def run_full_seeding_and_baseline_generation():
     mongo = get_mongo_db()
     logs_col = mongo["activity_logs"]
     baselines_col = mongo["behavioral_baselines"]
+    risk_snapshots_col = mongo["risk_snapshots"]
 
-    print("\n[->] Clearing existing activity_logs & behavioral_baselines collections in MongoDB...")
+    print("\n[->] Clearing existing activity_logs, behavioral_baselines, & risk_snapshots in MongoDB...")
     logs_col.delete_many({})
     baselines_col.delete_many({})
+    risk_snapshots_col.delete_many({})
 
     print("[->] Synthesizing 10,000 realistic multi-indicator activity logs across 60 days...")
     logs = generate_10000_activity_logs()
@@ -632,17 +577,25 @@ def run_full_seeding_and_baseline_generation():
     for flagged in report["flagged_employees"]:
         print(f"   - [Rank #{flagged.get('threat_rank', '?')}] {flagged['employee_id']} ({flagged['name']} - {flagged['department']}): Anomaly Score = {flagged['anomaly_score']:.4f} | Risk = {flagged['risk_level']}")
 
-    # 6. Seed matching alerts in PostgreSQL
-    print("\n[->] Syncing PostgreSQL security alerts...")
-    seed_alerts_in_postgres()
+    # 6. Ensure clean alerts and incidents in PostgreSQL
+    print("\n[->] Syncing clean PostgreSQL security alerts & incidents...")
+    seed_clean_state_in_postgres()
+
+    # 7. Generate clean initial 5-factor risk snapshots
+    print("\n[->] Generating clean initial 5-factor risk snapshots for all employees...")
+    from app.risk_scoring import record_all_daily_risk_snapshots
+    snapshots = record_all_daily_risk_snapshots(mongo=mongo)
+    print(f"[OK] Persisted {len(snapshots)} nominal risk snapshots across organization.")
 
     print("\n" + "=" * 70)
     print("[SUCCESS] MILESTONE 2 SEEDING & BEHAVIORAL BASELINE INITIALIZATION COMPLETE!")
     print(f"  * Total Activity Logs: {total_logs_in_db}")
     print(f"  * Total Baselines Generated: {total_baselines}")
     print(f"  * Flagged ML Threat Profiles: {report['flagged_count']}")
+    print(f"  * Clean Initial Alerts: 0")
     print("=" * 70)
 
 
 if __name__ == "__main__":
     run_full_seeding_and_baseline_generation()
+

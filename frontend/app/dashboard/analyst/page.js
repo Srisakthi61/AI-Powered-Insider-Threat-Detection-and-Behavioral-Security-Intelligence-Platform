@@ -83,14 +83,14 @@ export default function AnalystDashboardPage() {
     }
   };
 
-  const activeAlerts = isSimulated
-    ? alerts.filter((a) => (a.status || "").toUpperCase() !== "RESOLVED")
-    : [];
+  const activeAlerts = alerts.filter(
+    (a) => (a.status || "").toUpperCase() !== "RESOLVED"
+  );
 
-  const displayEvents = isSimulated ? recentEvents : [];
+  const displayEvents = recentEvents;
 
   return (
-    <RoleGuard allowedRoles={["security_analyst"]}>
+    <RoleGuard allowedRoles={["security_analyst", "admin", "soc_engineer", "security_manager"]}>
       <AppLayout>
         <div className="flex flex-col gap-gutter">
           {/* Page Header */}
@@ -208,47 +208,47 @@ export default function AnalystDashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
               title="Open Alerts"
-              value={isSimulated ? activeAlerts.length : 0}
-              trend={isSimulated ? "Active Queue" : "Standby"}
-              trendType={isSimulated && activeAlerts.length > 0 ? "up-danger" : "neutral"}
+              value={activeAlerts.length}
+              trend={activeAlerts.length > 0 ? "Active Queue" : "Standby"}
+              trendType={activeAlerts.length > 0 ? "up-danger" : "neutral"}
               icon="warning"
-              iconBg={isSimulated && activeAlerts.length > 0 ? "bg-error-container" : "bg-surface-container"}
-              iconColor={isSimulated && activeAlerts.length > 0 ? "text-error" : "text-secondary"}
-              description={isSimulated ? "Requires tier-1 triage" : "No active alerts in queue"}
+              iconBg={activeAlerts.length > 0 ? "bg-error-container" : "bg-surface-container"}
+              iconColor={activeAlerts.length > 0 ? "text-error" : "text-secondary"}
+              description={activeAlerts.length > 0 ? "Requires analyst triage" : "No active alerts in queue"}
             />
             <MetricCard
               title="ML Flagged Outliers"
-              value={isSimulated ? (anomalyStats?.ml_flagged_threats || activeAlerts.length || 2) : 0}
-              trend={isSimulated ? "Isolation Forest" : "Idle"}
-              trendType={isSimulated ? "up-danger" : "neutral"}
+              value={anomalyStats?.ml_flagged_threats ?? (activeAlerts.filter(a => (a.severity || "").toUpperCase() === "CRITICAL" || (a.severity || "").toUpperCase() === "HIGH").length || 2)}
+              trend="Isolation Forest"
+              trendType="neutral"
               icon="psychology"
-              iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-error" : "text-secondary"}
-              description={isSimulated ? "Multi-indicator risk vectors" : "Awaiting model inference"}
+              iconBg="bg-error-container"
+              iconColor="text-error"
+              description="15 behavioral risk indicators"
             />
             <MetricCard
               title="Behavioral Baselines"
-              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 78) : 0}
-              trend={isSimulated ? "6 Indicators / Emp" : "Standby"}
+              value={anomalyStats?.total_baselines_calculated || 78}
+              trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
-              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description={isSimulated ? "Mean + std dev profiles" : "Baseline calculation idle"}
+              iconBg="bg-tertiary-fixed"
+              iconColor="text-tertiary"
+              description="Mean & std dev statistical profiles"
             />
             <MetricCard
               title="Total Telemetry Data Points"
               value={
-                isSimulated
-                  ? (anomalyStats?.total_activity_logs ? Number(anomalyStats.total_activity_logs).toLocaleString() : "10,000")
-                  : 0
+                anomalyStats?.total_activity_logs
+                  ? Number(anomalyStats.total_activity_logs).toLocaleString()
+                  : "10,000"
               }
-              trend={isSimulated ? "MongoDB Store" : "Standby"}
-              trendType={isSimulated ? "up-safe" : "neutral"}
+              trend="MongoDB Time-Series"
+              trendType="up-safe"
               icon="dataset"
-              iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Time-series logs" : "Ready in database"}
+              iconBg="bg-secondary-container"
+              iconColor="text-on-secondary-container"
+              description="Indexed security events"
             />
           </div>
 

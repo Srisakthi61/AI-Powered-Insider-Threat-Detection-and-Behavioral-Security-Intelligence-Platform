@@ -9,7 +9,7 @@ if backend_dir not in sys.path:
 
 from sqlalchemy import text
 from app.database import engine, Base, SessionLocal, get_mongo_db
-from app.models import User, Employee, Alert
+from app.models import User, Employee, Alert, Incident, InvestigationNote, RiskSnapshot
 from app.security import hash_password
 
 
@@ -33,6 +33,10 @@ def seed_users():
             ("soc@itbis.com", "SocPass123!", "soc_engineer"),
             ("manager@itbis.com", "MgrPass123!", "security_manager"),
         ]
+        default_emails = [u[0] for u in default_users]
+
+        # Clean up ephemeral test accounts
+        db.query(User).filter(~User.email.in_(default_emails)).delete(synchronize_session=False)
 
         for email, pwd, role in default_users:
             existing = db.query(User).filter(User.email == email).first()
@@ -43,8 +47,11 @@ def seed_users():
                     role=role,
                 )
                 db.add(user)
+            else:
+                existing.role = role
+                existing.password_hash = hash_password(pwd)
         db.commit()
-        print("Successfully seeded platform users.")
+        print("Successfully seeded platform users (4 official users).")
     finally:
         db.close()
 
@@ -210,86 +217,14 @@ def seed_employees():
 
 
 def seed_alerts():
-    """Seed realistic security alerts into PostgreSQL."""
+    """Ensure PostgreSQL starts in clean standby state: 0 alerts, 0 incidents, 0 notes."""
     db = SessionLocal()
     try:
-        existing_alerts = db.query(Alert).all()
-        if len(existing_alerts) >= 5:
-            print(f"Alerts already present ({len(existing_alerts)} alerts found). No duplicates added.")
-            return
-
-        def get_emp(emp_code):
-            return db.query(Employee).filter(Employee.employee_id == emp_code).first()
-
-        analyst_user = db.query(User).filter(User.role == "security_analyst").first()
-        analyst_id = analyst_user.id if analyst_user else None
-
-        alerts_to_seed = [
-            {
-                "emp_code": "EMP1007",
-                "severity": "Critical",
-                "message": "Mass Data Exfiltration Detected",
-                "status": "UNASSIGNED",
-                "details": "Transferred 5.4 GB to external USB storage drive. Destination volume: KINGSTON_64G. Rate: 140 MB/s.",
-                "recommended_action": "Immediately revoke USB write permissions and freeze workstation session.",
-                "assigned_to": None,
-            },
-            {
-                "emp_code": "EMP1013",
-                "severity": "High",
-                "message": "Off-hours Access to Sensitive DB",
-                "status": "INVESTIGATING",
-                "details": "Direct SQL query executed on payroll_2026 table at 03:15 AM from residential IP subnet.",
-                "recommended_action": "Contact employee manager to confirm on-call approval; verify MFA telemetry.",
-                "assigned_to": analyst_id,
-            },
-            {
-                "emp_code": "EMP1011",
-                "severity": "High",
-                "message": "Privilege Escalation Attempt",
-                "status": "INVESTIGATING",
-                "details": "Multiple unauthorized sudo attempts on production Kubernetes cluster master node.",
-                "recommended_action": "Review IAM role bindings and audit SSH session recordings.",
-                "assigned_to": analyst_id,
-            },
-            {
-                "emp_code": "EMP1008",
-                "severity": "Medium",
-                "message": "Multiple Failed Login Attempts",
-                "status": "RESOLVED",
-                "details": "5 consecutive failed logins followed by password reset request from unrecognized IP.",
-                "recommended_action": "Verify identity with user via out-of-band channel.",
-                "assigned_to": analyst_id,
-            },
-            {
-                "emp_code": "EMP1009",
-                "severity": "Low",
-                "message": "Unusual Bulk File Download",
-                "status": "RESOLVED",
-                "details": "Downloaded 400 design assets concurrently. Flagged by volumetric deviation baseline.",
-                "recommended_action": "Confirmed benign campaign launch activity.",
-                "assigned_to": analyst_id,
-            },
-        ]
-
-        for item in alerts_to_seed:
-            emp = get_emp(item["emp_code"])
-            if not emp:
-                emp = db.query(Employee).first()
-            if emp:
-                new_alert = Alert(
-                    employee_id=emp.id,
-                    severity=item["severity"],
-                    message=item["message"],
-                    status=item["status"],
-                    details=item["details"],
-                    recommended_action=item["recommended_action"],
-                    assigned_to=item["assigned_to"],
-                )
-                db.add(new_alert)
-
+        db.query(InvestigationNote).delete()
+        db.query(Alert).delete()
+        db.query(Incident).delete()
         db.commit()
-        print("Successfully seeded security alerts in PostgreSQL.")
+        print("[OK] PostgreSQL alerts, incidents, and notes initialized to clean standby state.")
     finally:
         db.close()
 
@@ -312,12 +247,11 @@ def seed_activity_logs():
                 "event_type": "usb_connect",
                 "timestamp": now - timedelta(minutes=10),
                 "details": {
-                    "device_name": "SanDisk Extreme 64GB",
-                    "vendor_id": "0781",
-                    "product_id": "5581",
-                    "file_count": 140,
-                    "transferred_mb": 5400,
-                    "risk_flag": "critical_exfiltration",
+                    "device_name": "Corporate Encrypted Key 16GB",
+                    "vendor_id": "0930",
+                    "product_id": "1400",
+                    "file_count": 2,
+                    "transferred_mb": 15.0,
                 },
             },
             {
@@ -325,10 +259,9 @@ def seed_activity_logs():
                 "event_type": "privilege_change",
                 "timestamp": now - timedelta(minutes=45),
                 "details": {
-                    "command": "sudo -u root /bin/bash",
-                    "target_host": "prod-k8s-master-01",
-                    "status": "denied",
-                    "risk_flag": "unauthorized_sudo",
+                    "command": "verify_role k8s_developer",
+                    "target_host": "eng-srv-01",
+                    "status": "authorized",
                 },
             },
             {
@@ -336,10 +269,10 @@ def seed_activity_logs():
                 "event_type": "remote_access",
                 "timestamp": now - timedelta(hours=2),
                 "details": {
-                    "ip_address": "203.0.113.88",
+                    "ip_address": "192.168.1.115",
                     "protocol": "SSH",
-                    "destination_table": "payroll_2026",
-                    "location": "Residential IP / Off-hours",
+                    "destination_table": "general_ledger_q1",
+                    "location": "Finance Department",
                 },
             },
             {
@@ -347,10 +280,10 @@ def seed_activity_logs():
                 "event_type": "login",
                 "timestamp": now - timedelta(hours=3),
                 "details": {
-                    "ip_address": "198.51.100.24",
-                    "device": "Unknown Chrome Linux",
-                    "status": "failed_mfa",
-                    "attempt_count": 5,
+                    "ip_address": "192.168.1.88",
+                    "device": "Lenovo Yoga X1",
+                    "status": "success",
+                    "attempt_count": 1,
                 },
             },
             {
@@ -381,7 +314,7 @@ def seed_activity_logs():
                 "details": {
                     "destination": "AWS ECR Registry",
                     "image_tag": "itbis-core:v2.4",
-                    "size_mb": 280.5,
+                    "size_mb": 28.5,
                 },
             },
             {
@@ -389,9 +322,9 @@ def seed_activity_logs():
                 "event_type": "email_activity",
                 "timestamp": now - timedelta(hours=7),
                 "details": {
-                    "recipient_domain": "external-agency.com",
-                    "attachment_count": 12,
-                    "total_attachment_mb": 45.0,
+                    "recipient_domain": "corp.itbis.com",
+                    "attachment_count": 2,
+                    "total_attachment_mb": 4.5,
                 },
             },
             {
@@ -412,7 +345,7 @@ def seed_activity_logs():
                 "details": {
                     "protocol": "VPN",
                     "gateway": "vpn-gw-01.itbis.corp",
-                    "duration_min": 180,
+                    "duration_min": 60,
                 },
             },
         ]
@@ -421,6 +354,7 @@ def seed_activity_logs():
         print(f"Successfully inserted {len(result.inserted_ids)} activity logs into MongoDB.")
     except Exception as e:
         print(f"Note: MongoDB activity log seeding error: {e}")
+
 
 
 if __name__ == "__main__":

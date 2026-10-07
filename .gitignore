@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 venv/
 env/
 ENV/
@@ -50,3 +50,20 @@ Thumbs.db
 ITBIS_UI_Design_Plan.md
 stitch_itbis_security_intelligence_platform.zip
 ITBIS_Milestone2_Student_Handout (1).pdf
+
+# Puppeteer Test Outputs, Screenshots & Reports
+test-results/
+test-reports/
+screenshots/
+tests/reports/
+tests/screenshots/
+frontend/test-results/
+frontend/test-reports/
+frontend/tests/reports/
+frontend/tests/screenshots/
+backend/tests/reports/*.html
+backend/tests/reports/*.json
+*.png
+!frontend/public/*.png
+!public/*.png
+scratch/

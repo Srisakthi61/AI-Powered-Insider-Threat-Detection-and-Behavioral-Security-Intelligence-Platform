@@ -12,19 +12,21 @@ import Link from "next/link";
 export default function AdminDashboardPage() {
   const { isSimulated, openSimModal, resetSimulation } = useSimulation();
   const [adminData, setAdminData] = useState(null);
-  const [anomalyStats, setAnomalyStats] = useState(null);
   const [systemHealthy, setSystemHealthy] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const fetchAdminData = () => {
     Promise.all([
+      adminApi.getDashboard().catch(() => null),
       adminApi.getUsers().catch(() => null),
       systemApi.health().then(() => true).catch(() => false),
-      anomalyApi.getStats().catch(() => null),
-    ]).then(([userData, isHealthy, statsData]) => {
-      if (userData) setAdminData(userData);
+    ]).then(([dashData, userData, isHealthy]) => {
+      if (dashData) {
+        setAdminData(dashData);
+      } else if (userData) {
+        setAdminData(userData);
+      }
       setSystemHealthy(isHealthy);
-      if (statsData) setAnomalyStats(statsData);
       setLoading(false);
     });
   };
@@ -128,7 +130,7 @@ export default function AdminDashboardPage() {
                       : "bg-surface-container-high text-secondary border-outline-variant"
                   }`}
                 >
-                  {isSimulated ? "● Threat Evaluation Active" : "○ Governance Standby"}
+                  {isSimulated ? "● Threat Evaluation Active" : "● Governance Active"}
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
@@ -140,7 +142,7 @@ export default function AdminDashboardPage() {
                 <button
                   onClick={resetSimulation}
                   className="bg-surface-container-lowest border border-outline-variant text-secondary hover:text-error px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-error-container/30 transition-colors flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
-                  title="Reset dashboard to empty standby"
+                  title="Reset threat simulation"
                 >
                   <span className="material-symbols-outlined text-[15px]">restart_alt</span>
                   Reset
@@ -153,120 +155,98 @@ export default function AdminDashboardPage() {
                 <span className="material-symbols-outlined text-[16px]">bolt</span>
                 Simulate Threat
               </button>
-              <button
-                onClick={() => alert("Downloading Platform Audit Report...")}
+              <Link
+                href="/reports"
                 className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
               >
-                <span className="material-symbols-outlined text-[16px]">download</span>
-                Export Report
-              </button>
+                <span className="material-symbols-outlined text-[16px]">assessment</span>
+                Compliance &amp; Reports
+              </Link>
             </div>
           </div>
 
-          {/* Standby Banner */}
-          {!isSimulated ? (
-            <div className="bg-gradient-to-r from-purple-500/10 via-surface-container-lowest to-surface-container-low border border-purple-500/25 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-[28px]">admin_panel_settings</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-on-surface">
-                      Platform Administration Standby — Ready for Threat Simulation
-                    </h3>
-                    <span className="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200">
-                      RBAC Enforced
-                    </span>
-                  </div>
-                  <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    Database services and RBAC authentication are healthy. Click <strong>"Simulate Threat"</strong> in the navigation bar to test live privilege escalation detection, sudo root execution alerts, and persona dispatch.
-                  </p>
-                </div>
+          {/* Platform Status Banner */}
+          <div className="bg-gradient-to-r from-primary/10 via-surface-container-lowest to-surface-container-low border border-primary/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-[28px]">admin_panel_settings</span>
               </div>
-              <button
-                onClick={openSimModal}
-                className="bg-error text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer active:scale-95 animate-pulse"
-              >
-                <span className="material-symbols-outlined text-[18px]">crisis_alert</span>
-                <span>Simulate Threat Event</span>
-              </button>
-            </div>
-          ) : (
-            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[24px]">verified_user</span>
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Platform Threat Evaluation Active
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full">
-                      System Monitored
-                    </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-on-surface">
+                    Platform Governance Active &bull; Dual-Database Integrity Verified
                   </h3>
-                  <p className="text-[11px] text-secondary mt-0.5">
-                    Privilege escalation vectors, IAM role integrity, and ACID data stores monitored in real-time.
-                  </p>
+                  <span className="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200">
+                    RBAC Enforced
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Link
-                  href="/admin"
-                  className="bg-primary text-on-primary text-xs font-semibold px-3.5 py-1.5 rounded-lg hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
-                  Manage RBAC Permissions
-                </Link>
+                <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
+                  PostgreSQL ACID relational store and MongoDB time-series activity telemetry are healthy. Platform administrators govern system identities, role bindings, and platform telemetry.
+                </p>
               </div>
             </div>
-          )}
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/admin"
+                className="bg-primary text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-primary-container transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
+                <span>Manage User Roles</span>
+              </Link>
+            </div>
+          </div>
 
-          {/* 4 Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+          {/* 5 Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter">
             <MetricCard
-              title="Total Platform Users"
+              title="Platform Users"
               value={adminData?.total_users ?? 4}
-              trend="PostgreSQL Store"
+              trend="RBAC Store"
               trendType="up-good"
               icon="group"
               iconBg="bg-primary-fixed"
               iconColor="text-primary"
-              description="Active database credentials"
+              description="Active accounts in PostgreSQL"
             />
             <MetricCard
-              title="Telemetry Data Points"
-              value={
-                isSimulated
-                  ? (anomalyStats?.total_activity_logs ? Number(anomalyStats.total_activity_logs).toLocaleString() : "10,000")
-                  : 0
-              }
-              trend={isSimulated ? "MongoDB Time-Series" : "Standby"}
-              trendType={isSimulated ? "up-good" : "neutral"}
-              icon="dataset"
-              iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Multi-indicator activity logs" : "Ready in database"}
-            />
-            <MetricCard
-              title="Behavioral Baselines"
-              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 78) : 0}
-              trend={isSimulated ? "6 Indicators / Person" : "Standby"}
+              title="Monitored Employees"
+              value={adminData?.total_employees ?? 10}
+              trend="Directory"
               trendType="neutral"
-              icon="tune"
-              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
-              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description={isSimulated ? "Per-employee baseline store" : "Baselines standby"}
+              icon="badge"
+              iconBg="bg-secondary-fixed"
+              iconColor="text-secondary"
+              description="Monitored organizational staff"
             />
             <MetricCard
-              title="System Status"
+              title="Security Incidents"
+              value={`${adminData?.open_incidents ?? 0} Open`}
+              trend={`${adminData?.total_incidents ?? 0} Total`}
+              trendType="neutral"
+              icon="gavel"
+              iconBg="bg-tertiary-fixed"
+              iconColor="text-tertiary"
+              description="Formal investigation cases"
+            />
+            <MetricCard
+              title="Telemetry Activity Logs"
+              value={Number(adminData?.audit_activity?.total_activity_logs || 10000).toLocaleString()}
+              trend="MongoDB Time-Series"
+              trendType="up-good"
+              icon="dataset"
+              iconBg="bg-secondary-container"
+              iconColor="text-on-secondary-container"
+              description="High-throughput security logs"
+            />
+            <MetricCard
+              title="System Platform Health"
               value={systemHealthy ? "Operational" : "Degraded"}
-              trend="All services live"
+              trend="100% Uptime"
               trendType={systemHealthy ? "up-good" : "up-danger"}
               icon="health_and_safety"
               iconBg="bg-emerald-100"
               iconColor="text-emerald-700"
-              description="PostgreSQL + MongoDB ACID/Store"
+              description="PostgreSQL + MongoDB Online"
             />
           </div>
 

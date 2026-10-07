@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authApi } from "../lib/api";
+import { authApi, anomalyApi } from "../lib/api";
 
 const AuthContext = createContext(null);
 
@@ -11,19 +11,43 @@ export const ROLE_CONFIG = {
     title: "Security Analyst",
     dashboard: "/dashboard/analyst",
     description: "Triage behavioral anomalies, priority alert queues, and incident investigations.",
-    allowedRoutes: ["/dashboard/analyst", "/alerts", "/logs", "/employees", "/support"],
+    allowedRoutes: [
+      "/dashboard/analyst",
+      "/incidents",
+      "/alerts",
+      "/logs",
+      "/employees",
+      "/anomalies",
+      "/support",
+    ],
   },
   security_manager: {
     title: "Security Manager",
     dashboard: "/dashboard/manager",
     description: "Executive strategic risk posture, department comparisons, and employee governance.",
-    allowedRoutes: ["/dashboard/manager", "/reports", "/employees", "/alerts", "/support"],
+    allowedRoutes: [
+      "/dashboard/manager",
+      "/incidents",
+      "/reports",
+      "/employees",
+      "/alerts",
+      "/anomalies",
+      "/support",
+    ],
   },
   soc_engineer: {
     title: "SOC Engineer",
     dashboard: "/dashboard/soc",
     description: "Real-time activity telemetry stream, anomaly spike monitoring, and log ingestion.",
-    allowedRoutes: ["/dashboard/soc", "/logs", "/employees", "/alerts", "/support"],
+    allowedRoutes: [
+      "/dashboard/soc",
+      "/incidents",
+      "/logs",
+      "/employees",
+      "/alerts",
+      "/anomalies",
+      "/support",
+    ],
   },
   admin: {
     title: "Administrator",
@@ -32,14 +56,17 @@ export const ROLE_CONFIG = {
     allowedRoutes: [
       "/dashboard/admin",
       "/admin",
+      "/incidents",
       "/employees",
       "/logs",
       "/alerts",
+      "/anomalies",
       "/reports",
       "/support",
     ],
   },
 };
+
 
 export const DEMO_CREDENTIALS = [
   { role: "security_analyst", title: "Security Analyst", email: "analyst@itbis.com", password: "AnalystPass123!" },
@@ -98,6 +125,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("itbis_role", role);
       localStorage.setItem("itbis_email", email);
 
+
       const roleInfo = ROLE_CONFIG[role] || {
         title: role,
         dashboard: "/dashboard",
@@ -144,6 +172,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("itbis_token");
     localStorage.removeItem("itbis_role");
     localStorage.removeItem("itbis_email");
+    try {
+      sessionStorage.removeItem("itbis_simulated");
+      localStorage.removeItem("itbis_simulated");
+      sessionStorage.removeItem("itbis_simulated_threat");
+      localStorage.removeItem("itbis_simulated_threat");
+    } catch (e) {}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("simulation-reset"));
+    }
     setUser(null);
     router.push("/login");
   };

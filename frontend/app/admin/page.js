@@ -14,7 +14,7 @@ export default function AdminPage() {
   const [systemOnline, setSystemOnline] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchAdminData = () => {
     adminApi
       .getUsers()
       .then((data) => setAdminUsersData(data))
@@ -29,6 +29,21 @@ export default function AdminPage() {
       .health()
       .then(() => setSystemOnline(true))
       .catch(() => setSystemOnline(false));
+  };
+
+  useEffect(() => {
+    fetchAdminData();
+
+    const handleThreatSimulated = () => fetchAdminData();
+    const handleReset = () => fetchAdminData();
+
+    window.addEventListener("threat-simulated", handleThreatSimulated);
+    window.addEventListener("simulation-reset", handleReset);
+
+    return () => {
+      window.removeEventListener("threat-simulated", handleThreatSimulated);
+      window.removeEventListener("simulation-reset", handleReset);
+    };
   }, [user]);
 
   const platformRoles = adminUsersData?.platform_roles || [

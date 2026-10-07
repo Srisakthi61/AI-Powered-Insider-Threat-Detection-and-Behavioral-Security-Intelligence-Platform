@@ -33,6 +33,12 @@ DEFAULT_FEATURE_NAMES = [
 ]
 
 
+import threading
+
+_MODEL_CACHE_LOCK = threading.Lock()
+_CACHED_ARTIFACT: Optional[Dict[str, Any]] = None
+
+
 def ensure_model_dir() -> Path:
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     return MODEL_DIR
@@ -46,6 +52,7 @@ def save_model_artifact(
     training_granularity: str = "employee_profile",
 ) -> Dict[str, Any]:
     """Persist a trained Isolation Forest model, scaler, and metadata."""
+    global _CACHED_ARTIFACT
     ensure_model_dir()
     feats = feature_names or DEFAULT_FEATURE_NAMES
     payload = {
@@ -69,40 +76,63 @@ def save_model_artifact(
         "n_estimators": getattr(model, "n_estimators", 200),
     }
     METADATA_PATH.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+
+    # Invalidate / update in-memory cache with freshly saved model
+    with _MODEL_CACHE_LOCK:
+        _CACHED_ARTIFACT = {
+            "model": model,
+            "scaler": scaler,
+            "feature_names": feats,
+            "model_type": payload["model_type"],
+            "validation_metrics": payload["validation_metrics"],
+            "training_granularity": training_granularity,
+            "path": str(MODEL_PATH.resolve()),
+            "n_features": len(feats),
+        }
+
     return metadata
 
 
-def load_model_artifact() -> Dict[str, Any]:
-    """Load the persisted model, scaler, and feature metadata from disk."""
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Model artifact not found at {MODEL_PATH}")
+def load_model_artifact(force_reload: bool = False) -> Dict[str, Any]:
+    """Load the persisted model, scaler, and feature metadata from in-memory cache or disk."""
+    global _CACHED_ARTIFACT
+    if not force_reload and _CACHED_ARTIFACT is not None:
+        return _CACHED_ARTIFACT
 
-    artifact = joblib.load(MODEL_PATH)
-    if isinstance(artifact, dict):
-        model = artifact.get("model")
-        scaler = artifact.get("scaler")
-        feature_names = artifact.get("feature_names") or DEFAULT_FEATURE_NAMES
-        model_type = artifact.get("model_type", model.__class__.__name__ if model else "IsolationForest")
-        validation_metrics = artifact.get("validation_metrics", {})
-        training_granularity = artifact.get("training_granularity", "employee_profile")
-    else:
-        model = artifact
-        scaler = None
-        feature_names = DEFAULT_FEATURE_NAMES
-        model_type = model.__class__.__name__
-        validation_metrics = {}
-        training_granularity = "employee_profile"
+    with _MODEL_CACHE_LOCK:
+        if not force_reload and _CACHED_ARTIFACT is not None:
+            return _CACHED_ARTIFACT
 
-    return {
-        "model": model,
-        "scaler": scaler,
-        "feature_names": feature_names,
-        "model_type": model_type,
-        "validation_metrics": validation_metrics,
-        "training_granularity": training_granularity,
-        "path": str(MODEL_PATH.resolve()),
-        "n_features": len(feature_names),
-    }
+        if not MODEL_PATH.exists():
+            raise FileNotFoundError(f"Model artifact not found at {MODEL_PATH}")
+
+        artifact = joblib.load(MODEL_PATH)
+        if isinstance(artifact, dict):
+            model = artifact.get("model")
+            scaler = artifact.get("scaler")
+            feature_names = artifact.get("feature_names") or DEFAULT_FEATURE_NAMES
+            model_type = artifact.get("model_type", model.__class__.__name__ if model else "IsolationForest")
+            validation_metrics = artifact.get("validation_metrics", {})
+            training_granularity = artifact.get("training_granularity", "employee_profile")
+        else:
+            model = artifact
+            scaler = None
+            feature_names = DEFAULT_FEATURE_NAMES
+            model_type = model.__class__.__name__
+            validation_metrics = {}
+            training_granularity = "employee_profile"
+
+        _CACHED_ARTIFACT = {
+            "model": model,
+            "scaler": scaler,
+            "feature_names": feature_names,
+            "model_type": model_type,
+            "validation_metrics": validation_metrics,
+            "training_granularity": training_granularity,
+            "path": str(MODEL_PATH.resolve()),
+            "n_features": len(feature_names),
+        }
+        return _CACHED_ARTIFACT
 
 
 def extract_features_from_activity_logs(logs: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -113,6 +143,8 @@ def extract_features_from_activity_logs(logs: List[Dict[str, Any]]) -> pd.DataFr
     if not logs:
         return pd.DataFrame(columns=["employee_id"] + DEFAULT_FEATURE_NAMES)
 
+    import re
+
     emp_groups: Dict[str, List[Dict[str, Any]]] = {}
     for doc in logs:
         emp = doc.get("employee_id")
@@ -121,80 +153,122 @@ def extract_features_from_activity_logs(logs: List[Dict[str, Any]]) -> pd.DataFr
         emp_groups.setdefault(emp, []).append(doc)
 
     feature_rows = []
+    sudo_re = re.compile(r"\bsudo\b|\broot\b|clusterrolebinding", re.IGNORECASE)
+    denied_re = re.compile(r"denied|failed", re.IGNORECASE)
+    crit_re = re.compile(r"critical|exfiltration|unauthorized|brute_force|privilege_abuse", re.IGNORECASE)
+
     for emp_id, docs in emp_groups.items():
-        df_emp = pd.DataFrame(docs)
-        df_emp["timestamp"] = pd.to_datetime(df_emp["timestamp"], errors="coerce")
+        login_hours = []
+        access_dates: Dict[Any, int] = {}
+        transfers: List[float] = []
+        usb_count = 0
+        usb_total_mb = 0.0
+        sudo_attempts = 0
+        denied_events = 0
+        critical_flags = 0
+        devices = set()
+        device_names = set()
+        has_device_col = False
+        has_device_name_col = False
+        email_count = 0
 
-        # Flatten nested details
-        if "details" in df_emp.columns:
-            details_df = pd.json_normalize(df_emp["details"].fillna({}))
-            for col in details_df.columns:
-                df_emp[col] = details_df[col]
+        for d in docs:
+            et = d.get("event_type")
+            ts = d.get("timestamp")
+            details = d.get("details") or {}
 
-        # Decimal hour for login time analysis
-        df_emp["decimal_hour"] = df_emp["timestamp"].dt.hour + df_emp["timestamp"].dt.minute / 60.0
+            # Timestamp parsing
+            if hasattr(ts, "hour"):
+                dec_hour = ts.hour + ts.minute / 60.0
+                d_date = ts.date() if hasattr(ts, "date") else None
+            elif isinstance(ts, str):
+                try:
+                    dt = pd.to_datetime(ts)
+                    dec_hour = dt.hour + dt.minute / 60.0
+                    d_date = dt.date()
+                except Exception:
+                    dec_hour = 9.0
+                    d_date = None
+            else:
+                dec_hour = 9.0
+                d_date = None
 
-        # 1. Login metrics
-        logins = df_emp[df_emp["event_type"] == "login"]
-        login_hours = logins["decimal_hour"].dropna()
-        avg_login = float(login_hours.mean()) if len(login_hours) > 0 else 9.0
-        std_login = float(login_hours.std()) if len(login_hours) > 1 else 0.5
-        off_hours_logins = int(((login_hours < 6.0) | (login_hours > 22.0)).sum())
+            if et == "login":
+                login_hours.append(dec_hour)
+            elif et in ("file_download", "file_upload", "remote_access", "usb_connect", "data_transfer"):
+                if d_date:
+                    access_dates[d_date] = access_dates.get(d_date, 0) + 1
 
-        # 2. Resource access metrics
-        access_events = df_emp[
-            df_emp["event_type"].isin(
-                ["file_download", "file_upload", "remote_access", "usb_connect", "data_transfer"]
-            )
-        ]
-        daily_accesses = access_events.groupby(access_events["timestamp"].dt.date).size()
-        mean_daily_access = float(daily_accesses.mean()) if len(daily_accesses) > 0 else 5.0
-        std_daily_access = float(daily_accesses.std()) if len(daily_accesses) > 1 else 1.0
+            # Transfer mb
+            trans_mb = details.get("transferred_mb")
+            if trans_mb is not None:
+                try:
+                    transfers.append(float(trans_mb))
+                except Exception:
+                    transfers.append(0.0)
+            else:
+                transfers.append(0.0)
 
-        # 3. Data Transfer & USB metrics
-        transfer_vals = pd.to_numeric(
-            df_emp.get("transferred_mb", pd.Series(0, index=df_emp.index)), errors="coerce"
-        ).fillna(0)
-        total_transfer_mb = float(transfer_vals.sum())
-        avg_transfer_mb = float(transfer_vals.mean()) if len(transfer_vals) > 0 else 0.0
-        max_single_transfer_mb = float(transfer_vals.max()) if len(transfer_vals) > 0 else 0.0
+            if et == "usb_connect":
+                usb_count += 1
+                try:
+                    usb_total_mb += float(details.get("transferred_mb") or 0.0)
+                except Exception:
+                    pass
 
-        usb_events = df_emp[df_emp["event_type"] == "usb_connect"]
-        usb_count = len(usb_events)
-        usb_trans = pd.to_numeric(
-            usb_events.get("transferred_mb", pd.Series(0, index=usb_events.index)), errors="coerce"
-        ).fillna(0)
-        usb_total_mb = float(usb_trans.sum())
+            if et == "privilege_change":
+                cmd = str(details.get("command") or "")
+                if sudo_re.search(cmd):
+                    sudo_attempts += 1
 
-        # 4. Privilege & Security Flags
-        priv_events = df_emp[df_emp["event_type"] == "privilege_change"]
-        cmd_series = priv_events.get("command", pd.Series("", index=priv_events.index)).astype(str)
-        # Sudo root attempts: match sudo, root, or escalation requests
-        sudo_attempts = int(cmd_series.str.contains(r"\bsudo\b|\broot\b|clusterrolebinding", case=False, na=False).sum())
+            status_val = str(details.get("status") or "")
+            if denied_re.search(status_val):
+                denied_events += 1
 
-        status_series = df_emp.get("status", pd.Series("", index=df_emp.index)).astype(str)
-        denied_events = int(status_series.str.contains("denied|failed", case=False, na=False).sum())
+            risk_val = str(details.get("risk_flag") or "")
+            if crit_re.search(risk_val):
+                critical_flags += 1
 
-        risk_series = df_emp.get("risk_flag", pd.Series("", index=df_emp.index)).astype(str)
-        critical_flags = int(
-            risk_series.str.contains(
-                "critical|exfiltration|unauthorized|brute_force|privilege_abuse", case=False, na=False
-            ).sum()
-        )
+            if "device" in d or "device" in details:
+                has_device_col = True
+                dev = d.get("device") or details.get("device")
+                if dev is not None and str(dev).strip() != "":
+                    devices.add(str(dev).strip())
 
-        # 5. Device diversity
-        dev_col = df_emp.get("device", df_emp.get("device_name", pd.Series(index=df_emp.index)))
-        unique_devices = int(dev_col.dropna().replace("", np.nan).nunique()) if dev_col is not None else 1
+            if "device_name" in d or "device_name" in details:
+                has_device_name_col = True
+                dev_n = d.get("device_name") or details.get("device_name")
+                if dev_n is not None and str(dev_n).strip() != "":
+                    device_names.add(str(dev_n).strip())
 
-        # 6. Communication patterns
-        emails = df_emp[df_emp["event_type"] == "email_activity"]
-        email_count = len(emails)
+            if et == "email_activity":
+                email_count += 1
+
+        # Aggregate metrics
+        avg_login = float(np.mean(login_hours)) if login_hours else 9.0
+        std_login = float(np.std(login_hours, ddof=1)) if len(login_hours) > 1 else 0.5
+        off_hours = sum(1 for h in login_hours if h < 6.0 or h > 22.0)
+
+        daily_access_vals = list(access_dates.values())
+        mean_daily_access = float(np.mean(daily_access_vals)) if daily_access_vals else 5.0
+        std_daily_access = float(np.std(daily_access_vals, ddof=1)) if len(daily_access_vals) > 1 else 1.0
+
+        total_transfer_mb = sum(transfers)
+        avg_transfer_mb = float(np.mean(transfers)) if transfers else 0.0
+        max_single_transfer_mb = max(transfers) if transfers else 0.0
+
+        if has_device_col:
+            unique_devices = len(devices)
+        elif has_device_name_col:
+            unique_devices = len(device_names)
+        else:
+            unique_devices = 0
 
         feature_rows.append({
             "employee_id": emp_id,
             "avg_login_hour": round(avg_login, 2),
             "std_login_hour": round(std_login, 2),
-            "off_hours_logins": off_hours_logins,
+            "off_hours_logins": off_hours,
             "mean_daily_access": round(mean_daily_access, 2),
             "std_daily_access": round(std_daily_access, 2),
             "total_transfer_mb": round(total_transfer_mb, 2),
@@ -230,6 +304,7 @@ def analyze_threat_drivers(row: Dict[str, Any]) -> Dict[str, Any]:
     total_trans_mb = float(row.get("total_transfer_mb", 0))
     crit_flags = int(row.get("critical_flags", 0))
     avg_login = float(row.get("avg_login_hour", 9.0))
+    max_single_transfer_mb = float(row.get("max_single_transfer_mb", 0))
     anomaly_score = float(row.get("anomaly_score", 0.0))
     is_outlier = bool(row.get("is_outlier", False))
 
@@ -292,15 +367,27 @@ def analyze_threat_drivers(row: Dict[str, Any]) -> Dict[str, Any]:
     primary_target = target_roles[0] if target_roles else "security_analyst"
     primary_target_title = target_role_titles[0] if target_role_titles else "Security Analyst"
 
-    # Determine risk tier
-    if anomaly_score < -0.05 or crit_flags > 50 or usb_mb > 5000 or sudo_cnt > 50:
+    # Determine risk tier based on real threat telemetry markers and anomaly severity
+    has_threat_markers = (
+        crit_flags > 0
+        or sudo_cnt > 0
+        or usb_mb > 1000
+        or off_logins > 0
+        or denied_cnt > 0
+        or total_trans_mb > 50000
+        or max_single_transfer_mb > 1000
+    )
+
+    if (usb_mb > 5000 or sudo_cnt >= 5 or (has_threat_markers and anomaly_score < -0.05)):
         risk_tier = "Critical"
-    elif is_outlier or crit_flags > 10 or sudo_cnt > 0 or usb_mb > 1000:
+    elif has_threat_markers and (is_outlier or crit_flags > 0 or sudo_cnt > 0 or usb_mb > 1000 or anomaly_score < -0.02):
         risk_tier = "High"
-    elif anomaly_score < 0.05 or off_logins > 0 or denied_cnt > 0 or crit_flags > 0:
+    elif has_threat_markers or (is_outlier and anomaly_score < -0.08):
         risk_tier = "Medium"
     else:
         risk_tier = "Low"
+
+
 
     return {
         "risk_tier": risk_tier,

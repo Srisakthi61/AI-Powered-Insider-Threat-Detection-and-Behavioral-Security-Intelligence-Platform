@@ -1,26 +1,42 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { anomalyApi, alertApi } from "../lib/api";
+import { anomalyApi, alertApi, authApi } from "../lib/api";
 
 const SimulationContext = createContext(null);
 
 export const SimulationProvider = ({ children }) => {
-  const [isSimulated, setIsSimulated] = useState(false);
+  const [isSimulated, setIsSimulated] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return (
+          sessionStorage.getItem("itbis_simulated") === "true" ||
+          localStorage.getItem("itbis_simulated") === "true"
+        );
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  });
   const [simLoading, setSimLoading] = useState(false);
   const [simulatedThreat, setSimulatedThreat] = useState(null);
   const [targetedAlerts, setTargetedAlerts] = useState([]);
   const [realtimeAlert, setRealtimeAlert] = useState(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSimModal, setShowSimModal] = useState(false);
 
-  // Initialize simulation status from sessionStorage if previously run in this session
+  // Initialize simulation status from storage if previously run in this session
   useEffect(() => {
     try {
-      const stored = sessionStorage.getItem("itbis_simulated");
+      const stored =
+        sessionStorage.getItem("itbis_simulated") ||
+        localStorage.getItem("itbis_simulated");
       if (stored === "true") {
         setIsSimulated(true);
-        const storedThreat = sessionStorage.getItem("itbis_simulated_threat");
+        const storedThreat =
+          sessionStorage.getItem("itbis_simulated_threat") ||
+          localStorage.getItem("itbis_simulated_threat");
         if (storedThreat) {
           setSimulatedThreat(JSON.parse(storedThreat));
         }
@@ -30,6 +46,51 @@ export const SimulationProvider = ({ children }) => {
     } catch (e) {
       setIsSimulated(false);
     }
+
+    const handleReset = () => {
+      setIsSimulated(false);
+      setSimulatedThreat(null);
+      setRealtimeAlert(null);
+      setTargetedAlerts([]);
+    };
+
+    const handleSimulated = (e) => {
+      setIsSimulated(true);
+      if (e?.detail) {
+        setSimulatedThreat(e.detail);
+        setRealtimeAlert(e.detail);
+        if (Array.isArray(e.detail.created_alerts)) {
+          setTargetedAlerts(e.detail.created_alerts);
+        }
+      }
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === "itbis_simulated") {
+        if (e.newValue === "true") {
+          setIsSimulated(true);
+          try {
+            const raw = localStorage.getItem("itbis_simulated_threat");
+            if (raw) setSimulatedThreat(JSON.parse(raw));
+          } catch (err) {}
+        } else {
+          setIsSimulated(false);
+          setSimulatedThreat(null);
+          setRealtimeAlert(null);
+          setTargetedAlerts([]);
+        }
+      }
+    };
+
+    window.addEventListener("simulation-reset", handleReset);
+    window.addEventListener("threat-simulated", handleSimulated);
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("simulation-reset", handleReset);
+      window.removeEventListener("threat-simulated", handleSimulated);
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const fetchTargetedAlerts = useCallback(async () => {
@@ -51,7 +112,7 @@ export const SimulationProvider = ({ children }) => {
   const closeSimModal = useCallback(() => setShowSimModal(false), []);
 
   const triggerSimulation = useCallback(
-    async ({ scenario = "usb_exfiltration", employeeId = "EMP1007", customMessage = null }) => {
+    async ({ scenario = "usb_exfiltration", employeeId = null, customMessage = null }) => {
       setSimLoading(true);
       try {
         let token = typeof window !== "undefined" ? localStorage.getItem("itbis_token") : null;
@@ -71,13 +132,13 @@ export const SimulationProvider = ({ children }) => {
           }
         }
 
+        const payload = { threat_scenario: scenario };
+        if (employeeId) payload.employee_id = employeeId;
+        if (customMessage) payload.custom_message = customMessage;
+
         let res;
         try {
-          res = await anomalyApi.simulateThreatEvent({
-            employee_id: employeeId,
-            threat_scenario: scenario,
-            custom_message: customMessage,
-          });
+          res = await anomalyApi.simulateThreatEvent(payload);
         } catch (firstErr) {
           // If 401 occurred (e.g. token expired), re-authenticate and retry once
           if (firstErr.response && firstErr.response.status === 401) {
@@ -87,11 +148,7 @@ export const SimulationProvider = ({ children }) => {
               localStorage.setItem("itbis_role", authRes.role || "security_analyst");
               localStorage.setItem("itbis_email", "analyst@itbis.com");
               
-              res = await anomalyApi.simulateThreatEvent({
-                employee_id: employeeId,
-                threat_scenario: scenario,
-                custom_message: customMessage,
-              });
+              res = await anomalyApi.simulateThreatEvent(payload);
             } else {
               throw firstErr;
             }
@@ -100,6 +157,7 @@ export const SimulationProvider = ({ children }) => {
           }
         }
 
+
         setIsSimulated(true);
         setSimulatedThreat(res);
         setRealtimeAlert(res);
@@ -107,16 +165,24 @@ export const SimulationProvider = ({ children }) => {
 
         try {
           sessionStorage.setItem("itbis_simulated", "true");
-          sessionStorage.setItem("itbis_simulated_threat", JSON.stringify(res));
+          localStorage.setItem("itbis_simulated", "true");
+          if (res) {
+            sessionStorage.setItem("itbis_simulated_threat", JSON.stringify(res));
+            localStorage.setItem("itbis_simulated_threat", JSON.stringify(res));
+          }
         } catch (e) {}
 
-        // Re-fetch targeted alerts for current role
-        await fetchTargetedAlerts();
+        // Use the alerts returned by the simulation response directly
+        if (res && Array.isArray(res.created_alerts)) {
+          setTargetedAlerts(res.created_alerts);
+        }
 
         // Dispatch global event so all dashboards can immediately react
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("threat-simulated", { detail: res }));
         }
+
+        fetchTargetedAlerts();
 
         return { success: true, data: res };
       } catch (err) {
@@ -133,10 +199,6 @@ export const SimulationProvider = ({ children }) => {
   );
 
   const resetSimulation = useCallback(async () => {
-    try {
-      await anomalyApi.resetSimulation();
-    } catch (e) {}
-
     setIsSimulated(false);
     setSimulatedThreat(null);
     setRealtimeAlert(null);
@@ -144,13 +206,21 @@ export const SimulationProvider = ({ children }) => {
 
     try {
       sessionStorage.removeItem("itbis_simulated");
+      localStorage.removeItem("itbis_simulated");
       sessionStorage.removeItem("itbis_simulated_threat");
+      localStorage.removeItem("itbis_simulated_threat");
+    } catch (e) {}
+
+    try {
+      await anomalyApi.resetSimulation();
     } catch (e) {}
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("simulation-reset"));
     }
-  }, []);
+
+    fetchTargetedAlerts();
+  }, [fetchTargetedAlerts]);
 
   return (
     <SimulationContext.Provider

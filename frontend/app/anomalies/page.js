@@ -83,7 +83,24 @@ export default function AnomaliesPage() {
 
   useEffect(() => {
     fetchCoreData();
-  }, []);
+
+    const handleThreatSimulated = () => {
+      fetchCoreData();
+      if (selectedEmpId) fetchEmployeeBaselines(selectedEmpId);
+    };
+    const handleReset = () => {
+      fetchCoreData();
+      if (selectedEmpId) fetchEmployeeBaselines(selectedEmpId);
+    };
+
+    window.addEventListener("threat-simulated", handleThreatSimulated);
+    window.addEventListener("simulation-reset", handleReset);
+
+    return () => {
+      window.removeEventListener("threat-simulated", handleThreatSimulated);
+      window.removeEventListener("simulation-reset", handleReset);
+    };
+  }, [selectedEmpId]);
 
   useEffect(() => {
     if (selectedEmpId) {
@@ -283,9 +300,9 @@ export default function AnomaliesPage() {
             />
             <MetricCard
               title="ML Flagged Outliers"
-              value={report?.flagged_count || "4"}
-              trend="Isolation Forest"
-              trendType="up-danger"
+              value={report?.flagged_count ?? 0}
+              trend={report?.flagged_count > 0 ? "Threats Detected" : "Isolation Forest"}
+              trendType={(report?.flagged_count || 0) > 0 ? "up-danger" : "neutral"}
               icon="psychology"
               iconBg="bg-error-container"
               iconColor="text-error"
@@ -423,57 +440,60 @@ export default function AnomaliesPage() {
                           <th className="p-sm">Employee</th>
                           <th className="p-sm">ML Score</th>
                           <th className="p-sm">Primary Threat Vector</th>
-                          <th className="p-sm">Target Persona</th>
+                          <th className="p-sm">Recommended Responder</th>
                           <th className="p-sm">Risk</th>
                           <th className="p-sm pr-md text-right">Inspect</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-outline-variant/60 text-on-surface">
-                        {report?.all_analyzed?.map((row) => (
-                          <tr
-                            key={row.employee_id}
-                            className={`hover:bg-surface-container-low transition-colors ${
-                              row.is_outlier ? "bg-error-container/10" : ""
-                            }`}
-                          >
-                            <td className="p-sm pl-md font-mono font-bold">
-                              #{row.threat_rank || 1}
-                            </td>
-                            <td className="p-sm">
-                              <div className="font-bold text-on-surface">{row.name}</div>
-                              <div className="text-[10px] font-mono text-primary">
-                                {row.employee_id} • {row.department}
-                              </div>
-                            </td>
-                            <td className="p-sm font-mono font-bold">
-                              <span className={row.anomaly_score < 0 ? "text-error" : "text-emerald-600"}>
-                                {row.anomaly_score?.toFixed(4)}
-                              </span>
-                            </td>
-                            <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
-                              {row.primary_reason || "Normal Baseline"}
-                            </td>
-                            <td className="p-sm">
-                              <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-bold border border-outline-variant">
-                                {row.target_role_title || "Security Analyst"}
-                              </span>
-                            </td>
-                            <td className="p-sm">
-                              <RiskBadge level={row.risk_level || (row.is_outlier ? "High" : "Low")} />
-                            </td>
-                            <td className="p-sm pr-md text-right">
-                              <button
-                                onClick={() => {
-                                  setSelectedEmpId(row.employee_id);
-                                  setActiveTab("baselines");
-                                }}
-                                className="text-primary hover:underline text-[11px] font-semibold cursor-pointer"
-                              >
-                                Baseline →
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {report?.all_analyzed?.map((row) => {
+                          const isHighRisk = row.risk_level === "Critical" || row.risk_level === "High";
+                          return (
+                            <tr
+                              key={row.employee_id}
+                              className={`hover:bg-surface-container-low transition-colors ${
+                                isHighRisk ? "bg-error-container/10" : ""
+                              }`}
+                            >
+                              <td className="p-sm pl-md font-mono font-bold">
+                                #{row.threat_rank || 1}
+                              </td>
+                              <td className="p-sm">
+                                <div className="font-bold text-on-surface">{row.name}</div>
+                                <div className="text-[10px] font-mono text-primary">
+                                  {row.employee_id} • {row.department}
+                                </div>
+                              </td>
+                              <td className="p-sm font-mono font-bold">
+                                <span className={row.anomaly_score < 0 ? (isHighRisk ? "text-error" : "text-amber-600") : "text-emerald-600"}>
+                                  {row.anomaly_score?.toFixed(4)}
+                                </span>
+                              </td>
+                              <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
+                                {row.primary_reason || "Normal Baseline"}
+                              </td>
+                              <td className="p-sm">
+                                <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-bold border border-outline-variant">
+                                  {row.target_role_title || "Security Analyst"}
+                                </span>
+                              </td>
+                              <td className="p-sm">
+                                <RiskBadge level={row.risk_level || "Low"} />
+                              </td>
+                              <td className="p-sm pr-md text-right">
+                                <button
+                                  onClick={() => {
+                                    setSelectedEmpId(row.employee_id);
+                                    setActiveTab("baselines");
+                                  }}
+                                  className="text-primary hover:underline text-[11px] font-semibold cursor-pointer"
+                                >
+                                  Baseline →
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

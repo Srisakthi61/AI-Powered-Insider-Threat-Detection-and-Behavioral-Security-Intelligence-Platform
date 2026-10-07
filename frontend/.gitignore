@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Puppeteer Test Outputs, Screenshots & Reports
+/test-results
+/test-reports
+/screenshots
+/tests/reports
+/tests/screenshots
+*.png
+!public/*.png
+!public/brand_logo.png
+!public/logo.png
+

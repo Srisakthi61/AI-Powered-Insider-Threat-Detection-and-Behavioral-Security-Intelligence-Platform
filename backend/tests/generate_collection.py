@@ -482,6 +482,54 @@ collection = {
                         "header": [],
                         "url": {"raw": "{{base_url}}/admin/users", "host": ["{{base_url}}"], "path": ["admin", "users"]}
                     }
+                },
+                {
+                    "name": "GET /dashboard/admin (Admin Access)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test('Contains platform telemetry metrics', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('total_users');",
+                                    "    pm.expect(jsonData).to.have.property('total_employees');",
+                                    "    pm.expect(jsonData).to.have.property('total_incidents');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+                        "url": {"raw": "{{base_url}}/dashboard/admin", "host": ["{{base_url}}"], "path": ["dashboard", "admin"]}
+                    }
+                },
+                {
+                    "name": "GET /dashboard/admin (Analyst Access Forbidden - RBAC)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 403 Forbidden', function () {",
+                                    "    pm.response.to.have.status(403);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/dashboard/admin", "host": ["{{base_url}}"], "path": ["dashboard", "admin"]}
+                    }
                 }
             ]
         },
@@ -616,6 +664,7 @@ collection = {
                                     "    var jsonData = pm.response.json();",
                                     "    pm.expect(jsonData).to.be.an('array');",
                                     "    pm.expect(jsonData.length).to.be.above(0);",
+                                    "    pm.environment.set('test_emp_db_id', jsonData[0].id);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
@@ -1070,6 +1119,419 @@ collection = {
                     }
                 }
             ]
+        },
+        {
+            "name": "09 Incidents & Case Management",
+            "item": [
+                {
+                    "name": "POST /incidents/ - Create Incident Case",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201 Created', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData.id).to.be.a('number');",
+                                    "pm.expect(jsonData.status).to.eql('OPEN');",
+                                    "pm.environment.set('created_incident_id', jsonData.id);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Authorization", "value": "Bearer {{analyst_token}}"},
+                            {"key": "Content-Type", "value": "application/json"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"employee_id\": {{test_emp_db_id}},\n    \"title\": \"Automated Test Incident Case\",\n    \"severity\": \"HIGH\",\n    \"summary\": \"Test case investigation for security audit\"\n}"
+                        },
+                        "url": {"raw": "{{base_url}}/incidents/", "host": ["{{base_url}}"], "path": ["incidents", ""]}
+                    }
+                },
+                {
+                    "name": "GET /incidents/ - List Incidents",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData).to.be.an('array');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/incidents/", "host": ["{{base_url}}"], "path": ["incidents", ""]}
+                    }
+                },
+                {
+                    "name": "POST /incidents/{id}/notes - Add Investigation Note",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201 Created', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData.incident_id).to.be.a('number');",
+                                    "pm.expect(jsonData.note).to.include('Initial evidence collected');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Authorization", "value": "Bearer {{analyst_token}}"},
+                            {"key": "Content-Type", "value": "application/json"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"note\": \"Initial evidence collected: suspicious data download\",\n    \"evidence_reference\": \"PCAP-001\"\n}"
+                        },
+                        "url": {"raw": "{{base_url}}/incidents/{{created_incident_id}}/notes", "host": ["{{base_url}}"], "path": ["incidents", "{{created_incident_id}}", "notes"]}
+                    }
+                },
+                {
+                    "name": "GET /incidents/{id}/timeline - Case Timeline",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData).to.be.an('array');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/incidents/{{created_incident_id}}/timeline", "host": ["{{base_url}}"], "path": ["incidents", "{{created_incident_id}}", "timeline"]}
+                    }
+                },
+                {
+                    "name": "POST /incidents/{id}/resolve - Resolve Case",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData.status).to.eql('RESOLVED');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Authorization", "value": "Bearer {{analyst_token}}"},
+                            {"key": "Content-Type", "value": "application/json"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"resolution_summary\": \"Case resolved: Verified as legitimate business access\"\n}"
+                        },
+                        "url": {"raw": "{{base_url}}/incidents/{{created_incident_id}}/resolve", "host": ["{{base_url}}"], "path": ["incidents", "{{created_incident_id}}", "resolve"]}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "10 UEBA & Risk Scoring",
+            "item": [
+                {
+                    "name": "POST /ueba/snapshot - Record Daily Risk Snapshot",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201 Created', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData).to.have.property('id');",
+                                    "pm.expect(jsonData).to.have.property('risk_score');",
+                                    "pm.expect(jsonData).to.have.property('snapshot_date');",
+                                    "pm.expect(jsonData.factors).to.have.property('behavioral_anomalies_score');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/ueba/snapshot/{{test_emp_db_id}}", "host": ["{{base_url}}"], "path": ["ueba", "snapshot", "{{test_emp_db_id}}"]}
+                    }
+                },
+                {
+                    "name": "GET /ueba/risk-scores - List 5-Factor Risk Scores",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData).to.be.an('array');",
+                                    "if (jsonData.length > 0) {",
+                                    "    pm.expect(jsonData[0].overall_score).to.be.a('number');",
+                                    "    pm.expect(jsonData[0].risk_level).to.be.a('string');",
+                                    "    pm.expect(jsonData[0].factors).to.be.an('object');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/ueba/risk-scores", "host": ["{{base_url}}"], "path": ["ueba", "risk-scores"]}
+                    }
+                },
+                {
+                    "name": "GET /ueba/risk-score - 5-Factor Score",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData.employee_id).to.eql(Number(pm.environment.get('test_emp_db_id')));",
+                                    "pm.expect(jsonData.overall_score).to.be.within(0, 100);",
+                                    "pm.expect(jsonData.factors).to.have.property('behavioral_anomalies_score');",
+                                    "pm.expect(jsonData.factors).to.have.property('privilege_misuse_score');",
+                                    "pm.expect(jsonData.factors).to.have.property('data_access_violations_score');",
+                                    "pm.expect(jsonData.factors).to.have.property('access_pattern_deviations_score');",
+                                    "pm.expect(jsonData.factors).to.have.property('historical_security_events_score');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/ueba/risk-score/{{test_emp_db_id}}", "host": ["{{base_url}}"], "path": ["ueba", "risk-score", "{{test_emp_db_id}}"]}
+                    }
+                },
+                {
+                    "name": "GET /ueba/peer-comparison - UEBA Peer Comparison",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData).to.have.property('department');",
+                                    "pm.expect(jsonData).to.have.property('department_avg_score');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/ueba/peer-comparison/{{test_emp_db_id}}", "host": ["{{base_url}}"], "path": ["ueba", "peer-comparison", "{{test_emp_db_id}}"]}
+                    }
+                },
+                {
+                    "name": "GET /ueba/trend - 14-Day Risk Trend",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData.daily_scores).to.be.an('array');",
+                                    "pm.expect(jsonData.snapshots_count).to.be.at.least(0);",
+                                    "pm.expect(jsonData.direction).to.be.oneOf(['Increasing', 'Decreasing', 'Stable']);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/ueba/trend/{{test_emp_db_id}}", "host": ["{{base_url}}"], "path": ["ueba", "trend", "{{test_emp_db_id}}"]}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "11 Anomaly Intelligence & Trend",
+            "item": [
+                {
+                    "name": "GET /anomalies/trend?days=7 - 7-Day Anomaly Trend",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.expect(jsonData.days).to.eql(7);",
+                                    "pm.expect(jsonData.trend).to.be.an('array');",
+                                    "pm.expect(jsonData.trend.length).to.eql(7);",
+                                    "pm.expect(jsonData.trend[0]).to.have.property('total_anomalies');",
+                                    "pm.expect(jsonData.trend[0]).to.have.property('rule_anomalies');",
+                                    "pm.expect(jsonData.trend[0]).to.have.property('ml_anomalies');",
+                                    "pm.expect(jsonData.trend[0]).to.have.property('total_activity_logs');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/anomalies/trend?days=7", "host": ["{{base_url}}"], "path": ["anomalies", "trend"], "query": [{"key": "days", "value": "7"}]}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "12 Reports Export",
+            "item": [
+                {
+                    "name": "GET /reports/export?format=csv - CSV Export",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test('Content-Type is text/csv', function () {",
+                                    "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+                        "url": {"raw": "{{base_url}}/reports/export?format=csv", "host": ["{{base_url}}"], "path": ["reports", "export"], "query": [{"key": "format", "value": "csv"}]}
+                    }
+                },
+                {
+                    "name": "GET /reports/insider-threat/excel - Excel Export (Admin)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test('Content-Type is Excel', function () {",
+                                    "    pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+                        "url": {"raw": "{{base_url}}/reports/insider-threat/excel", "host": ["{{base_url}}"], "path": ["reports", "insider-threat", "excel"]}
+                    }
+                },
+                {
+                    "name": "GET /reports/insider-threat/pdf - PDF Export (Manager)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test('Content-Type is PDF', function () {",
+                                    "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{manager_token}}"}],
+                        "url": {"raw": "{{base_url}}/reports/insider-threat/pdf", "host": ["{{base_url}}"], "path": ["reports", "insider-threat", "pdf"]}
+                    }
+                },
+                {
+                    "name": "GET /reports/insider-threat/excel - Forbidden (Analyst RBAC)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 403 Forbidden', function () {",
+                                    "    pm.response.to.have.status(403);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{analyst_token}}"}],
+                        "url": {"raw": "{{base_url}}/reports/insider-threat/excel", "host": ["{{base_url}}"], "path": ["reports", "insider-threat", "excel"]}
+                    }
+                }
+            ]
         }
     ]
 }
@@ -1080,6 +1542,12 @@ environment = {
         {
             "key": "base_url",
             "value": "http://127.0.0.1:8000",
+            "type": "default",
+            "enabled": True
+        },
+        {
+            "key": "created_incident_id",
+            "value": "1",
             "type": "default",
             "enabled": True
         }

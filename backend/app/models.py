@@ -1,5 +1,16 @@
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
+from datetime import datetime, date
+from sqlalchemy import (
+    Column,
+    Integer,
+    Float,
+    String,
+    Text,
+    DateTime,
+    Date,
+    ForeignKey,
+    func,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -38,6 +49,25 @@ class Employee(Base):
     manager = relationship("Employee", remote_side=[id], backref="subordinates")
     incidents = relationship("Incident", back_populates="employee")
     alerts = relationship("Alert", back_populates="employee")
+    risk_snapshots = relationship(
+        "RiskSnapshot",
+        back_populates="employee",
+        cascade="all, delete-orphan",
+        order_by="RiskSnapshot.snapshot_date.asc()",
+    )
+
+    @property
+    def risk_score(self) -> float:
+        if self.risk_snapshots:
+            return float(self.risk_snapshots[-1].risk_score)
+        return 15.0
+
+    @property
+    def risk_level(self) -> str:
+        if self.risk_snapshots:
+            return str(self.risk_snapshots[-1].risk_level)
+        return "Low"
+
 
 
 class Incident(Base):
@@ -48,12 +78,38 @@ class Incident(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
-    status = Column(String, nullable=False, default="open")
-    severity = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="OPEN")  # OPEN, INVESTIGATING, RESOLVED, CLOSED
+    severity = Column(String, nullable=False)  # LOW, MEDIUM, HIGH, CRITICAL
+    summary = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    resolution_summary = Column(Text, nullable=True)
 
     # Relationships
     employee = relationship("Employee", back_populates="incidents")
+    creator = relationship("User", foreign_keys=[created_by])
+    notes = relationship("InvestigationNote", back_populates="incident", cascade="all, delete-orphan", order_by="InvestigationNote.created_at.asc()")
+    alerts = relationship("Alert", back_populates="incident")
+
+
+class InvestigationNote(Base):
+    """
+    Investigation notes and evidence references attached to an incident.
+    """
+    __tablename__ = "investigation_notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    incident_id = Column(Integer, ForeignKey("incidents.id"), nullable=False)
+    author_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    author_name = Column(String, nullable=True)
+    note = Column(Text, nullable=False)
+    evidence_reference = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    incident = relationship("Incident", back_populates="notes")
+    author = relationship("User", foreign_keys=[author_user_id])
 
 
 class Alert(Base):
@@ -64,15 +120,64 @@ class Alert(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    incident_id = Column(Integer, ForeignKey("incidents.id"), nullable=True)
     severity = Column(String, nullable=False)
     message = Column(String, nullable=False)
-    status = Column(String, nullable=False, default="UNASSIGNED")
+    status = Column(String, nullable=False, default="OPEN")  # OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, ESCALATED
     details = Column(Text, nullable=True)
     recommended_action = Column(Text, nullable=True)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
+    escalated = Column(String, nullable=False, default="false")  # "true" or "false"
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     employee = relationship("Employee", back_populates="alerts")
     assignee = relationship("User", back_populates="assigned_alerts")
+    incident = relationship("Incident", back_populates="alerts")
+
+
+class RiskSnapshot(Base):
+    """
+    Risk Snapshots table - maintains actual daily risk snapshots for monitored employees.
+    """
+    __tablename__ = "risk_snapshots"
+    __table_args__ = (
+        UniqueConstraint("employee_id", "snapshot_date", name="uq_employee_snapshot_date"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, index=True)
+    risk_score = Column(Integer, nullable=False)
+    risk_level = Column(String, nullable=False)
+    behavioral_anomalies_score = Column(Float, nullable=False, default=0.0)
+    privilege_misuse_score = Column(Float, nullable=False, default=0.0)
+    data_access_violations_score = Column(Float, nullable=False, default=0.0)
+    access_pattern_deviations_score = Column(Float, nullable=False, default=0.0)
+    historical_security_events_score = Column(Float, nullable=False, default=0.0)
+    calculated_at = Column(DateTime(timezone=True), server_default=func.now())
+    snapshot_date = Column(Date, nullable=False, index=True)
+
+    # Relationships
+    employee = relationship("Employee", back_populates="risk_snapshots")
+
+
+class Notification(Base):
+    """
+    Notifications table - stores in-app notifications generated for platform users (e.g., security managers).
+    """
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    recipient_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    message = Column(Text, nullable=False)
+    channel = Column(String, nullable=False, default="in_app")
+    alert_id = Column(Integer, ForeignKey("alerts.id"), nullable=True)
+    is_read = Column(String, nullable=False, default="false")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    recipient = relationship("User")
+    alert = relationship("Alert")
+
 
