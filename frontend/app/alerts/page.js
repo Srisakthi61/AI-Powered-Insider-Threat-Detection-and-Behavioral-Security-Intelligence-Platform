@@ -98,7 +98,7 @@ export default function AlertsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                Security Alerts
+                Security Alerts &amp; Incident Triage Queue
               </h1>
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
@@ -107,7 +107,7 @@ export default function AlertsPage() {
               />
             </div>
             <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-              Review, triage, and resolve behavioral security alerts across the organization.
+              Automated multi-stakeholder alert dispatch powered by Isolation Forest unsupervised anomaly detection.
             </p>
           </div>
 
@@ -122,16 +122,6 @@ export default function AlertsPage() {
                 Reset
               </button>
             )}
-            <button
-              onClick={handleRunMlAlertGenerator}
-              disabled={mlGenerating}
-              className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
-            >
-              <span className={`material-symbols-outlined text-[15px] ${mlGenerating ? "animate-spin" : ""}`}>
-                {mlGenerating ? "sync" : "psychology"}
-              </span>
-              <span>{mlGenerating ? "Scanning..." : "Execute ML Threat Scan"}</span>
-            </button>
           </div>
         </div>
 
@@ -158,48 +148,44 @@ export default function AlertsPage() {
           <MetricCard
             title="Critical Alerts"
             value={alerts.filter((a) => (a.severity || "").toLowerCase() === "critical").length}
-            trend={alerts.some((a) => (a.severity || "").toLowerCase() === "critical") ? "Immediate Action" : "Nominal"}
+            trend={alerts.some((a) => (a.severity || "").toLowerCase() === "critical") ? "Immediate Action" : "None"}
             trendType={alerts.some((a) => (a.severity || "").toLowerCase() === "critical") ? "up-danger" : "neutral"}
             icon="warning"
             iconBg="bg-error-container"
             iconColor="text-error"
-            description="High-severity threats"
           />
           <MetricCard
             title="Investigating"
             value={alerts.filter((a) => (a.status || "").toUpperCase() === "INVESTIGATING").length}
-            trend="Active"
+            trend="Active Triage"
             trendType="neutral"
             icon="policy"
             iconBg="bg-secondary-container"
             iconColor="text-on-secondary-container"
-            description="Currently under review"
           />
           <MetricCard
             title="Unassigned"
             value={alerts.filter((a) => (a.status || "").toUpperCase() === "UNASSIGNED").length}
-            trend="Queue"
+            trend="Awaiting Owner"
             trendType={alerts.some((a) => (a.status || "").toUpperCase() === "UNASSIGNED") ? "up-danger" : "neutral"}
             icon="hourglass_empty"
             iconBg="bg-tertiary-fixed"
             iconColor="text-tertiary"
-            description="Pending triage"
           />
           <MetricCard
             title="Resolved"
             value={alerts.filter((a) => (a.status || "").toUpperCase() === "RESOLVED").length}
-            trend="Closed"
+            trend="SLA Protected"
             trendType="up-good"
             icon="check_circle"
             iconBg="bg-emerald-100"
             iconColor="text-emerald-700"
-            description="Resolved security alerts"
           />
         </div>
 
         {/* Multi-Factor Filter Bar */}
         <div className="flex flex-wrap gap-3 items-center bg-surface-container-lowest p-3 border border-outline-variant rounded-xl shadow-xs text-xs">
-          <span className="font-semibold text-secondary text-xs">Filter by:</span>
+          <span className="font-bold text-secondary">Filter by:</span>
 
           {/* Priority */}
           <div className="flex items-center gap-1.5">
@@ -243,7 +229,7 @@ export default function AlertsPage() {
 
           {/* Target Stakeholder Role */}
           <div className="flex items-center gap-1.5">
-            <span className="text-secondary text-[11px]">Role:</span>
+            <span className="text-secondary text-[11px]">Recommended Responder:</span>
             {[
               { id: "ALL", label: "All Roles" },
               { id: "soc_engineer", label: "SOC Engineer" },

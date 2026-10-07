@@ -50,28 +50,28 @@ export default function AdminPage() {
     {
       role: "Security Analyst",
       code: "security_analyst",
-      permissions: "View dashboards, triage alerts, and investigate incidents",
+      permissions: "View dashboards, alerts queue, activity logs, triage investigations",
       count: 1,
       active: true,
     },
     {
       role: "Security Manager",
       code: "security_manager",
-      permissions: "Executive reports, organizational risk posture, and team oversight",
+      permissions: "Access executive reports, org risk posture, manage employee records & direct reports",
       count: 1,
       active: true,
     },
     {
       role: "SOC Engineer",
       code: "soc_engineer",
-      permissions: "Live telemetry monitoring, raw log ingestion, and threat mitigation",
+      permissions: "Live event stream ingestion, ingest digital activity logs into MongoDB, anomaly monitor",
       count: 1,
       active: true,
     },
     {
       role: "Administrator",
       code: "admin",
-      permissions: "System administration, user access management, and governance",
+      permissions: "Full superuser privileges across all endpoints, PostgreSQL & MongoDB governance",
       count: 1,
       active: true,
     },
@@ -87,10 +87,10 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">
           <div>
             <h1 className="font-page-title text-page-title text-on-surface font-bold">
-              User Administration
+              Administration & RBAC Governance
             </h1>
             <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-              Manage platform users, credentials, and access roles.
+              Manage platform credentials, role-based access control, and PostgreSQL database accounts.
             </p>
           </div>
           <button
@@ -115,11 +115,11 @@ export default function AdminPage() {
                 admin_panel_settings
               </span>
               <span>
-                Signed in as Administrator: <strong>{user?.email}</strong>
+                Superuser Authenticated: <strong>{user?.email}</strong> (FastAPI /admin/users)
               </span>
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-              Full Admin Access
+              Full Admin Privileges
             </span>
           </div>
         )}
@@ -127,14 +127,14 @@ export default function AdminPage() {
         {/* Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
           <MetricCard
-            title="Platform Users"
+            title="Registered Platform Users"
             value={adminUsersData?.total_users ?? userList.length}
-            trend="Active Accounts"
+            trend="In Database"
             trendType="up-good"
             icon="group"
             iconBg="bg-primary-fixed"
             iconColor="text-primary"
-            description="Active accounts registered"
+            description="Stored in PostgreSQL users table"
           />
           <MetricCard
             title="Database Stores"
@@ -144,7 +144,7 @@ export default function AdminPage() {
             icon="database"
             iconBg="bg-secondary-container"
             iconColor="text-on-secondary-container"
-            description="Data stores online"
+            description="Dual-database architecture"
           />
           <MetricCard
             title="Backend Status"
@@ -154,7 +154,7 @@ export default function AdminPage() {
             icon="health_and_safety"
             iconBg="bg-emerald-100"
             iconColor="text-emerald-700"
-            description="API services online"
+            description="FastAPI RESTful API Gateway"
           />
         </div>
 
@@ -162,7 +162,7 @@ export default function AdminPage() {
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
           <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
             <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-              Platform Users
+              Registered Platform Users (PostgreSQL ACID)
             </h2>
             <span className="text-secondary text-xs">{userList.length} Accounts Found</span>
           </div>
@@ -173,7 +173,7 @@ export default function AdminPage() {
                 <tr className="bg-surface-container-low border-b border-outline-variant text-secondary font-label-caps text-label-caps">
                   <th className="p-sm pl-md">User ID</th>
                   <th className="p-sm">Email Address</th>
-                  <th className="p-sm">Assigned Role</th>
+                  <th className="p-sm">Assigned RBAC Role</th>
                   <th className="p-sm pr-md text-right">Status</th>
                 </tr>
               </thead>

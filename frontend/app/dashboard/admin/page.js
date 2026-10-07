@@ -126,15 +126,15 @@ export default function AdminDashboardPage() {
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     isSimulated
-                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 animate-pulse"
                       : "bg-surface-container-high text-secondary border-outline-variant"
                   }`}
                 >
-                  {isSimulated ? "Threat Active" : "Governance Active"}
+                  {isSimulated ? "● Threat Evaluation Active" : "● Governance Active"}
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                System administration, role-based access control, and platform infrastructure.
+                Platform administration, RBAC access governance, and PostgreSQL database accounts.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -160,31 +160,31 @@ export default function AdminDashboardPage() {
 
           {/* Platform Status Banner */}
           <div className="bg-gradient-to-r from-primary/10 via-surface-container-lowest to-surface-container-low border border-primary/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
-                <span className="material-symbols-outlined text-[24px]">admin_panel_settings</span>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-[28px]">admin_panel_settings</span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold text-on-surface">
-                    Platform Governance Active &bull; Dual-Database Verified
+                    Platform Governance Active &bull; Dual-Database Integrity Verified
                   </h3>
-                  <span className="bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-purple-200">
+                  <span className="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200">
                     RBAC Enforced
                   </span>
                 </div>
                 <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                  PostgreSQL relational store and MongoDB time-series activity telemetry are online and healthy.
+                  PostgreSQL ACID relational store and MongoDB time-series activity telemetry are healthy. Platform administrators govern system identities, role bindings, and platform telemetry.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/admin"
-                className="bg-primary text-white font-semibold text-xs px-3.5 py-2 rounded-xl hover:bg-primary-container transition-all flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer active:scale-95"
+                className="bg-primary text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-primary-container transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer active:scale-95"
               >
-                <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
-                <span>Manage Users &amp; Roles</span>
+                <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
+                <span>Manage User Roles</span>
               </Link>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
             <MetricCard
               title="Platform Users"
               value={adminData?.total_users ?? 4}
-              trend="RBAC"
+              trend="RBAC Store"
               trendType="up-good"
               icon="group"
               iconBg="bg-primary-fixed"
@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
               icon="badge"
               iconBg="bg-secondary-fixed"
               iconColor="text-secondary"
-              description="Monitored personnel"
+              description="Monitored organizational staff"
             />
             <MetricCard
               title="Security Incidents"
@@ -219,26 +219,26 @@ export default function AdminDashboardPage() {
               icon="gavel"
               iconBg={isSimulated && (adminData?.open_incidents ?? 0) > 0 ? "bg-error-container" : "bg-tertiary-fixed"}
               iconColor={isSimulated && (adminData?.open_incidents ?? 0) > 0 ? "text-error" : "text-tertiary"}
-              description={isSimulated ? "Investigation cases" : "No active cases"}
+              description={isSimulated ? "Formal investigation cases" : "No active incident cases"}
             />
             <MetricCard
-              title="Activity Logs"
+              title="Telemetry Activity Logs"
               value={
                 isSimulated && adminData?.audit_activity?.total_activity_logs
                   ? Number(adminData.audit_activity.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="MongoDB"
+              trend="MongoDB Time-Series"
               trendType="up-good"
               icon="dataset"
               iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Recorded activity logs" : "Standby stream"}
+              description={isSimulated ? "High-throughput security logs" : "Standby monitoring"}
             />
             <MetricCard
-              title="System Health"
+              title="System Platform Health"
               value={systemHealthy ? "Operational" : "Degraded"}
-              trend="Online"
+              trend="100% Uptime"
               trendType={systemHealthy ? "up-good" : "up-danger"}
               icon="health_and_safety"
               iconBg="bg-emerald-100"
@@ -254,10 +254,10 @@ export default function AdminDashboardPage() {
               <div className="p-md border-b border-outline-variant flex justify-between items-center">
                 <div>
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                    User &amp; Role Management
+                    User &amp; Role Management (RBAC)
                   </h2>
                   <p className="text-[11px] text-secondary">
-                    Role-based permissions and user allocations
+                    Enforced via FastAPI require_role and PostgreSQL identity persistence
                   </p>
                 </div>
                 <Link

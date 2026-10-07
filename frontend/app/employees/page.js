@@ -190,11 +190,11 @@ export default function EmployeesPage() {
                 badge
               </span>
               <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                Employee Directory
+                Monitored Employee Directory
               </h1>
             </div>
             <p className="text-secondary text-xs mt-0.5">
-              Monitored organizational staff, department allocations, and behavioral risk profiles.
+              Identity records, organizational hierarchy, cross-database behavioral dossiers, and 5-factor risk telemetry.
             </p>
           </div>
 
@@ -217,10 +217,10 @@ export default function EmployeesPage() {
             title="Total Personnel"
             value={employees.length}
             icon="group"
-            trend="Directory"
+            trend="Active Directory"
           />
           <MetricCard
-            title="Elevated Risks"
+            title="High / Critical Risks"
             value={
               Object.values(riskMap).filter(
                 (r) => r.risk_level === "High" || r.risk_level === "Critical"
@@ -237,11 +237,11 @@ export default function EmployeesPage() {
             trend="Org Units"
           />
           <MetricCard
-            title="Risk Profiles"
+            title="UEBA Analyzed"
             value={Object.keys(riskMap).length}
             icon="psychology"
             accentColor="#0284c7"
-            trend="Scored"
+            trend="5-Factor Profiles"
           />
         </div>
 

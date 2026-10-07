@@ -60,10 +60,10 @@ export default function SignupPage() {
               <span className="material-symbols-outlined text-[36px]">shield</span>
             </div>
             <h1 className="text-2xl font-bold text-[#004ac6] tracking-tight">
-              ITBIS Platform
+              ITBIS SECURITY
             </h1>
             <p className="text-sm text-[#434655] mt-1">
-              Create your account
+              Create your analyst or operational account
             </p>
           </div>
 

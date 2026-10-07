@@ -87,14 +87,14 @@ export default function LogsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Activity Logs
+                  Activity Logs & Telemetry Stream
                 </h1>
                 <span className="bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-primary/20">
-                  {Number(totalCount).toLocaleString()} Events
+                  {Number(totalCount).toLocaleString()} Total Events
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Search and filter security telemetry events across all monitored endpoints.
+                High-throughput time-series digital events stored in MongoDB with pagination across 10,000+ data points.
               </p>
             </div>
             <button
@@ -114,7 +114,7 @@ export default function LogsPage() {
                   manage_search
                 </span>
                 <span className="font-semibold text-xs text-on-surface">
-                  Filter Events
+                  Filter &amp; Query MongoDB Logs
                 </span>
               </div>
 
@@ -138,15 +138,15 @@ export default function LogsPage() {
                   onChange={(e) => setEventType(e.target.value)}
                   className="px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded-lg font-semibold text-on-surface-variant outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                 >
-                  <option value="">All Event Types</option>
-                  <option value="login">Login</option>
-                  <option value="file_download">File Download</option>
-                  <option value="file_upload">File Upload</option>
-                  <option value="data_transfer">Data Transfer</option>
-                  <option value="email_activity">Email Activity</option>
-                  <option value="privilege_change">Privilege Change</option>
-                  <option value="remote_access">Remote Access</option>
-                  <option value="usb_connect">USB Connect</option>
+                  <option value="">All 8 Event Types</option>
+                  <option value="login">login (Login Times)</option>
+                  <option value="file_download">file_download</option>
+                  <option value="file_upload">file_upload</option>
+                  <option value="data_transfer">data_transfer (Volume)</option>
+                  <option value="email_activity">email_activity (Comms)</option>
+                  <option value="privilege_change">privilege_change</option>
+                  <option value="remote_access">remote_access</option>
+                  <option value="usb_connect">usb_connect (USB Egress)</option>
                 </select>
 
                 <select

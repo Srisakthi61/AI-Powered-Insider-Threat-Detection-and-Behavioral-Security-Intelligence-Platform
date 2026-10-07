@@ -40,10 +40,10 @@ export default function LoginPage() {
               <span className="material-symbols-outlined text-[36px]">shield</span>
             </div>
             <h1 className="text-2xl font-bold text-[#004ac6] tracking-tight">
-              ITBIS Platform
+              ITBIS SECURITY
             </h1>
             <p className="text-sm text-[#434655] mt-1">
-              Sign in to your account
+              Secure Portal Access
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default function LoginPage() {
           <div className="mt-6 pt-5 border-t border-[#c3c6d7]/60">
             <p className="text-[11px] font-bold text-[#191b23] uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[16px] text-[#004ac6]">key</span>
-              Demo Logins:
+              1-Click Demo Persona Sign-In:
             </p>
             <div className="grid grid-cols-2 gap-2">
               <button

@@ -96,15 +96,15 @@ export default function ManagerDashboardPage() {
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     isSimulated
-                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 animate-pulse"
                       : "bg-surface-container-high text-secondary border-outline-variant"
                   }`}
                 >
-                  {isSimulated ? "Posture Analyzed" : "Standby"}
+                  {isSimulated ? "● Posture Analyzed" : "○ Posture Standby"}
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Strategic risk posture, department benchmarks, and organizational threat tracking.
+                Strategic risk posture, department comparisons, and organizational threat posture from PostgreSQL ACID store.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -127,41 +127,41 @@ export default function ManagerDashboardPage() {
 
           {/* Standby Banner */}
           {!isSimulated ? (
-            <div className="bg-gradient-to-r from-blue-500/10 via-surface-container-lowest to-surface-container-low border border-blue-500/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-[24px]">assessment</span>
+            <div className="bg-gradient-to-r from-blue-500/10 via-surface-container-lowest to-surface-container-low border border-blue-500/25 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span className="material-symbols-outlined text-[28px]">assessment</span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-on-surface">
-                      Executive Risk Posture Standby
+                      Executive Risk Posture Standby — Awaiting AI Threat Simulation
                     </h3>
-                    <span className="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200">
-                      Standby
+                    <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                      Clean Baseline
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    No departmental threats currently flagged. Use <strong>&quot;Simulate Threat&quot;</strong> in the navigation bar to evaluate risk profiles and department benchmarks.
+                    No departmental threat vectors are currently flagged. Use <strong>"Simulate Threat"</strong> in the top navigation bar to evaluate employee risk profiles, department benchmarks, and generate manager-targeted alerts.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
+            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">corporate_fare</span>
+                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">corporate_fare</span>
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Organizational Risk Evaluated
+                    Organizational Risk Intelligence Evaluated
                     <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full">
                       PostgreSQL + MongoDB Synced
                     </span>
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Strategic threat posture computed across all business departments and roles.
+                    Strategic threat posture computed across all business departments and user roles.
                   </p>
                 </div>
               </div>
@@ -180,33 +180,33 @@ export default function ManagerDashboardPage() {
           {/* 4 Key Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
-              title="Activity Events"
+              title="Telemetry Data Points"
               value={
                 isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="Indexed"
+              trend="MongoDB Time-Series"
               trendType="up-safe"
               icon="dataset"
               iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-primary" : "text-secondary"}
-              description={isSimulated ? "Recorded security events" : "Standby baseline"}
+              description={isSimulated ? "Indexed security events" : "Standby baseline"}
             />
             <MetricCard
-              title="Flagged Outliers"
+              title="ML Flagged Outliers"
               value={isSimulated ? (anomalyReport?.flagged_count ?? (reportData?.high_risk_profiles || 0)) : 0}
               trend="Isolation Forest"
               trendType="neutral"
               icon="psychology"
               iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-error" : "text-secondary"}
-              description="High risk employee profiles"
+              description="High risk insider profiles"
             />
             <MetricCard
               title="Behavioral Baselines"
               value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
-              trend="6 Indicators"
+              trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
               iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
@@ -216,12 +216,12 @@ export default function ManagerDashboardPage() {
             <MetricCard
               title="Monitored Employees"
               value={employees.length || 10}
-              trend="Directory"
+              trend="Active Directory"
               trendType="neutral"
               icon="person_alert"
               iconBg="bg-secondary-container"
               iconColor="text-on-secondary-container"
-              description="Active employee records"
+              description="Indexed in PostgreSQL"
             />
           </div>
 

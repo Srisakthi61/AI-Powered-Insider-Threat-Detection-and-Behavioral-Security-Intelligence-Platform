@@ -95,19 +95,19 @@ export default function ReportsPage() {
       title: "Data Exfiltration Controls (NIST SP 800-53)",
       score: "94% Compliant",
       status: "healthy",
-      findings: "Automated USB monitoring, file download audits, and bulk egress detection active.",
+      findings: "Automated USB telemetry, file download audits, and bulk egress detection active.",
     },
     {
       title: "Access Privileges & Identity Governance (ISO 27001)",
       score: "88% Compliant",
       status: "healthy",
-      findings: "Least privilege enforcement and role-based access verified.",
+      findings: "Least privilege enforcement and RBAC verified in PostgreSQL ACID store.",
     },
     {
       title: "Behavioral Deviation Baselines (SOC 2 Type II)",
       score: "91% Compliant",
       status: "healthy",
-      findings: "Continuous audit logging meets enterprise retention standards.",
+      findings: "Dual-database audit logging (PostgreSQL ACID + MongoDB Time-Series) meets retention standards.",
     },
   ];
 
@@ -123,11 +123,11 @@ export default function ReportsPage() {
                   summarize
                 </span>
                 <h1 className="font-page-title text-page-title text-on-surface font-bold">
-                  Risk & Compliance Reports
+                  Organization Risk Posture & Compliance Intelligence
                 </h1>
               </div>
               <p className="text-secondary text-xs mt-0.5">
-                Organizational threat posture, regulatory compliance status, and downloadable reports.
+                Strategic insider threat posture assessments, regulatory compliance scoring, and executive audit exports.
               </p>
             </div>
 
@@ -148,7 +148,7 @@ export default function ReportsPage() {
                     onClick={handleExportExcel}
                     disabled={exporting}
                     className="bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-800 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-                    title="Download official Excel report"
+                    title="Download official Excel insider threat intelligence report"
                   >
                     <span className="material-symbols-outlined text-[16px]">table_view</span>
                     Download Excel
@@ -157,7 +157,7 @@ export default function ReportsPage() {
                     onClick={handleExportPdf}
                     disabled={exporting}
                     className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-                    title="Download official PDF report"
+                    title="Download official PDF insider threat intelligence report"
                   >
                     <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                     Download PDF
@@ -182,7 +182,7 @@ export default function ReportsPage() {
                   verified_user
                 </span>
                 <span>
-                  Signed in as <strong>{user?.role || "Security Officer"}</strong>
+                  Authorized via Role: <strong>{user?.role || "Security Officer"}</strong> (FastAPI /reports/risk-posture)
                 </span>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
@@ -194,31 +194,31 @@ export default function ReportsPage() {
           {/* KPI Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-gutter">
             <MetricCard
-              title="Org Risk Index"
+              title="Composite Organization Risk Index"
               value={`${reportResponse?.org_risk_score ?? 0} / 100`}
-              trend="5-Factor Average"
+              trend="5-Factor Model Average"
               trendType="neutral"
               icon="verified_user"
               accentColor="#0284c7"
-              description="Average risk across all employees"
+              description="Mean weighted risk score across all monitored personnel"
             />
             <MetricCard
-              title="Monitored Employees"
+              title="Monitored Endpoint Personnel"
               value={reportResponse?.total_assets ?? reportResponse?.total_employees ?? 13}
-              trend="Active Profiles"
+              trend="PostgreSQL Directory"
               trendType="neutral"
               icon="group"
               accentColor="#16a34a"
-              description="Total monitored employees"
+              description="Entities tracked across identity and MongoDB event stores"
             />
             <MetricCard
-              title="Critical Alerts & Cases"
+              title="Active Critical Alerts & Cases"
               value={reportResponse?.critical_alerts ?? 0}
               trend={reportResponse?.critical_alerts > 0 ? "Requires Review" : "Queue Clear"}
               trendType={reportResponse?.critical_alerts > 0 ? "up-danger" : "neutral"}
               icon="warning"
               accentColor="#dc2626"
-              description="High and Critical priority items"
+              description="High and Critical risk indicators in progress"
             />
           </div>
 
@@ -226,9 +226,9 @@ export default function ReportsPage() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm">
             <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
               <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-                Compliance Frameworks
+                Regulatory Framework Compliance Breakdown
               </h2>
-              <span className="text-[11px] text-secondary">Status across security standards</span>
+              <span className="text-[11px] text-secondary">Verified against dual-database stores</span>
             </div>
 
             <div className="space-y-3">

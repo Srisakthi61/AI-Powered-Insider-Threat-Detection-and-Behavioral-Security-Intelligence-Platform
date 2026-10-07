@@ -103,15 +103,15 @@ export default function AnalystDashboardPage() {
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                     isSimulated
-                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 animate-pulse"
                       : "bg-surface-container-high text-secondary border-outline-variant"
                   }`}
                 >
-                  {isSimulated ? "Threat Active" : "Standby"}
+                  {isSimulated ? "● Live Threat Active" : "○ Standby Mode"}
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-base text-xs mt-0.5">
-                Investigate behavioral anomalies, triage priority alerts, and review endpoint activity.
+                Multi-indicator threat telemetry from PostgreSQL ACID tables &amp; MongoDB document store.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -139,52 +139,52 @@ export default function AnalystDashboardPage() {
 
           {/* Standby / Initial State Banner */}
           {!isSimulated ? (
-            <div className="bg-gradient-to-r from-primary/10 via-surface-container-lowest to-surface-container-low border border-primary/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-[24px]">shield</span>
+            <div className="bg-gradient-to-r from-primary/10 via-surface-container-lowest to-surface-container-low border border-primary/25 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary-container text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span className="material-symbols-outlined text-[28px]">shield</span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-on-surface">
-                      Dashboard in Standby Mode
+                      Dashboard in Standby Mode — Waiting for Threat Simulation
                     </h3>
-                    <span className="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200">
-                      Standby
+                    <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                      Empty Baseline
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    No active threats currently detected. Click <strong>&quot;Simulate Threat&quot;</strong> in the top navigation to trigger a test scenario and evaluate model detections.
+                    No active threat scenarios are loaded yet. Use <strong>"Simulate Threat"</strong> in the top navigation bar to fetch telemetry from the database, execute the Isolation Forest AI risk engine on 15 behavioral indicators, and generate role-targeted alerts.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            /* Active Threat Banner */
-            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
+            /* Active Milestone 2 Banner */
+            <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">troubleshoot</span>
+                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">troubleshoot</span>
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-                    Threat Detection Engine Active
+                    Milestone 2: Behavioral Analytics &amp; Anomaly Detection Operational
                     <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full">
-                      Telemetry Active
+                      10,000 Data Points Indexed
                     </span>
                   </h3>
                   <p className="text-[11px] text-secondary mt-0.5">
-                    Isolation Forest model evaluating behavioral indicators across monitored endpoints.
+                    Isolation Forest ML model &amp; 15 baseline indicators active. Evaluated multi-dimensional threat vectors.
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link
                   href="/anomalies"
-                  className="bg-primary text-on-primary text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                  className="bg-primary text-on-primary text-xs font-semibold px-3.5 py-1.5 rounded-lg hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[16px]">biotech</span>
-                  Open Sandbox
+                  Open Anomaly Sandbox
                 </Link>
               </div>
             </div>
@@ -200,41 +200,41 @@ export default function AnalystDashboardPage() {
               icon="warning"
               iconBg={isSimulated && activeAlerts.length > 0 ? "bg-error-container" : "bg-surface-container"}
               iconColor={isSimulated && activeAlerts.length > 0 ? "text-error" : "text-secondary"}
-              description={isSimulated && activeAlerts.length > 0 ? "Requires review" : "No open alerts"}
+              description={isSimulated && activeAlerts.length > 0 ? "Requires analyst triage" : "No active alerts in queue"}
             />
             <MetricCard
-              title="Flagged Outliers"
+              title="ML Flagged Outliers"
               value={isSimulated ? (anomalyStats?.ml_flagged_threats ?? activeAlerts.filter(a => (a.severity || "").toUpperCase() === "CRITICAL" || (a.severity || "").toUpperCase() === "HIGH").length) : 0}
               trend="Isolation Forest"
               trendType="neutral"
               icon="psychology"
               iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-error" : "text-secondary"}
-              description="Behavioral outliers detected"
+              description="15 behavioral risk indicators"
             />
             <MetricCard
               title="Behavioral Baselines"
               value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
-              trend="6 Indicators"
+              trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
               iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
               iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
-              description="Statistical employee profiles"
+              description="Mean & std dev statistical profiles"
             />
             <MetricCard
-              title="Activity Events"
+              title="Total Telemetry Data Points"
               value={
                 isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
                   : "0"
               }
-              trend="Monitored"
+              trend="MongoDB Time-Series"
               trendType="up-safe"
               icon="dataset"
               iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
               iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
-              description={isSimulated ? "Recorded activity logs" : "Standby monitoring"}
+              description={isSimulated ? "Indexed security events" : "Standby baseline monitoring"}
             />
           </div>
 
@@ -245,7 +245,7 @@ export default function AnalystDashboardPage() {
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-                    Priority Alerts
+                    Alerts / Priority Queue (PostgreSQL)
                   </h2>
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
@@ -270,15 +270,15 @@ export default function AnalystDashboardPage() {
 
               {!isSimulated || activeAlerts.length === 0 ? (
                 <div className="flex-1 w-full min-w-0 py-8 px-6 flex flex-col items-center justify-center text-center">
-                  <div className="w-full max-w-[360px] mx-auto flex flex-col items-center justify-center text-center">
-                    <div className="w-10 h-10 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
-                      <span className="material-symbols-outlined text-[22px]">verified_user</span>
+                  <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                      <span className="material-symbols-outlined text-[24px]">verified_user</span>
                     </div>
                     <h4 className="font-bold text-sm text-on-surface">
-                      No active alerts
+                      No active security alerts.
                     </h4>
                     <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
-                      Alerts will appear here when anomalies or threats are detected.
+                      Threat telemetry will appear here after simulation.
                     </p>
                   </div>
                 </div>
@@ -353,7 +353,7 @@ export default function AnalystDashboardPage() {
             <div className="lg:col-span-4 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col shadow-xs">
               <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
                 <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-                  Recent Events
+                  Recent Security Events (MongoDB)
                 </h2>
                 <span
                   className={`w-2 h-2 rounded-full ${
@@ -363,13 +363,13 @@ export default function AnalystDashboardPage() {
               </div>
               <div className="p-md flex-1 overflow-y-auto relative space-y-4 max-h-[380px]">
                 {!isSimulated || displayEvents.length === 0 ? (
-                  <div className="w-full max-w-[260px] mx-auto p-8 text-center text-secondary text-xs flex flex-col items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-[24px] text-outline">
+                  <div className="w-full max-w-[280px] mx-auto p-8 text-center text-secondary text-xs flex flex-col items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-[28px] text-outline">
                       dataset
                     </span>
-                    <p className="text-xs font-semibold text-on-surface">Awaiting Events</p>
-                    <p className="text-[11px] text-secondary text-center leading-relaxed w-full">
-                      Activity logs will stream here as events are recorded.
+                    <p className="text-xs font-medium">Awaiting Telemetry Stream</p>
+                    <p className="text-[10px] text-secondary/80 text-center leading-relaxed w-full">
+                      Telemetry logs will stream live once threat events are initiated.
                     </p>
                   </div>
                 ) : (
@@ -408,12 +408,12 @@ export default function AnalystDashboardPage() {
             <div className="flex justify-between items-center mb-md">
               <div>
                 <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
-                  Activity &amp; Risk Trend
+                  Activity / Risk Trend Analysis
                 </h2>
                 <p className="text-[11px] text-secondary">
                   {isSimulated
-                    ? "24-hour endpoint telemetry and risk detection timeline"
-                    : "Standby activity baseline"}
+                    ? "Real-time telemetry analysis across monitored organizational endpoints"
+                    : "Standby baseline monitoring mode"}
                 </p>
               </div>
               <div className="flex gap-3 text-xs">
