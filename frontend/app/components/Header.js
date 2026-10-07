@@ -157,37 +157,6 @@ export default function Header({ onToggleSidebar = () => {} }) {
 
         {/* Right: Actions & User Persona */}
         <div className="flex items-center gap-2 md:gap-3 relative shrink-0">
-          {/* Dashboard Switcher */}
-          <div className="hidden lg:flex items-center gap-1 bg-surface-container-low border border-outline-variant p-0.5 rounded-lg text-[11px] font-medium">
-            <Link
-              href="/dashboard/analyst"
-              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
-              title="Analyst Dashboard"
-            >
-              Analyst
-            </Link>
-            <Link
-              href="/dashboard/soc"
-              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
-              title="SOC Stream"
-            >
-              SOC
-            </Link>
-            <Link
-              href="/dashboard/manager"
-              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
-              title="Manager Posture"
-            >
-              Manager
-            </Link>
-            <Link
-              href="/dashboard/admin"
-              className="px-2 py-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
-              title="Admin Telemetry"
-            >
-              Admin
-            </Link>
-          </div>
 
           {/* Real-time Threat Trigger Quick Button */}
           <button
