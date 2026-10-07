@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import RiskBadge from "./RiskBadge";
 import Link from "next/link";
+import { formatThreatTitle, formatThreatDescription } from "../lib/threatFormatting";
 
 // Web Audio API synthesized alert sound generator
 function playAlertChime(isCritical = true) {
@@ -113,8 +114,11 @@ export default function RealtimeAlertNotification({
         {/* Message and responder */}
         <div className="space-y-1.5">
           <h4 className="font-bold text-sm leading-snug">
-            {alert.alert_message || alert.message || "Behavioral Anomaly Triggered"}
+            {formatThreatTitle(alert.alert_message || alert.message)}
           </h4>
+          <p className="text-xs text-white/90 leading-snug">
+            {formatThreatDescription(alert.alert_message || alert.message, alert.details)}
+          </p>
 
           <div className="text-xs opacity-90 flex items-center gap-2">
             <span>Subject:</span>

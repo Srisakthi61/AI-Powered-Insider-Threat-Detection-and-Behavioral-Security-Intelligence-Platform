@@ -6,6 +6,7 @@ import RiskBadge from "../components/RiskBadge";
 import MetricCard from "../components/MetricCard";
 import { alertApi, anomalyApi } from "../lib/api";
 import { useSimulation } from "../context/SimulationContext";
+import { formatThreatTitle, formatThreatDescription } from "../lib/threatFormatting";
 
 export default function AlertsPage() {
   const { isSimulated, resetSimulation } = useSimulation();
@@ -300,12 +301,10 @@ export default function AlertsPage() {
                         <RiskBadge level={alert.severity} />
                       </td>
                       <td className="p-3 font-semibold text-on-surface max-w-xs">
-                        <div className="truncate">{alert.message}</div>
-                        {alert.details && (
-                          <div className="text-[10px] text-secondary font-mono truncate mt-0.5">
-                            {alert.details}
-                          </div>
-                        )}
+                        <div className="truncate">{formatThreatTitle(alert.message)}</div>
+                        <div className="text-[11px] text-secondary truncate mt-0.5 font-normal">
+                          {formatThreatDescription(alert.message, alert.details)}
+                        </div>
                       </td>
                       <td className="p-3">
                         <span className="font-mono text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
@@ -376,7 +375,7 @@ export default function AlertsPage() {
                     </span>
                   </div>
                   <h3 className="font-card-title text-card-title text-on-surface mt-1">
-                    {selectedAlert.message}
+                    {formatThreatTitle(selectedAlert.message)}
                   </h3>
                 </div>
                 <button
@@ -405,7 +404,7 @@ export default function AlertsPage() {
                 <div>
                   <span className="font-bold text-secondary">Incident Details:</span>
                   <p className="text-on-surface-variant bg-surface-container-low p-2.5 rounded-lg border border-outline-variant mt-1 leading-relaxed">
-                    {selectedAlert.details || "No details provided."}
+                    {formatThreatDescription(selectedAlert.message, selectedAlert.details)}
                   </p>
                 </div>
                 {selectedAlert.recommended_action && (

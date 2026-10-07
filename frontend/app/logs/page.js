@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import AppLayout from "../components/AppLayout";
 import RoleGuard from "../components/RoleGuard";
 import { logApi, employeeApi } from "../lib/api";
+import { formatEventType, formatRiskFlag, formatActivityDetails } from "../lib/threatFormatting";
 
 export default function LogsPage() {
   const [employeeId, setEmployeeId] = useState("ALL");
@@ -138,15 +139,15 @@ export default function LogsPage() {
                   onChange={(e) => setEventType(e.target.value)}
                   className="px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded-lg font-semibold text-on-surface-variant outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                 >
-                  <option value="">All 8 Event Types</option>
-                  <option value="login">login (Login Times)</option>
-                  <option value="file_download">file_download</option>
-                  <option value="file_upload">file_upload</option>
-                  <option value="data_transfer">data_transfer (Volume)</option>
-                  <option value="email_activity">email_activity (Comms)</option>
-                  <option value="privilege_change">privilege_change</option>
-                  <option value="remote_access">remote_access</option>
-                  <option value="usb_connect">usb_connect (USB Egress)</option>
+                  <option value="">All Event Types</option>
+                  <option value="login">Login</option>
+                  <option value="file_download">File Download</option>
+                  <option value="file_upload">File Upload</option>
+                  <option value="data_transfer">Data Transfer</option>
+                  <option value="email_activity">Email Activity</option>
+                  <option value="privilege_change">Admin Access Change</option>
+                  <option value="remote_access">Remote Access</option>
+                  <option value="usb_connect">USB Device Connected</option>
                 </select>
 
                 <select
@@ -214,13 +215,13 @@ export default function LogsPage() {
                           </td>
                           <td className="p-sm">
                             <span
-                              className={`px-2 py-0.5 rounded font-mono font-semibold text-[11px] ${
+                              className={`px-2 py-0.5 rounded font-semibold text-[11px] ${
                                 isThreat
                                   ? "bg-error-container text-error font-bold"
                                   : "bg-primary-fixed text-primary-container"
                               }`}
                             >
-                              {log.event_type}
+                              {formatEventType(log.event_type)}
                             </span>
                           </td>
                           <td className="p-sm font-mono text-primary font-bold">
@@ -229,11 +230,11 @@ export default function LogsPage() {
                           <td className="p-sm">
                             {log.details?.risk_flag ? (
                               <span className="text-[10px] font-bold bg-error-container text-error px-2 py-0.5 rounded">
-                                {log.details.risk_flag}
+                                {formatRiskFlag(log.details.risk_flag)}
                               </span>
                             ) : isThreat ? (
                               <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                                Unusual
+                                Unusual Activity
                               </span>
                             ) : (
                               <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
@@ -241,8 +242,8 @@ export default function LogsPage() {
                               </span>
                             )}
                           </td>
-                          <td className="p-sm pr-md font-mono text-[11px] text-secondary max-w-md truncate">
-                            {JSON.stringify(log.details)}
+                          <td className="p-sm pr-md text-[11px] text-on-surface-variant max-w-md truncate" title={formatActivityDetails(log.details, log.event_type)}>
+                            {formatActivityDetails(log.details, log.event_type)}
                           </td>
                         </tr>
                       );

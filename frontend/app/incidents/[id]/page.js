@@ -7,6 +7,7 @@ import AppLayout from "../../components/AppLayout";
 import RiskBadge from "../../components/RiskBadge";
 import MetricCard from "../../components/MetricCard";
 import { incidentApi, uebaApi, alertApi } from "../../lib/api";
+import { formatThreatTitle, formatThreatDescription, formatEventType } from "../../lib/threatFormatting";
 
 export default function IncidentDetailPage() {
   const params = useParams();
@@ -229,11 +230,11 @@ export default function IncidentDetailPage() {
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-on-surface">
-                {incident.title}
+                {formatThreatTitle(incident.title)}
               </h1>
               {incident.summary && (
                 <p className="text-secondary text-xs sm:text-sm mt-1 max-w-3xl leading-relaxed">
-                  {incident.summary}
+                  {formatThreatDescription(incident.title, incident.summary)}
                 </p>
               )}
             </div>
@@ -443,12 +444,12 @@ export default function IncidentDetailPage() {
                           <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
                             <div className="flex items-center gap-2">
                               <span
-                                className={`text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${style.bg} ${style.color}`}
+                                className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${style.bg} ${style.color}`}
                               >
-                                {item.event_type}
+                                {formatEventType(item.event_type)}
                               </span>
                               <span className="font-bold text-xs text-on-surface">
-                                {item.title}
+                                {formatThreatTitle(item.title)}
                               </span>
                             </div>
                             <span className="text-[10px] text-secondary font-mono">
@@ -459,7 +460,7 @@ export default function IncidentDetailPage() {
                           </div>
 
                           <p className="text-xs text-on-surface-variant leading-relaxed">
-                            {item.description}
+                            {formatThreatDescription(item.title, item.description)}
                           </p>
 
                           {/* Extra metadata fields */}

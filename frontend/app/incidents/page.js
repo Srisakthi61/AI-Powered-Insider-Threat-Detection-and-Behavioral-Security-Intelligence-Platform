@@ -8,6 +8,7 @@ import RiskBadge from "../components/RiskBadge";
 import MetricCard from "../components/MetricCard";
 import { incidentApi, employeeApi } from "../lib/api";
 import { useSimulation } from "../context/SimulationContext";
+import { formatThreatTitle, formatThreatDescription } from "../lib/threatFormatting";
 
 export default function IncidentsPage() {
   const router = useRouter();
@@ -247,25 +248,25 @@ export default function IncidentsPage() {
         {/* Incidents Table & Controls */}
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
           {/* Table Toolbar */}
-          <div className="p-3 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/40">
-            <div className="relative flex-1 max-w-sm">
-              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px] pointer-events-none">
-                search
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search cases..."
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 py-1.5 text-xs text-on-surface placeholder:text-secondary/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-              />
-            </div>
+          <div className="p-3 border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40">
+            <div className="flex flex-1 items-center gap-2 max-w-xl">
+              <div className="relative flex-1">
+                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px] pointer-events-none">
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search cases..."
+                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 py-1.5 text-xs text-on-surface placeholder:text-secondary/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-xs"
+                />
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium"
+                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium shadow-xs"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="OPEN">Open</option>
@@ -277,7 +278,7 @@ export default function IncidentsPage() {
               <select
                 value={filterSeverity}
                 onChange={(e) => setFilterSeverity(e.target.value)}
-                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium"
+                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium shadow-xs"
               >
                 <option value="ALL">All Severities</option>
                 <option value="CRITICAL">Critical</option>
@@ -292,7 +293,7 @@ export default function IncidentsPage() {
                   setFilterSeverity("ALL");
                   setSearchQuery("");
                 }}
-                className="px-3 py-1.5 text-xs font-semibold text-secondary hover:text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-lg border border-outline-variant transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-secondary hover:text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-lg border border-outline-variant transition-colors cursor-pointer shadow-xs"
               >
                 Reset
               </button>
@@ -369,13 +370,11 @@ export default function IncidentsPage() {
                       </td>
                       <td className="p-3 max-w-sm">
                         <div className="font-bold text-on-surface group-hover:text-primary transition-colors">
-                          {inc.title}
+                          {formatThreatTitle(inc.title)}
                         </div>
-                        {inc.summary && (
-                          <div className="text-[11px] text-secondary truncate mt-0.5">
-                            {inc.summary}
-                          </div>
-                        )}
+                        <div className="text-[11px] text-secondary truncate mt-0.5">
+                          {formatThreatDescription(inc.title, inc.summary)}
+                        </div>
                       </td>
                       <td className="p-3">
                         <Link

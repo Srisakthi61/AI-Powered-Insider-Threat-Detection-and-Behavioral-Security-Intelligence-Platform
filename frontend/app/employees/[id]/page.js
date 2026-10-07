@@ -9,6 +9,7 @@ import RiskBadge from "../../components/RiskBadge";
 import RoleGuard from "../../components/RoleGuard";
 import { uebaApi, incidentApi, alertApi, employeeApi, anomalyApi } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+import { formatThreatTitle, formatThreatDescription, formatEventType, formatActivityDetails } from "../../lib/threatFormatting";
 
 export default function EmployeeInvestigationPage() {
   const params = useParams();
@@ -525,12 +526,12 @@ export default function EmployeeInvestigationPage() {
                     <div className="flex-1 p-3 bg-surface-container-low border border-outline-variant rounded-xl text-xs">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-on-surface uppercase text-[11px]">
-                          {act.event_type}
+                          {formatEventType(act.event_type)}
                         </span>
                         <span className="text-[10px] font-mono text-outline">{act.timestamp ? new Date(act.timestamp).toLocaleString() : "Recent"}</span>
                       </div>
-                      <p className="text-on-surface-variant font-mono text-[11px] mt-1 bg-surface-container p-2 rounded">
-                        {JSON.stringify(act.details)}
+                      <p className="text-on-surface-variant text-[11px] mt-1 bg-surface-container p-2 rounded leading-relaxed">
+                        {formatActivityDetails(act)}
                       </p>
                     </div>
                   </div>
@@ -574,7 +575,7 @@ export default function EmployeeInvestigationPage() {
                         <tr key={inc.id} className="hover:bg-surface-container-low">
                           <td className="p-3 pl-4 font-mono font-bold text-primary">INC-{inc.id}</td>
                           <td className="p-3"><RiskBadge level={inc.severity} /></td>
-                          <td className="p-3 font-semibold text-on-surface">{inc.summary}</td>
+                          <td className="p-3 font-semibold text-on-surface">{formatThreatTitle(inc.summary)}</td>
                           <td className="p-3"><RiskBadge status={inc.status} /></td>
                           <td className="p-3 font-mono text-outline">{inc.created_at ? new Date(inc.created_at).toLocaleDateString() : "—"}</td>
                           <td className="p-3 pr-4 text-right">
@@ -623,7 +624,7 @@ export default function EmployeeInvestigationPage() {
                         <tr key={alt.id} className="hover:bg-surface-container-low">
                           <td className="p-3 pl-4 font-mono font-bold text-primary">ALT-{alt.id}</td>
                           <td className="p-3"><RiskBadge level={alt.severity} /></td>
-                          <td className="p-3 font-semibold text-on-surface">{alt.message}</td>
+                          <td className="p-3 font-semibold text-on-surface">{formatThreatTitle(alt.message)}</td>
                           <td className="p-3"><RiskBadge status={alt.status} /></td>
                           <td className="p-3 font-mono text-secondary">
                             {alt.incident_id ? (

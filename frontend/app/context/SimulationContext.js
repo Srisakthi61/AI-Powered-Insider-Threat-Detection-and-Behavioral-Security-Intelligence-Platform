@@ -120,7 +120,7 @@ export const SimulationProvider = ({ children }) => {
   const closeSimModal = useCallback(() => setShowSimModal(false), []);
 
   const triggerSimulation = useCallback(
-    async ({ scenario = "usb_exfiltration", employeeId = null, customMessage = null }) => {
+    async ({ scenario = null, employeeId = null, customMessage = null } = {}) => {
       setSimLoading(true);
       try {
         let token = typeof window !== "undefined" ? localStorage.getItem("itbis_token") : null;
@@ -140,8 +140,25 @@ export const SimulationProvider = ({ children }) => {
           }
         }
 
-        const payload = { threat_scenario: scenario };
-        if (employeeId) payload.employee_id = employeeId;
+        const EXISTING_SCENARIOS = [
+          "usb_exfiltration",
+          "sudo_privilege_abuse",
+          "off_hours_mfa_attack",
+          "cloud_data_dump",
+        ];
+        const EXISTING_EMPLOYEES = [
+          "EMP1007",
+          "EMP1008",
+          "EMP1011",
+          "EMP1002",
+          "EMP1005",
+        ];
+
+        const chosenScenario = scenario || EXISTING_SCENARIOS[Math.floor(Math.random() * EXISTING_SCENARIOS.length)];
+        const chosenEmployee = employeeId || EXISTING_EMPLOYEES[Math.floor(Math.random() * EXISTING_EMPLOYEES.length)];
+
+        const payload = { threat_scenario: chosenScenario };
+        if (chosenEmployee) payload.employee_id = chosenEmployee;
         if (customMessage) payload.custom_message = customMessage;
 
         let res;

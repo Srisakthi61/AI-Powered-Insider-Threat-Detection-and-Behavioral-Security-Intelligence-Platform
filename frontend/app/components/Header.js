@@ -5,57 +5,7 @@ import Link from "next/link";
 import { useAuth, ROLE_CONFIG } from "../context/AuthContext";
 import { useSimulation } from "../context/SimulationContext";
 import RealtimeAlertNotification from "./RealtimeAlertNotification";
-
-const THREAT_SCENARIOS = [
-  {
-    id: "usb_exfiltration",
-    title: "1. Large File Copy to USB",
-    metric: "6.5 GB Copied",
-    desc: "6.5 GB of company data was copied to a USB device.",
-    target: "SOC Incident Response",
-    badgeStyle: "bg-red-100 text-red-800 border-red-300",
-    icon: "usb",
-    accent: "border-red-500/40 bg-red-50/40",
-  },
-  {
-    id: "sudo_privilege_abuse",
-    title: "2. Unauthorized Admin Access",
-    metric: "Higher Access Attempt",
-    desc: "An attempt was made to gain higher system access.",
-    target: "System Administrator",
-    badgeStyle: "bg-amber-100 text-amber-800 border-amber-300",
-    icon: "terminal",
-    accent: "border-amber-500/40 bg-amber-50/40",
-  },
-  {
-    id: "off_hours_mfa_attack",
-    title: "3. Unusual Login Attempts",
-    metric: "Unusual Time Login",
-    desc: "Multiple login attempts were detected at an unusual time.",
-    target: "Department Manager",
-    badgeStyle: "bg-blue-100 text-blue-800 border-blue-300",
-    icon: "schedule",
-    accent: "border-blue-500/40 bg-blue-50/40",
-  },
-  {
-    id: "cloud_data_dump",
-    title: "4. Large External Data Transfer",
-    metric: "Large Data Transfer",
-    desc: "A large amount of company data was sent outside the organization.",
-    target: "Security Analyst",
-    badgeStyle: "bg-purple-100 text-purple-800 border-purple-300",
-    icon: "cloud_upload",
-    accent: "border-purple-500/40 bg-purple-50/40",
-  },
-];
-
-const TARGET_EMPLOYEES = [
-  { id: "EMP1007", name: "John Doe", dept: "Engineering", role: "DevOps Engineer" },
-  { id: "EMP1008", name: "Alex Johnson", dept: "Sales", role: "Account Executive" },
-  { id: "EMP1011", name: "Robert Jones", dept: "Engineering", role: "Backend Developer" },
-  { id: "EMP1002", name: "Jane Doe", dept: "Marketing", role: "Growth Lead" },
-  { id: "EMP1005", name: "Sarah Connor", dept: "Engineering", role: "Security Architect" },
-];
+import { formatThreatTitle } from "../lib/threatFormatting";
 
 export default function Header({ onToggleSidebar = () => {} }) {
   const { user, logout } = useAuth();
@@ -64,34 +14,21 @@ export default function Header({ onToggleSidebar = () => {} }) {
     simLoading,
     targetedAlerts,
     realtimeAlert,
+    setRealtimeAlert,
     soundEnabled,
     setSoundEnabled,
-    showSimModal,
-    openSimModal,
-    closeSimModal,
     triggerSimulation,
     resetSimulation,
   } = useSimulation();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [simScenario, setSimScenario] = useState("usb_exfiltration");
-  const [simEmpId, setSimEmpId] = useState("EMP1007");
-  const [simError, setSimError] = useState(null);
 
   const currentRole = user?.role || "security_analyst";
   const roleTitle = ROLE_CONFIG[currentRole]?.title || "Security Analyst";
 
-  const handleSimulateSubmit = async (e) => {
-    if (e) e.preventDefault();
-    setSimError(null);
-    const result = await triggerSimulation({
-      scenario: simScenario,
-      employeeId: simEmpId,
-    });
-    if (!result.success) {
-      setSimError(result.error);
-    }
+  const handleSimulateClick = () => {
+    triggerSimulation();
   };
 
   return (
@@ -160,7 +97,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
 
           {/* Real-time Threat Trigger Quick Button */}
           <button
-            onClick={openSimModal}
+            onClick={handleSimulateClick}
             disabled={simLoading}
             className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer transition-all active:scale-95 shadow-xs ${
               simLoading
@@ -258,7 +195,7 @@ export default function Header({ onToggleSidebar = () => {} }) {
                       >
                         <div className="flex justify-between items-start">
                           <span className="font-bold text-xs text-on-surface truncate pr-2">
-                            {a.message}
+                            {formatThreatTitle(a.message)}
                           </span>
                           <span
                             className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 ${
@@ -347,163 +284,6 @@ export default function Header({ onToggleSidebar = () => {} }) {
         soundEnabled={soundEnabled}
         onDismiss={() => setRealtimeAlert(null)}
       />
-
-      {/* Global Quick Simulation Modal (Wide, full-featured dialog) */}
-      {showSimModal && (
-        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col p-5 sm:p-7 shadow-2xl relative my-auto animate-toast-slide-in overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex justify-between items-start border-b border-outline-variant pb-3.5 mb-3 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-error-container flex items-center justify-center text-error shadow-xs shrink-0">
-                  <span className="material-symbols-outlined text-[24px] animate-pulse">
-                    crisis_alert
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm sm:text-base text-on-surface leading-tight">
-                    Simulate Threat Event &amp; Run AI Detection
-                  </h3>
-                  <p className="text-[11px] text-secondary mt-0.5">
-                    Evaluates employee behavior indicators &amp; generates targeted security alerts.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={closeSimModal}
-                className="text-secondary hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
-                aria-label="Close Modal"
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
-            </div>
-
-            <form onSubmit={handleSimulateSubmit} className="space-y-4 text-xs flex-1 overflow-y-auto pr-1">
-              {simError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm shrink-0">error</span>
-                  <span className="font-medium">{simError}</span>
-                </div>
-              )}
-
-              {/* Target Employee Selection */}
-              <div>
-                <label className="font-bold text-on-surface block mb-1.5 text-xs">
-                  1. Target Monitored Employee:
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                  {TARGET_EMPLOYEES.map((emp) => {
-                    const isSelected = simEmpId === emp.id;
-                    return (
-                      <button
-                        key={emp.id}
-                        type="button"
-                        onClick={() => setSimEmpId(emp.id)}
-                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-primary bg-primary/10 ring-2 ring-primary shadow-xs"
-                            : "border-outline-variant hover:bg-surface-container-low bg-surface"
-                        }`}
-                      >
-                        <div className="font-mono font-bold text-[11px] text-primary">{emp.id}</div>
-                        <div className="font-bold text-xs text-on-surface mt-0.5 truncate">{emp.name}</div>
-                        <div className="text-[10px] text-secondary truncate">{emp.dept}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Threat Scenario Selection: 2-Column Grid */}
-              <div>
-                <label className="font-bold text-on-surface block mb-1.5 text-xs">
-                  2. Select Threat Scenario &amp; Suggested Owner:
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                  {THREAT_SCENARIOS.map((s) => {
-                    const isSelected = simScenario === s.id;
-                    return (
-                      <div
-                        key={s.id}
-                        onClick={() => setSimScenario(s.id)}
-                        className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                          isSelected
-                            ? "ring-2 ring-primary border-primary bg-primary/5 shadow-xs"
-                            : "border-outline-variant hover:bg-surface-container-low bg-surface"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                                  isSelected
-                                    ? "border-primary bg-primary"
-                                    : "border-outline"
-                                }`}
-                              >
-                                {isSelected && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                )}
-                              </div>
-                              <span className="font-bold text-xs text-on-surface flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px] text-primary">
-                                  {s.icon}
-                                </span>
-                                {s.title}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-mono font-bold text-error bg-error/10 px-1.5 py-0.5 rounded shrink-0">
-                              {s.metric}
-                            </span>
-                          </div>
-
-                          <p className="text-[11px] text-secondary mt-1 leading-snug pl-6">
-                            {s.desc}
-                          </p>
-                        </div>
-
-                        <div className="mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between pl-6">
-                          <span className="text-[10px] text-secondary">Suggested Owner:</span>
-                          <span
-                            className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${s.badgeStyle}`}
-                          >
-                            👤 {s.target}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="pt-3 border-t border-outline-variant flex items-center justify-between gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={closeSimModal}
-                  className="px-3.5 py-2 border border-outline-variant rounded-xl text-secondary font-semibold hover:bg-surface-container transition-colors cursor-pointer text-xs"
-                >
-                  Cancel
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={simLoading}
-                    className="px-4 py-2 bg-error text-white font-bold rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 shadow-md cursor-pointer disabled:opacity-50 text-xs active:scale-95"
-                  >
-                    <span className={`material-symbols-outlined text-[17px] ${simLoading ? "animate-spin" : ""}`}>
-                      {simLoading ? "progress_activity" : "crisis_alert"}
-                    </span>
-                    <span>{simLoading ? "Running AI Detection..." : "Trigger Live Threat & Run AI Scan"}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }

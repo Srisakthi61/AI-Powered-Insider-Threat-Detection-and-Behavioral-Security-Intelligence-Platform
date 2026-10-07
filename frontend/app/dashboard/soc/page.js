@@ -7,6 +7,7 @@ import RiskBadge from "../../components/RiskBadge";
 import RoleGuard from "../../components/RoleGuard";
 import { logApi, employeeApi, alertApi, anomalyApi } from "../../lib/api";
 import { useSimulation } from "../../context/SimulationContext";
+import { formatEventType } from "../../lib/threatFormatting";
 import Link from "next/link";
 
 export default function SocDashboardPage() {
@@ -46,7 +47,7 @@ export default function SocDashboardPage() {
           logsData.map((l) => ({
             id: l._id || l.id,
             timestamp: l.timestamp ? new Date(l.timestamp).toLocaleTimeString() : "Recent",
-            eventType: (l.event_type || "").toUpperCase(),
+            eventType: formatEventType(l.event_type),
             rawType: l.event_type,
             employeeId: l.employee_id,
             riskLevel:
@@ -106,7 +107,7 @@ export default function SocDashboardPage() {
             latest.map((l) => ({
               id: l._id || l.id,
               timestamp: l.timestamp ? new Date(l.timestamp).toLocaleTimeString() : "Recent",
-              eventType: (l.event_type || "").toUpperCase(),
+              eventType: formatEventType(l.event_type),
               rawType: l.event_type,
               employeeId: l.employee_id,
               riskLevel:
@@ -155,7 +156,7 @@ export default function SocDashboardPage() {
           latest.map((l) => ({
             id: l._id || l.id,
             timestamp: l.timestamp ? new Date(l.timestamp).toLocaleTimeString() : "Recent",
-            eventType: (l.event_type || "").toUpperCase(),
+            eventType: formatEventType(l.event_type),
             rawType: l.event_type,
             employeeId: l.employee_id,
             riskLevel:

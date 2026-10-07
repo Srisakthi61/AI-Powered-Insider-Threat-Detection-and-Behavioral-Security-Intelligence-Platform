@@ -7,6 +7,7 @@ import RiskBadge from "../../components/RiskBadge";
 import RoleGuard from "../../components/RoleGuard";
 import { employeeApi, alertApi, logApi, anomalyApi } from "../../lib/api";
 import { useSimulation } from "../../context/SimulationContext";
+import { formatThreatTitle, formatThreatDescription, formatEventType, formatActivityDetails } from "../../lib/threatFormatting";
 import Link from "next/link";
 
 export default function AnalystDashboardPage() {
@@ -315,7 +316,7 @@ export default function AnalystDashboardPage() {
                               <RiskBadge level={alertItem.severity} />
                             </td>
                             <td className="p-sm font-medium text-xs text-on-surface">
-                              {alertItem.message}
+                              {formatThreatTitle(alertItem.message)}
                             </td>
                             <td className="p-sm text-on-surface-variant text-xs">
                               {alertItem.employee_name || "Employee"} ({alertItem.employee_code || `ID:${alertItem.employee_id}`})
@@ -382,15 +383,15 @@ export default function AnalystDashboardPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-on-surface uppercase text-[11px]">
-                            {log.event_type}
+                          <span className="font-bold text-on-surface text-[11px]">
+                            {formatEventType(log.event_type)}
                           </span>
                           <span className="text-[10px] font-mono text-primary font-bold">
                             {log.employee_id}
                           </span>
                         </div>
-                        <p className="text-[11px] text-on-surface-variant mt-0.5 leading-snug font-mono truncate max-w-[200px]">
-                          {JSON.stringify(log.details)}
+                        <p className="text-[11px] text-on-surface-variant mt-0.5 leading-snug truncate max-w-[200px]" title={formatActivityDetails(log.details, log.event_type)}>
+                          {formatActivityDetails(log.details, log.event_type)}
                         </p>
                         <span className="text-[10px] text-outline mt-1 block">
                           {log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : "Recent"}
@@ -503,7 +504,7 @@ export default function AnalystDashboardPage() {
                       </span>
                     </div>
                     <h3 className="font-card-title text-card-title text-on-surface mt-1">
-                      {selectedAlert.message}
+                      {formatThreatTitle(selectedAlert.message)}
                     </h3>
                   </div>
                   <button
@@ -532,7 +533,7 @@ export default function AnalystDashboardPage() {
                   <div>
                     <span className="font-bold text-secondary">Incident Details:</span>
                     <p className="text-on-surface-variant bg-surface-container-low p-2.5 rounded-lg border border-outline-variant mt-1 leading-relaxed">
-                      {selectedAlert.details || "No details provided."}
+                      {formatThreatDescription(selectedAlert.details || selectedAlert.message)}
                     </p>
                   </div>
                   {selectedAlert.recommended_action && (

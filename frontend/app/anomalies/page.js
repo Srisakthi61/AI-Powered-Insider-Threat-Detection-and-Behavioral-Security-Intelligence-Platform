@@ -8,6 +8,7 @@ import RoleGuard from "../components/RoleGuard";
 import RadarScanner from "../components/RadarScanner";
 import { useSimulation } from "../context/SimulationContext";
 import { anomalyApi, employeeApi } from "../lib/api";
+import { formatThreatTitle, formatThreatDescription } from "../lib/threatFormatting";
 
 export default function AnomaliesPage() {
   const { isSimulated } = useSimulation();
@@ -436,7 +437,7 @@ export default function AnomaliesPage() {
                         <tr>
                           <th className="w-16 p-sm pl-md">Rank</th>
                           <th className="w-44 p-sm">Employee</th>
-                          <th className="w-24 p-sm">Detection Score</th>
+                          <th className="w-24 p-sm">Unusual Activity Score</th>
                           <th className="w-48 p-sm">Primary Reason</th>
                           <th className="w-36 p-sm">Suggested Owner</th>
                           <th className="w-24 p-sm">Risk</th>
@@ -469,7 +470,7 @@ export default function AnomaliesPage() {
                                   </span>
                                 </td>
                                 <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
-                                  {row.primary_reason || "Normal Activity"}
+                                  {formatThreatTitle(row.primary_reason) || "Normal Activity"}
                                 </td>
                                 <td className="p-sm">
                                   <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-bold border border-outline-variant">
@@ -703,17 +704,19 @@ export default function AnomaliesPage() {
                       >
                         <div className="flex justify-between items-center">
                           <div className="font-bold text-sm">
-                            {sandboxResult.primary_reason || "Normal Activity"}
+                            {formatThreatTitle(sandboxResult.primary_reason) || "Normal Activity"}
                           </div>
                           <RiskBadge level={sandboxResult.risk_tier} />
                         </div>
-                        <p className="text-xs mt-1">{sandboxResult.details}</p>
+                        <p className="text-xs mt-1">
+                          {formatThreatDescription(sandboxResult.details || sandboxResult.primary_reason)}
+                        </p>
                       </div>
 
                       {/* Decision Score Metric */}
                       <div className="bg-surface-container-low p-3 rounded-lg border border-outline-variant grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono">
                         <div>
-                          <span className="text-[10px] text-secondary block">DETECTION SCORE</span>
+                          <span className="text-[10px] text-secondary block">UNUSUAL ACTIVITY SCORE</span>
                           <span className={`text-base font-bold ${sandboxResult.anomaly_score < 0 ? "text-error" : "text-emerald-700"}`}>
                             {sandboxResult.anomaly_score}
                           </span>
