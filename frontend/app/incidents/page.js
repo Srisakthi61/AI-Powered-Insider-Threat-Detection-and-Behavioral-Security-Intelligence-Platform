@@ -305,23 +305,23 @@ export default function IncidentsPage() {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="table-fixed w-full min-w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-low text-secondary font-semibold">
-                  <th className="p-3 pl-4">Case ID</th>
-                  <th className="p-3">Severity</th>
-                  <th className="p-3">Title & Summary</th>
-                  <th className="p-3">Subject Employee</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Notes</th>
-                  <th className="p-3">Created</th>
-                  <th className="p-3 pr-4 text-right">Actions</th>
+                  <th className="w-24 p-3 pl-4">Case ID</th>
+                  <th className="w-24 p-3">Severity</th>
+                  <th className="w-72 p-3">Title &amp; Summary</th>
+                  <th className="w-48 p-3">Subject Employee</th>
+                  <th className="w-28 p-3">Status</th>
+                  <th className="w-20 p-3">Notes</th>
+                  <th className="w-28 p-3">Created</th>
+                  <th className="w-28 p-3 pr-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/60">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="p-10 text-center text-secondary">
+                    <td colSpan={8} className="py-8 px-6 text-center text-secondary">
                       <div className="flex items-center justify-center gap-2">
                         <span className="material-symbols-outlined animate-spin text-primary">
                           progress_activity
@@ -332,13 +332,13 @@ export default function IncidentsPage() {
                   </tr>
                 ) : !isSimulated ? (
                   <tr>
-                    <td colSpan={8} className="p-12 text-center text-secondary">
-                      <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                    <td colSpan={8} className="py-8 px-6 text-center text-secondary">
+                      <div className="w-full max-w-[420px] mx-auto flex flex-col items-center justify-center text-center gap-2">
                         <span className="material-symbols-outlined text-[36px] text-primary">
                           shield
                         </span>
                         <h4 className="font-bold text-sm text-on-surface">Incident Investigation Standby</h4>
-                        <p className="text-xs text-secondary">
+                        <p className="text-xs text-secondary leading-relaxed text-center w-full">
                           No active investigation cases in nominal baseline. Click &quot;Simulate Threat&quot; in the header to run ML inference and generate threat incidents.
                         </p>
                       </div>
@@ -346,13 +346,13 @@ export default function IncidentsPage() {
                   </tr>
                 ) : displayIncidents.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-12 text-center text-secondary">
-                      <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                    <td colSpan={8} className="py-8 px-6 text-center text-secondary">
+                      <div className="w-full max-w-[420px] mx-auto flex flex-col items-center justify-center text-center gap-2">
                         <span className="material-symbols-outlined text-[36px] text-outline">
                           folder_off
                         </span>
                         <h4 className="font-bold text-sm text-on-surface">No Incidents Found</h4>
-                        <p className="text-xs text-secondary">
+                        <p className="text-xs text-secondary leading-relaxed text-center w-full">
                           No investigation cases match your filters. Click &quot;Open New Case&quot; to formalize a threat investigation.
                         </p>
                       </div>

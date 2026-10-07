@@ -178,22 +178,38 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/60 text-on-surface">
-                {userList.map((u) => (
-                  <tr key={u.id} className="hover:bg-surface-container-low transition-colors">
-                    <td className="p-sm pl-md font-mono font-bold text-primary">
-                      USR-{u.id}
-                    </td>
-                    <td className="p-sm font-semibold">{u.email}</td>
-                    <td className="p-sm">
-                      <span className="px-2 py-0.5 rounded font-mono text-[11px] bg-secondary-container text-on-secondary-container font-semibold">
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="p-sm pr-md text-right">
-                      <RiskBadge status="Active" level="healthy" />
+                {userList.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 px-6 text-center text-secondary">
+                      <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                        <span className="material-symbols-outlined text-[32px] text-outline mb-1">
+                          person_off
+                        </span>
+                        <h4 className="font-bold text-sm text-on-surface">No Users Registered</h4>
+                        <p className="text-xs text-secondary leading-relaxed mt-1 w-full">
+                          No platform user accounts found in the database.
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  userList.map((u) => (
+                    <tr key={u.id} className="hover:bg-surface-container-low transition-colors">
+                      <td className="p-sm pl-md font-mono font-bold text-primary">
+                        USR-{u.id}
+                      </td>
+                      <td className="p-sm font-semibold">{u.email}</td>
+                      <td className="p-sm">
+                        <span className="px-2 py-0.5 rounded font-mono text-[11px] bg-secondary-container text-on-secondary-container font-semibold">
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="p-sm pr-md text-right">
+                        <RiskBadge status="Active" level="healthy" />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -228,7 +244,7 @@ export default function AdminPage() {
                     <td className="p-sm font-mono text-[11px] text-primary">
                       {r.code}
                     </td>
-                    <td className="p-sm text-secondary text-[11px] max-w-md">
+                    <td className="p-sm text-secondary text-[11px] max-w-[420px]">
                       {r.permissions}
                     </td>
                     <td className="p-sm font-bold">{r.count} users</td>

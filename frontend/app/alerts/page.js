@@ -255,21 +255,21 @@ export default function AlertsPage() {
         {/* Alerts Table */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="table-fixed w-full min-w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps text-[10px]">
-                  <th className="p-3 pl-4 font-semibold">Priority</th>
-                  <th className="p-3 font-semibold">Message &amp; Root Cause</th>
-                  <th className="p-3 font-semibold">Recommended Responder</th>
-                  <th className="p-3 font-semibold">Employee / Dept</th>
-                  <th className="p-3 font-semibold">Status</th>
-                  <th className="p-3 pr-4 font-semibold text-right">Actions</th>
+                  <th className="w-24 p-3 pl-4 font-semibold">Priority</th>
+                  <th className="w-80 p-3 font-semibold">Message &amp; Root Cause</th>
+                  <th className="w-44 p-3 font-semibold">Recommended Responder</th>
+                  <th className="w-44 p-3 font-semibold">Employee / Dept</th>
+                  <th className="w-28 p-3 font-semibold">Status</th>
+                  <th className="w-32 p-3 pr-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-body-sm text-on-surface divide-y divide-outline-variant text-xs">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-secondary">
+                    <td colSpan={6} className="py-8 px-6 text-center text-secondary">
                       <span className="material-symbols-outlined animate-spin text-[28px]">
                         progress_activity
                       </span>
@@ -277,14 +277,14 @@ export default function AlertsPage() {
                   </tr>
                 ) : filteredAlerts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-secondary">
-                      <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                    <td colSpan={6} className="py-8 px-6 text-center text-secondary">
+                      <div className="w-full max-w-[400px] mx-auto flex flex-col items-center justify-center text-center gap-2">
                         <span className="material-symbols-outlined text-[32px] text-outline">
                           notifications_off
                         </span>
-                        <h4 className="font-bold text-xs text-on-surface">No Alerts in Queue</h4>
-                        <p className="text-[11px] text-secondary">
-                          No alerts matching your criteria. Use "Simulate Threat" in the top navigation bar to trigger a threat scenario.
+                        <h4 className="font-bold text-sm text-on-surface">No Alerts in Queue</h4>
+                        <p className="text-xs text-secondary leading-relaxed text-center w-full">
+                          No alerts matching your criteria. Use &ldquo;Simulate Threat&rdquo; in the top navigation bar to trigger a threat scenario.
                         </p>
                       </div>
                     </td>

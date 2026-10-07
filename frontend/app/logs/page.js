@@ -187,7 +187,11 @@ export default function LogsPage() {
                   ) : logs.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="p-8 text-center text-secondary">
-                        No activity logs matching this query in MongoDB.
+                        <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                          <p className="text-xs text-secondary leading-relaxed text-center w-full">
+                            No activity logs matching this query in MongoDB.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (

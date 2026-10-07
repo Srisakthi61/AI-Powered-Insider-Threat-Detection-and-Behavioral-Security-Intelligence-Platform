@@ -308,7 +308,11 @@ export default function EmployeesPage() {
                 ) : filteredEmployees.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-12 text-center text-secondary">
-                      No employees found matching the filters.
+                      <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                        <p className="text-xs text-secondary leading-relaxed text-center w-full">
+                          No employees found matching the filters.
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 ) : (

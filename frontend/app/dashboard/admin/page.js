@@ -279,7 +279,22 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-variant text-on-surface">
-                    {rolesSummary.map((item) => (
+                    {rolesSummary.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-8 px-6 text-center text-secondary">
+                          <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                            <span className="material-symbols-outlined text-[28px] text-outline mb-1">
+                              admin_panel_settings
+                            </span>
+                            <h4 className="font-bold text-sm text-on-surface">No Roles Configured</h4>
+                            <p className="text-xs text-secondary leading-relaxed mt-1 w-full">
+                              No platform roles configured in the system.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      rolesSummary.map((item) => (
                       <tr
                         key={item.role}
                         className="hover:bg-surface-container-low transition-colors"
@@ -306,7 +321,7 @@ export default function AdminDashboardPage() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
               </div>

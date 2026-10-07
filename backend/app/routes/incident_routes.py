@@ -156,7 +156,7 @@ def create_incident(
     risk_data = calculate_risk_score(emp.employee_id, db=db, mongo=mongo)
     current_risk_level = (risk_data.get("risk_level") or "Low").capitalize()
 
-    if current_risk_level not in ["High", "Critical"]:
+    if current_risk_level not in ["High", "Critical"] and req.severity.upper() not in ["HIGH", "CRITICAL"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incidents can only be created for High or Critical risk employees.",

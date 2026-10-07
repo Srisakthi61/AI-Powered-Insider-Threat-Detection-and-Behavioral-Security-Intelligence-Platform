@@ -73,8 +73,10 @@ def get_admin_dashboard(
     total_baselines = 0
     try:
         if mongo is not None:
-            total_activity_logs = mongo["activity_logs"].count_documents({})
-            total_baselines = mongo["behavioral_baselines"].count_documents({})
+            sim_logs_count = mongo["activity_logs"].count_documents({"is_simulation": True})
+            if sim_logs_count > 0:
+                total_activity_logs = mongo["activity_logs"].count_documents({})
+                total_baselines = mongo["behavioral_baselines"].count_documents({})
     except Exception:
         pass
 

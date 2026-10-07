@@ -432,34 +432,45 @@ async function runAllTests() {
       await safeClick(page, profileBtnSelector);
     });
 
-    await recordTest('Simulation Pipeline', 'Open Global Threat Simulation Modal and verify scenario options', async () => {
+    await recordTest('Simulation Pipeline', 'Verify Global Simulate Threat action and trigger live ML inference', async () => {
+      await page.waitForFunction(() => {
+        const btns = Array.from(document.querySelectorAll('header button'));
+        return btns.some((b) => b.textContent.includes('Simulate Threat'));
+      }, { timeout: 8000 });
+
+      await captureScreenshot(page, '12_simulation_button_initial.png', 'Global Simulate Threat Button Initial State');
       await clickByText(page, 'header button', 'Simulate Threat');
-      await page.waitForSelector('h3', { timeout: 8000 });
-      await captureScreenshot(page, '12_simulation_modal_opened.png', 'Live Threat Simulation Modal');
+
+      // Wait for execution and state transition to "Threat Active"
+      await page.waitForFunction(() => {
+        const btns = Array.from(document.querySelectorAll('header button'));
+        return btns.some((b) => b.textContent.includes('Threat Active') || b.textContent.includes('Simulating'));
+      }, { timeout: 8000 });
+      await new Promise((r) => setTimeout(r, 1500));
+      await captureScreenshot(page, '13_simulation_active_button_state.png', 'Simulation Active in Global Header');
     });
 
-    await recordTest('Simulation Pipeline', 'Select Target Employee and Threat Scenario in Simulation Modal', async () => {
-      await clickByText(page, 'div', 'Mass USB Data Exfiltration');
-      await captureScreenshot(page, '13_simulation_modal_scenario_selected.png', 'Threat Scenario Selected');
-    });
-
-    await recordTest('Simulation Pipeline', 'Trigger Live Threat Event & Execute Isolation Forest AI Model Scan', async () => {
-      await clickByText(page, 'button[type="submit"]', 'Trigger Live Threat');
-      await new Promise((r) => setTimeout(r, 2500));
+    await recordTest('Simulation Pipeline', 'Verify Real-Time Alert Toast and Dashboard Telemetry Stream', async () => {
+      await page.waitForSelector('div[class*="animate-toast-slide-in"], h4', { timeout: 8000 });
+      await new Promise((r) => setTimeout(r, 1000));
       await captureScreenshot(page, '14_simulation_active_realtime_toast.png', 'Real-time Threat Toast Alert');
       await captureScreenshot(page, '15_analyst_dashboard_simulated_state.png', 'Analyst Dashboard with Active Simulated Threat');
     });
 
     await recordTest('Simulation Pipeline', 'Test Simulation Reset button to restore nominal telemetry state', async () => {
       const resetBtnClicked = await page.evaluate(() => {
-        const btns = Array.from(document.querySelectorAll('button'));
+        const btns = Array.from(document.querySelectorAll('header button, button'));
         const b = btns.find((x) => x.textContent.trim() === 'Reset' || x.textContent.includes('Reset Simulation') || x.textContent.includes('Clear Simulation') || x.textContent.includes('Reset to Baseline'));
         if (b) { b.click(); return true; }
         return false;
       });
 
       if (resetBtnClicked) {
-        await new Promise((r) => setTimeout(r, 2000));
+        await page.waitForFunction(() => {
+          const btns = Array.from(document.querySelectorAll('header button'));
+          return btns.some((b) => b.textContent.includes('Simulate Threat'));
+        }, { timeout: 8000 }).catch(() => {});
+        await new Promise((r) => setTimeout(r, 1500));
         await captureScreenshot(page, '15b_simulation_reset_complete.png', 'Simulation Telemetry Cleared');
       } else {
         await page.keyboard.press('Escape');
@@ -643,6 +654,12 @@ async function runAllTests() {
     });
 
     await recordTest('Screen: Employee Directory', 'Test "Register Employee" modal and PostgreSQL creation form', async () => {
+      await navigateTo(page, '/employees');
+      await page.waitForFunction(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        return btns.some((b) => b.textContent.includes('Register Employee'));
+      }, { timeout: 8000 });
+
       await clickByText(page, 'button', 'Register Employee');
       await page.waitForSelector('form', { timeout: 6000 });
       await captureScreenshot(page, '27_create_employee_modal.png', 'Register Employee Modal');

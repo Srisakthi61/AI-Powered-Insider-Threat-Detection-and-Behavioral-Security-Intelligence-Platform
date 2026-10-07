@@ -395,16 +395,18 @@ export default function ManagerDashboardPage() {
             </div>
 
             {!isSimulated || topRisks.length === 0 ? (
-              <div className="py-10 flex flex-col items-center justify-center text-center w-full min-w-0">
-                <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
-                  <span className="material-symbols-outlined text-[24px]">verified</span>
+              <div className="py-8 px-6 flex flex-col items-center justify-center text-center w-full min-w-0">
+                <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                    <span className="material-symbols-outlined text-[24px]">verified</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-on-surface">
+                    No high-risk employee profiles detected.
+                  </h4>
+                  <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
+                    Threat evaluations will appear here after simulation.
+                  </p>
                 </div>
-                <h4 className="font-bold text-sm text-on-surface">
-                  No high-risk employee profiles detected.
-                </h4>
-                <p className="text-xs text-secondary text-center leading-relaxed max-w-md mt-1">
-                  Threat evaluations will appear here after simulation.
-                </p>
               </div>
             ) : (
               <div className="flex-1 overflow-auto w-full min-w-0">

@@ -269,16 +269,18 @@ export default function AnalystDashboardPage() {
               </div>
 
               {!isSimulated || activeAlerts.length === 0 ? (
-                <div className="flex-1 w-full min-w-0 p-8 sm:p-12 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
-                    <span className="material-symbols-outlined text-[24px]">verified_user</span>
+                <div className="flex-1 w-full min-w-0 py-8 px-6 flex flex-col items-center justify-center text-center">
+                  <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                      <span className="material-symbols-outlined text-[24px]">verified_user</span>
+                    </div>
+                    <h4 className="font-bold text-sm text-on-surface">
+                      No active security alerts.
+                    </h4>
+                    <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
+                      Threat telemetry will appear here after simulation.
+                    </p>
                   </div>
-                  <h4 className="font-bold text-sm text-on-surface">
-                    No active security alerts.
-                  </h4>
-                  <p className="text-xs text-secondary text-center leading-relaxed max-w-md mt-1">
-                    Threat telemetry will appear here after simulation.
-                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto w-full min-w-0">
@@ -361,12 +363,12 @@ export default function AnalystDashboardPage() {
               </div>
               <div className="p-md flex-1 overflow-y-auto relative space-y-4 max-h-[380px]">
                 {!isSimulated || displayEvents.length === 0 ? (
-                  <div className="p-8 text-center text-secondary text-xs flex flex-col items-center justify-center gap-2">
+                  <div className="w-full max-w-[280px] mx-auto p-8 text-center text-secondary text-xs flex flex-col items-center justify-center gap-2">
                     <span className="material-symbols-outlined text-[28px] text-outline">
                       dataset
                     </span>
                     <p className="text-xs font-medium">Awaiting Telemetry Stream</p>
-                    <p className="text-[10px] text-secondary/80">
+                    <p className="text-[10px] text-secondary/80 text-center leading-relaxed w-full">
                       Telemetry logs will stream live once threat events are initiated.
                     </p>
                   </div>

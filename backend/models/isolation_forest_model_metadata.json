@@ -21,10 +21,10 @@
   "scaler_saved": true,
   "path": "C:\\Users\\srisa\\project (clg)\\AI-Powered-Insider-Threat-Detection-and-Behavioral-Security-Intelligence-Platform\\backend\\models\\isolation_forest_model.joblib",
   "validation_metrics": {
-    "employee_count": 23,
-    "contamination": 0.08695652173913043,
+    "employee_count": 13,
+    "contamination": 0.15384615384615385,
     "n_estimators": 200
   },
-  "contamination": 0.08695652173913043,
+  "contamination": 0.15384615384615385,
   "n_estimators": 200
 }

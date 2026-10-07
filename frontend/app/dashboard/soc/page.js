@@ -334,7 +334,7 @@ export default function SocDashboardPage() {
           {/* Main Grid: Activity Stream + Right Widgets */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
             {/* Live Activity Stream (Left 7/12) */}
-            <div className="lg:col-span-7 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col h-[520px] overflow-hidden shadow-xs">
+            <div className="lg:col-span-7 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col min-h-[380px] lg:h-[480px] overflow-hidden shadow-xs">
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
@@ -373,16 +373,18 @@ export default function SocDashboardPage() {
 
               {/* Scrolling Content Area */}
               {!isSimulated || filteredLogs.length === 0 ? (
-                <div className="flex-1 p-8 sm:p-12 flex flex-col items-center justify-center text-center w-full min-w-0 text-secondary">
-                  <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
-                    <span className="material-symbols-outlined text-[26px]">sensors_off</span>
+                <div className="flex-1 py-8 px-6 flex flex-col items-center justify-center text-center w-full min-w-0 text-secondary">
+                  <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                      <span className="material-symbols-outlined text-[26px]">sensors_off</span>
+                    </div>
+                    <h4 className="font-bold text-sm text-on-surface">
+                      No activity logs in stream.
+                    </h4>
+                    <p className="text-xs text-secondary text-center leading-relaxed mt-1 w-full">
+                      Threat telemetry will stream here after simulation or manual log ingestion.
+                    </p>
                   </div>
-                  <h4 className="font-bold text-sm text-on-surface">
-                    No activity logs in stream.
-                  </h4>
-                  <p className="text-xs text-secondary text-center leading-relaxed max-w-md mt-1">
-                    Threat telemetry will stream here after simulation or manual log ingestion.
-                  </p>
                 </div>
               ) : (
                 <div className="flex-1 overflow-y-auto relative w-full min-w-0">

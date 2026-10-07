@@ -6,9 +6,11 @@ import MetricCard from "../components/MetricCard";
 import RiskBadge from "../components/RiskBadge";
 import RoleGuard from "../components/RoleGuard";
 import RadarScanner from "../components/RadarScanner";
+import { useSimulation } from "../context/SimulationContext";
 import { anomalyApi, employeeApi } from "../lib/api";
 
 export default function AnomaliesPage() {
+  const { isSimulated } = useSimulation();
   const [activeTab, setActiveTab] = useState("ml_model"); // 'ml_model' | 'baselines' | 'sandbox'
   const [stats, setStats] = useState(null);
   const [report, setReport] = useState(null);
@@ -275,9 +277,9 @@ export default function AnomaliesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
               title="Telemetry Data Points"
-              value={stats?.total_activity_logs ? Number(stats.total_activity_logs).toLocaleString() : "10,000"}
-              trend="MongoDB Store"
-              trendType="up-safe"
+              value={isSimulated && stats?.total_activity_logs ? Number(stats.total_activity_logs).toLocaleString() : "0"}
+              trend={isSimulated ? "MongoDB Store" : "Standby"}
+              trendType={isSimulated ? "up-safe" : "neutral"}
               icon="dataset"
               iconBg="bg-primary-container"
               iconColor="text-on-primary-container"
@@ -295,9 +297,9 @@ export default function AnomaliesPage() {
             />
             <MetricCard
               title="ML Flagged Outliers"
-              value={report?.flagged_count ?? 0}
-              trend={report?.flagged_count > 0 ? "Threats Detected" : "Isolation Forest"}
-              trendType={(report?.flagged_count || 0) > 0 ? "up-danger" : "neutral"}
+              value={isSimulated ? (report?.flagged_count ?? 0) : 0}
+              trend={isSimulated && (report?.flagged_count || 0) > 0 ? "Threats Detected" : "Standby"}
+              trendType={isSimulated && (report?.flagged_count || 0) > 0 ? "up-danger" : "neutral"}
               icon="psychology"
               iconBg="bg-error-container"
               iconColor="text-error"
@@ -398,12 +400,13 @@ export default function AnomaliesPage() {
               </div>
 
               {/* Threat Radar Grid (Left Radar, Right Flagged Outliers) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
                 {/* Threat Radar Visualization (Left 5/12) */}
-                <div className="lg:col-span-5">
+                <div className="lg:col-span-5 flex flex-col h-full">
                   <RadarScanner
-                    employees={report?.all_analyzed || []}
-                    flaggedCount={report?.flagged_count || 0}
+                    employees={isSimulated ? (report?.all_analyzed || []) : []}
+                    flaggedCount={isSimulated ? (report?.flagged_count || 0) : 0}
+                    isSimulated={isSimulated}
                     onSelectEmployee={(empId) => {
                       setSelectedEmpId(empId);
                       setActiveTab("baselines");
@@ -412,14 +415,14 @@ export default function AnomaliesPage() {
                 </div>
 
                 {/* Ranked Threat Outliers Table (Right 7/12) */}
-                <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs flex flex-col">
-                  <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
+                <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs flex flex-col h-full min-h-[440px]">
+                  <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-xs text-on-surface">
                         Flagged Threat Outliers (Ranked by Decision Score)
                       </h3>
                       <span className="text-[10px] bg-error-container text-error px-2 py-0.5 rounded-full font-bold">
-                        {report?.flagged_count || 0} Flagged
+                        {isSimulated ? (report?.flagged_count || 0) : 0} Flagged
                       </span>
                     </div>
                     <span className="text-[11px] text-secondary">
@@ -427,68 +430,86 @@ export default function AnomaliesPage() {
                     </span>
                   </div>
 
-                  <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead className="bg-surface-container-low border-b border-outline-variant text-[10px] uppercase font-bold text-secondary">
+                  <div className="overflow-x-auto flex-1 overflow-y-auto min-h-0">
+                    <table className="table-fixed w-full min-w-full text-left border-collapse text-xs">
+                      <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant text-[10px] uppercase font-bold text-secondary backdrop-blur-xs">
                         <tr>
-                          <th className="p-sm pl-md">Rank</th>
-                          <th className="p-sm">Employee</th>
-                          <th className="p-sm">ML Score</th>
-                          <th className="p-sm">Primary Threat Vector</th>
-                          <th className="p-sm">Recommended Responder</th>
-                          <th className="p-sm">Risk</th>
-                          <th className="p-sm pr-md text-right">Inspect</th>
+                          <th className="w-16 p-sm pl-md">Rank</th>
+                          <th className="w-44 p-sm">Employee</th>
+                          <th className="w-24 p-sm">ML Score</th>
+                          <th className="w-48 p-sm">Primary Threat Vector</th>
+                          <th className="w-36 p-sm">Recommended Responder</th>
+                          <th className="w-24 p-sm">Risk</th>
+                          <th className="w-24 p-sm pr-md text-right">Inspect</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-outline-variant/60 text-on-surface">
-                        {report?.all_analyzed?.map((row) => {
-                          const isHighRisk = row.risk_level === "Critical" || row.risk_level === "High";
-                          return (
-                            <tr
-                              key={row.employee_id}
-                              className={`hover:bg-surface-container-low transition-colors ${
-                                isHighRisk ? "bg-error-container/10" : ""
-                              }`}
-                            >
-                              <td className="p-sm pl-md font-mono font-bold">
-                                #{row.threat_rank || 1}
-                              </td>
-                              <td className="p-sm">
-                                <div className="font-bold text-on-surface">{row.name}</div>
-                                <div className="text-[10px] font-mono text-primary">
-                                  {row.employee_id} • {row.department}
+                        {isSimulated && report?.all_analyzed && report.all_analyzed.length > 0 ? (
+                          report.all_analyzed.map((row) => {
+                            const isHighRisk = row.risk_level === "Critical" || row.risk_level === "High";
+                            return (
+                              <tr
+                                key={row.employee_id}
+                                className={`hover:bg-surface-container-low transition-colors ${
+                                  isHighRisk ? "bg-error-container/10" : ""
+                                }`}
+                              >
+                                <td className="p-sm pl-md font-mono font-bold">
+                                  #{row.threat_rank || 1}
+                                </td>
+                                <td className="p-sm">
+                                  <div className="font-bold text-on-surface">{row.name}</div>
+                                  <div className="text-[10px] font-mono text-primary">
+                                    {row.employee_id} • {row.department}
+                                  </div>
+                                </td>
+                                <td className="p-sm font-mono font-bold">
+                                  <span className={row.anomaly_score < 0 ? (isHighRisk ? "text-error" : "text-amber-600") : "text-emerald-600"}>
+                                    {row.anomaly_score?.toFixed(4)}
+                                  </span>
+                                </td>
+                                <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
+                                  {row.primary_reason || "Normal Baseline"}
+                                </td>
+                                <td className="p-sm">
+                                  <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-bold border border-outline-variant">
+                                    {row.target_role_title || "Security Analyst"}
+                                  </span>
+                                </td>
+                                <td className="p-sm">
+                                  <RiskBadge level={row.risk_level || "Low"} />
+                                </td>
+                                <td className="p-sm pr-md text-right">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedEmpId(row.employee_id);
+                                      setActiveTab("baselines");
+                                    }}
+                                    className="text-primary hover:underline text-[11px] font-semibold cursor-pointer"
+                                  >
+                                    Baseline →
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="py-12 px-6 text-center">
+                              <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
+                                <div className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-slate-400 mb-3 border border-outline-variant">
+                                  <span className="material-symbols-outlined text-2xl">radar</span>
                                 </div>
-                              </td>
-                              <td className="p-sm font-mono font-bold">
-                                <span className={row.anomaly_score < 0 ? (isHighRisk ? "text-error" : "text-amber-600") : "text-emerald-600"}>
-                                  {row.anomaly_score?.toFixed(4)}
-                                </span>
-                              </td>
-                              <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
-                                {row.primary_reason || "Normal Baseline"}
-                              </td>
-                              <td className="p-sm">
-                                <span className="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-bold border border-outline-variant">
-                                  {row.target_role_title || "Security Analyst"}
-                                </span>
-                              </td>
-                              <td className="p-sm">
-                                <RiskBadge level={row.risk_level || "Low"} />
-                              </td>
-                              <td className="p-sm pr-md text-right">
-                                <button
-                                  onClick={() => {
-                                    setSelectedEmpId(row.employee_id);
-                                    setActiveTab("baselines");
-                                  }}
-                                  className="text-primary hover:underline text-[11px] font-semibold cursor-pointer"
-                                >
-                                  Baseline →
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                                <h4 className="text-sm font-bold text-on-surface mb-1">
+                                  No Threat Outliers Detected
+                                </h4>
+                                <p className="text-xs text-secondary leading-relaxed text-center w-full">
+                                  Isolation Forest model is active in standby mode. Click &ldquo;Simulate Threat&rdquo; in the global header to evaluate live telemetry.
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
