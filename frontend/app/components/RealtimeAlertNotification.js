@@ -60,9 +60,21 @@ export default function RealtimeAlertNotification({
   const isCritical = (alert.severity || "").toLowerCase() === "critical";
 
   return (
-    <div className="fixed top-20 right-4 z-[100000] max-w-md w-full animate-toast-slide-in">
+    <div
+      style={{
+        position: "fixed",
+        top: "5rem",
+        right: "1.25rem",
+        left: "auto",
+        maxWidth: "min(28rem, calc(100vw - 2.5rem))",
+        width: "100%",
+        boxSizing: "border-box",
+        zIndex: 100000,
+      }}
+      className="animate-toast-slide-in pointer-events-auto"
+    >
       <div
-        className={`rounded-xl border p-4 shadow-2xl backdrop-blur-md transition-all ${
+        className={`rounded-xl border p-4 shadow-2xl backdrop-blur-md transition-all box-border overflow-hidden ${
           isCritical
             ? "bg-red-950/90 border-red-500 text-white shadow-red-900/50"
             : "bg-surface-container-lowest/95 border-amber-500/80 text-on-surface shadow-amber-900/20"

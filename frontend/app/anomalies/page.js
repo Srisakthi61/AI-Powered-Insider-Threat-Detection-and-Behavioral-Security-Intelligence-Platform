@@ -6,7 +6,6 @@ import MetricCard from "../components/MetricCard";
 import RiskBadge from "../components/RiskBadge";
 import RoleGuard from "../components/RoleGuard";
 import RadarScanner from "../components/RadarScanner";
-import RealtimeAlertNotification from "../components/RealtimeAlertNotification";
 import { anomalyApi, employeeApi } from "../lib/api";
 
 export default function AnomaliesPage() {
@@ -223,11 +222,7 @@ export default function AnomaliesPage() {
     <RoleGuard allowedRoles={["security_analyst", "security_manager", "soc_engineer", "admin"]}>
       <AppLayout>
         <div className="flex flex-col gap-gutter">
-          {/* Real-time Toast Component */}
-          <RealtimeAlertNotification
-            alert={realtimeAlert}
-            onDismiss={() => setRealtimeAlert(null)}
-          />
+
 
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm mb-xs">

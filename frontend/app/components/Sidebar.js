@@ -153,13 +153,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
 
         {/* Footer Navigation */}
         <div className="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-sm">
-          <Link
-            href="/support"
-            className="flex items-center gap-md px-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-caps text-label-caps transition-all cursor-pointer active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[20px]">help</span>
-            <span>Support</span>
-          </Link>
+
           <button
             onClick={logout}
             className="flex items-center gap-md px-md py-2 rounded-lg text-on-surface-variant hover:bg-error-container hover:text-error font-label-caps text-label-caps transition-all text-left w-full cursor-pointer active:scale-95"

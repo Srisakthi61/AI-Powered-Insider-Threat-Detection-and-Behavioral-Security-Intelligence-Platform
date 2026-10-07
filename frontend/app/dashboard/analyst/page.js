@@ -134,13 +134,6 @@ export default function AnalystDashboardPage() {
                   Reset
                 </button>
               )}
-              <button
-                onClick={openSimModal}
-                className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[16px]">bolt</span>
-                Simulate Threat
-              </button>
             </div>
           </div>
 
@@ -161,17 +154,10 @@ export default function AnalystDashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    No active threat scenarios are loaded yet. Click <strong>"Simulate Threat"</strong> in the navigation bar to fetch telemetry from the database, execute the Isolation Forest AI risk engine on 15 behavioral indicators, and generate role-targeted alerts.
+                    No active threat scenarios are loaded yet. Use <strong>"Simulate Threat"</strong> in the top navigation bar to fetch telemetry from the database, execute the Isolation Forest AI risk engine on 15 behavioral indicators, and generate role-targeted alerts.
                   </p>
                 </div>
               </div>
-              <button
-                onClick={openSimModal}
-                className="bg-error text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer active:scale-95 animate-pulse"
-              >
-                <span className="material-symbols-outlined text-[18px]">crisis_alert</span>
-                <span>Simulate Threat Event Now</span>
-              </button>
             </div>
           ) : (
             /* Active Milestone 2 Banner */
@@ -208,54 +194,54 @@ export default function AnalystDashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
             <MetricCard
               title="Open Alerts"
-              value={activeAlerts.length}
-              trend={activeAlerts.length > 0 ? "Active Queue" : "Standby"}
-              trendType={activeAlerts.length > 0 ? "up-danger" : "neutral"}
+              value={isSimulated ? activeAlerts.length : 0}
+              trend={isSimulated && activeAlerts.length > 0 ? "Active Queue" : "Standby"}
+              trendType={isSimulated && activeAlerts.length > 0 ? "up-danger" : "neutral"}
               icon="warning"
-              iconBg={activeAlerts.length > 0 ? "bg-error-container" : "bg-surface-container"}
-              iconColor={activeAlerts.length > 0 ? "text-error" : "text-secondary"}
-              description={activeAlerts.length > 0 ? "Requires analyst triage" : "No active alerts in queue"}
+              iconBg={isSimulated && activeAlerts.length > 0 ? "bg-error-container" : "bg-surface-container"}
+              iconColor={isSimulated && activeAlerts.length > 0 ? "text-error" : "text-secondary"}
+              description={isSimulated && activeAlerts.length > 0 ? "Requires analyst triage" : "No active alerts in queue"}
             />
             <MetricCard
               title="ML Flagged Outliers"
-              value={anomalyStats?.ml_flagged_threats ?? (activeAlerts.filter(a => (a.severity || "").toUpperCase() === "CRITICAL" || (a.severity || "").toUpperCase() === "HIGH").length || 2)}
+              value={isSimulated ? (anomalyStats?.ml_flagged_threats ?? activeAlerts.filter(a => (a.severity || "").toUpperCase() === "CRITICAL" || (a.severity || "").toUpperCase() === "HIGH").length) : 0}
               trend="Isolation Forest"
               trendType="neutral"
               icon="psychology"
-              iconBg="bg-error-container"
-              iconColor="text-error"
+              iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-error" : "text-secondary"}
               description="15 behavioral risk indicators"
             />
             <MetricCard
               title="Behavioral Baselines"
-              value={anomalyStats?.total_baselines_calculated || 78}
+              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
               trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
-              iconBg="bg-tertiary-fixed"
-              iconColor="text-tertiary"
+              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
               description="Mean & std dev statistical profiles"
             />
             <MetricCard
               title="Total Telemetry Data Points"
               value={
-                anomalyStats?.total_activity_logs
+                isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
-                  : "10,000"
+                  : "0"
               }
               trend="MongoDB Time-Series"
               trendType="up-safe"
               icon="dataset"
-              iconBg="bg-secondary-container"
-              iconColor="text-on-secondary-container"
-              description="Indexed security events"
+              iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
+              description={isSimulated ? "Indexed security events" : "Standby baseline monitoring"}
             />
           </div>
 
           {/* Main Analysis Area: Priority Queue + Recent Events Stream */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
             {/* Priority Queue (Left 8/12) */}
-            <div className="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden shadow-xs">
+            <div className="lg:col-span-8 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden shadow-xs">
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
@@ -282,98 +268,87 @@ export default function AnalystDashboardPage() {
                 )}
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps">
-                      <th className="p-sm pl-md font-semibold">Priority</th>
-                      <th className="p-sm font-semibold">Alert Message</th>
-                      <th className="p-sm font-semibold">Employee</th>
-                      <th className="p-sm font-semibold">Timestamp</th>
-                      <th className="p-sm font-semibold">Status</th>
-                      <th className="p-sm pr-md font-semibold text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-body-sm text-on-surface divide-y divide-outline-variant">
-                    {loading ? (
-                      <tr>
-                        <td colSpan={6} className="p-8 text-center text-secondary">
-                          <span className="material-symbols-outlined animate-spin text-[24px]">
-                            progress_activity
-                          </span>
-                        </td>
+              {!isSimulated || activeAlerts.length === 0 ? (
+                <div className="flex-1 w-full min-w-0 p-8 sm:p-12 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                    <span className="material-symbols-outlined text-[24px]">verified_user</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-on-surface">
+                    No active security alerts.
+                  </h4>
+                  <p className="text-xs text-secondary text-center leading-relaxed max-w-md mt-1">
+                    Threat telemetry will appear here after simulation.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto w-full min-w-0">
+                  <table className="w-full min-w-full text-left border-collapse table-auto">
+                    <thead>
+                      <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps">
+                        <th className="p-sm pl-md font-semibold">Priority</th>
+                        <th className="p-sm font-semibold">Alert Message</th>
+                        <th className="p-sm font-semibold">Employee</th>
+                        <th className="p-sm font-semibold">Timestamp</th>
+                        <th className="p-sm font-semibold">Status</th>
+                        <th className="p-sm pr-md font-semibold text-right">Action</th>
                       </tr>
-                    ) : !isSimulated || activeAlerts.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="p-12 text-center">
-                          <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
-                            <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center">
-                              <span className="material-symbols-outlined text-[24px]">
-                                verified_user
-                              </span>
-                            </div>
-                            <h4 className="font-bold text-xs text-on-surface mt-1">
-                              No Active Security Alerts in Queue
-                            </h4>
-                            <p className="text-[11px] text-secondary text-center leading-relaxed">
-                              The priority queue is empty. Click the <strong>"Simulate Threat"</strong> button above to inject an insider threat scenario and trigger the AI risk detection pipeline.
-                            </p>
-                            <button
-                              onClick={openSimModal}
-                              className="mt-2 bg-primary text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-container transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
-                            >
-                              <span className="material-symbols-outlined text-[15px]">bolt</span>
-                              Simulate Threat
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      activeAlerts.map((alertItem) => (
-                        <tr
-                          key={alertItem.id}
-                          className="hover:bg-surface-container-low transition-colors group cursor-pointer"
-                          onClick={() => setSelectedAlert(alertItem)}
-                        >
-                          <td className="p-sm pl-md">
-                            <RiskBadge level={alertItem.severity} />
-                          </td>
-                          <td className="p-sm font-medium text-xs text-on-surface">
-                            {alertItem.message}
-                          </td>
-                          <td className="p-sm text-on-surface-variant text-xs">
-                            {alertItem.employee_name || "Employee"} ({alertItem.employee_code || `ID:${alertItem.employee_id}`})
-                          </td>
-                          <td className="p-sm text-on-surface-variant text-xs font-mono">
-                            {alertItem.created_at ? new Date(alertItem.created_at).toLocaleTimeString() : "Recent"}
-                          </td>
-                          <td className="p-sm">
-                            <RiskBadge status={alertItem.status} />
-                          </td>
-                          <td className="p-sm pr-md text-right">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedAlert(alertItem);
-                              }}
-                              className="p-1 text-primary hover:bg-primary-fixed rounded transition-colors cursor-pointer"
-                              title="View Alert Details"
-                            >
-                              <span className="material-symbols-outlined text-[18px]">
-                                open_in_new
-                              </span>
-                            </button>
+                    </thead>
+                    <tbody className="text-body-sm text-on-surface divide-y divide-outline-variant">
+                      {loading ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-secondary">
+                            <span className="material-symbols-outlined animate-spin text-[24px]">
+                              progress_activity
+                            </span>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      ) : (
+                        activeAlerts.map((alertItem) => (
+                          <tr
+                            key={alertItem.id}
+                            className="hover:bg-surface-container-low transition-colors group cursor-pointer"
+                            onClick={() => setSelectedAlert(alertItem)}
+                          >
+                            <td className="p-sm pl-md">
+                              <RiskBadge level={alertItem.severity} />
+                            </td>
+                            <td className="p-sm font-medium text-xs text-on-surface">
+                              {alertItem.message}
+                            </td>
+                            <td className="p-sm text-on-surface-variant text-xs">
+                              {alertItem.employee_name || "Employee"} ({alertItem.employee_code || `ID:${alertItem.employee_id}`})
+                            </td>
+                            <td className="p-sm text-on-surface-variant text-xs font-mono">
+                              {alertItem.created_at ? new Date(alertItem.created_at).toLocaleTimeString() : "Recent"}
+                            </td>
+                            <td className="p-sm">
+                              <RiskBadge status={alertItem.status} />
+                            </td>
+                            <td className="p-sm pr-md text-right">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedAlert(alertItem);
+                                }}
+                                className="p-1 text-primary hover:bg-primary-fixed rounded transition-colors cursor-pointer"
+                                title="View Alert Details"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">
+                                  open_in_new
+                                </span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Recent Events Stream (Right 4/12) */}
-            <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col shadow-xs">
+            <div className="lg:col-span-4 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col shadow-xs">
               <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
                 <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
                   Recent Security Events (MongoDB)

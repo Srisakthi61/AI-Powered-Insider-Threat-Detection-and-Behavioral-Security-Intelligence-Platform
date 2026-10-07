@@ -17,7 +17,18 @@ def calculate_login_time_baseline(employee_id: str, mongo=None) -> Optional[Dict
     if len(logs) < 5:
         return None  # not enough data yet for a meaningful baseline
         
-    login_hours = [log["timestamp"].hour + log["timestamp"].minute / 60.0 for log in logs if "timestamp" in log and log["timestamp"]]
+    login_hours = []
+    for log in logs:
+        ts = log.get("timestamp")
+        if not ts:
+            continue
+        if isinstance(ts, str):
+            try:
+                ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            except Exception:
+                continue
+        if hasattr(ts, "hour"):
+            login_hours.append(ts.hour + ts.minute / 60.0)
     if len(login_hours) < 5:
         return None
         

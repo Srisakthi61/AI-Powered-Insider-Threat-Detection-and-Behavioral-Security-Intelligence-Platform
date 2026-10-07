@@ -148,13 +148,6 @@ export default function AdminDashboardPage() {
                   Reset
                 </button>
               )}
-              <button
-                onClick={openSimModal}
-                className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[16px]">bolt</span>
-                Simulate Threat
-              </button>
               <Link
                 href="/reports"
                 className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
@@ -220,23 +213,27 @@ export default function AdminDashboardPage() {
             />
             <MetricCard
               title="Security Incidents"
-              value={`${adminData?.open_incidents ?? 0} Open`}
-              trend={`${adminData?.total_incidents ?? 0} Total`}
+              value={isSimulated ? `${adminData?.open_incidents ?? 0} Open` : "0 Open"}
+              trend={isSimulated ? `${adminData?.total_incidents ?? 0} Total` : "0 Total"}
               trendType="neutral"
               icon="gavel"
-              iconBg="bg-tertiary-fixed"
-              iconColor="text-tertiary"
-              description="Formal investigation cases"
+              iconBg={isSimulated && (adminData?.open_incidents ?? 0) > 0 ? "bg-error-container" : "bg-tertiary-fixed"}
+              iconColor={isSimulated && (adminData?.open_incidents ?? 0) > 0 ? "text-error" : "text-tertiary"}
+              description={isSimulated ? "Formal investigation cases" : "No active incident cases"}
             />
             <MetricCard
               title="Telemetry Activity Logs"
-              value={Number(adminData?.audit_activity?.total_activity_logs || 10000).toLocaleString()}
+              value={
+                isSimulated && adminData?.audit_activity?.total_activity_logs
+                  ? Number(adminData.audit_activity.total_activity_logs).toLocaleString()
+                  : "0"
+              }
               trend="MongoDB Time-Series"
               trendType="up-good"
               icon="dataset"
-              iconBg="bg-secondary-container"
-              iconColor="text-on-secondary-container"
-              description="High-throughput security logs"
+              iconBg={isSimulated ? "bg-secondary-container" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-on-secondary-container" : "text-secondary"}
+              description={isSimulated ? "High-throughput security logs" : "Standby monitoring"}
             />
             <MetricCard
               title="System Platform Health"
@@ -253,7 +250,7 @@ export default function AdminDashboardPage() {
           {/* Central Widget & System Health Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
             {/* User & Role Management Table (2 cols) */}
-            <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs flex flex-col">
+            <div className="lg:col-span-2 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xs flex flex-col">
               <div className="p-md border-b border-outline-variant flex justify-between items-center">
                 <div>
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">

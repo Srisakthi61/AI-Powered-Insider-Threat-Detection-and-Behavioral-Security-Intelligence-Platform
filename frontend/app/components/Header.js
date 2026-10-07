@@ -192,24 +192,39 @@ export default function Header({ onToggleSidebar = () => {} }) {
           {/* Real-time Threat Trigger Quick Button */}
           <button
             onClick={openSimModal}
+            disabled={simLoading}
             className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer transition-all active:scale-95 shadow-xs ${
-              isSimulated
+              simLoading
+                ? "bg-primary/70 text-white cursor-not-allowed opacity-80"
+                : isSimulated
                 ? "bg-primary text-white hover:bg-primary-container"
                 : "bg-error text-white hover:bg-red-700 shadow-md animate-pulse"
             }`}
-            title="Inject simulated threat event & run AI Isolation Forest model"
+            title={
+              simLoading
+                ? "Executing AI threat pipeline..."
+                : isSimulated
+                ? "Simulated threat scenario active"
+                : "Inject simulated threat event & run AI Isolation Forest model"
+            }
           >
-            <span className="material-symbols-outlined text-[17px]">
-              {isSimulated ? "psychology" : "bolt"}
+            <span
+              className={`material-symbols-outlined text-[17px] ${
+                simLoading ? "animate-spin" : ""
+              }`}
+            >
+              {simLoading ? "progress_activity" : isSimulated ? "psychology" : "bolt"}
             </span>
-            <span className="font-semibold">Simulate Threat</span>
+            <span className="font-semibold">
+              {simLoading ? "Simulating..." : isSimulated ? "Threat Active" : "Simulate Threat"}
+            </span>
           </button>
 
           {/* Reset Dashboard button (visible if simulated) */}
           {isSimulated && (
             <button
               onClick={resetSimulation}
-              className="hidden lg:flex items-center gap-1 text-[11px] font-semibold text-secondary hover:text-error bg-surface-container-low hover:bg-error-container/30 px-2.5 py-2 rounded-xl border border-outline-variant transition-colors cursor-pointer"
+              className="flex items-center gap-1 text-[11px] font-semibold text-secondary hover:text-error bg-surface-container-low hover:bg-error-container/30 px-2.5 py-2 rounded-xl border border-outline-variant transition-colors cursor-pointer active:scale-95 shadow-xs"
               title="Reset dashboards to empty standby state"
             >
               <span className="material-symbols-outlined text-[14px]">restart_alt</span>
@@ -258,17 +273,9 @@ export default function Header({ onToggleSidebar = () => {} }) {
                   {targetedAlerts.length === 0 ? (
                     <div className="p-4 text-center text-secondary text-xs">
                       No active alerts targeted for your role right now.
-                      <div className="mt-2">
-                        <button
-                          onClick={() => {
-                            setShowNotifMenu(false);
-                            openSimModal();
-                          }}
-                          className="text-[11px] text-primary font-semibold hover:underline cursor-pointer"
-                        >
-                          Click here to simulate threat
-                        </button>
-                      </div>
+                      <p className="mt-1 text-[10px] text-secondary/80">
+                        Use "Simulate Threat" in the header to trigger telemetry and model scan.
+                      </p>
                     </div>
                   ) : (
                     targetedAlerts.slice(0, 5).map((a) => (

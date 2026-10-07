@@ -612,7 +612,11 @@ def reset_simulation(
     re-computes clean baselines and nominal risk snapshots.
     """
     try:
+        from app.models import Notification
+        db.query(Notification).delete()
         db.query(InvestigationNote).delete()
+        db.query(Alert).update({Alert.incident_id: None})
+        db.commit()
         db.query(Alert).delete()
         db.query(Incident).delete()
         db.query(RiskSnapshot).delete()

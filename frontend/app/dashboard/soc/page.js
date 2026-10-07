@@ -231,13 +231,6 @@ export default function SocDashboardPage() {
                 </button>
               )}
               <button
-                onClick={openSimModal}
-                className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[16px]">bolt</span>
-                Simulate Threat
-              </button>
-              <button
                 onClick={() => setShowIngestModal(true)}
                 className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
               >
@@ -264,17 +257,10 @@ export default function SocDashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    Live telemetry stream is waiting for incident events. Click <strong>"Simulate Threat"</strong> to inject mass USB data exfiltration or privilege escalation into MongoDB and observe real-time AI outlier detection.
+                    Live telemetry stream is waiting for incident events. Use <strong>"Simulate Threat"</strong> in the top navigation bar to inject mass USB data exfiltration or privilege escalation into MongoDB and observe real-time AI outlier detection.
                   </p>
                 </div>
               </div>
-              <button
-                onClick={openSimModal}
-                className="bg-error text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer active:scale-95 animate-pulse"
-              >
-                <span className="material-symbols-outlined text-[18px]">bolt</span>
-                <span>Simulate Threat Event</span>
-              </button>
             </div>
           ) : (
             <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
@@ -302,36 +288,36 @@ export default function SocDashboardPage() {
             <MetricCard
               title="Total Telemetry Logs"
               value={
-                anomalyStats?.total_activity_logs
+                isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
-                  : "10,000"
+                  : "0"
               }
               trend="MongoDB Time-Series"
               trendType="up-safe"
               icon="dataset"
-              iconBg="bg-primary-fixed"
-              iconColor="text-primary"
-              description="Indexed security events"
+              iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-primary" : "text-secondary"}
+              description={isSimulated ? "Indexed security events" : "Standby stream"}
             />
             <MetricCard
               title="Behavioral Baselines"
-              value={anomalyStats?.total_baselines_calculated || 78}
+              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
               trend="6 Indicators / Emp"
               trendType="neutral"
               icon="tune"
-              iconBg="bg-tertiary-fixed"
-              iconColor="text-tertiary"
-              description="MongoDB Baselines Store"
+              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
+              description={isSimulated ? "MongoDB Baselines Store" : "Standby baselines"}
             />
             <MetricCard
               title="Active Alerts"
-              value={alertsCount}
+              value={isSimulated ? alertsCount : 0}
               trend="PostgreSQL Store"
-              trendType={alertsCount > 0 ? "up-danger" : "neutral"}
+              trendType={isSimulated && alertsCount > 0 ? "up-danger" : "neutral"}
               icon="warning"
-              iconBg={alertsCount > 0 ? "bg-error-container" : "bg-surface-container"}
-              iconColor={alertsCount > 0 ? "text-error" : "text-secondary"}
-              description={alertsCount > 0 ? "Active triage queue" : "No active alerts"}
+              iconBg={isSimulated && alertsCount > 0 ? "bg-error-container" : "bg-surface-container"}
+              iconColor={isSimulated && alertsCount > 0 ? "text-error" : "text-secondary"}
+              description={isSimulated && alertsCount > 0 ? "Active triage queue" : "No active alerts"}
             />
             <MetricCard
               title="Monitored Employees"
@@ -348,7 +334,7 @@ export default function SocDashboardPage() {
           {/* Main Grid: Activity Stream + Right Widgets */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
             {/* Live Activity Stream (Left 7/12) */}
-            <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col h-[520px] overflow-hidden shadow-xs">
+            <div className="lg:col-span-7 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col h-[520px] overflow-hidden shadow-xs">
               <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
                 <div className="flex items-center gap-2">
                   <h2 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
@@ -386,33 +372,31 @@ export default function SocDashboardPage() {
               </div>
 
               {/* Scrolling Content Area */}
-              <div className="flex-1 overflow-y-auto relative">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-surface-container-low sticky top-0 z-10 border-b border-outline-variant">
-                    <tr className="text-[10px] uppercase font-bold text-secondary tracking-wider">
-                      <th className="px-md py-2">Timestamp</th>
-                      <th className="px-md py-2">Event Type</th>
-                      <th className="px-md py-2">Employee ID</th>
-                      <th className="px-md py-2">Risk Level</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-body-sm text-on-surface divide-y divide-outline-variant/60 text-xs">
-                    {!isSimulated || filteredLogs.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="p-12 text-center text-secondary">
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <span className="material-symbols-outlined text-[28px] text-outline">
-                              sensors_off
-                            </span>
-                            <p className="font-semibold text-xs text-on-surface">No Activity Logs in Stream</p>
-                            <p className="text-[11px] text-secondary">
-                              Click "Simulate Threat" or "Ingest Log" to stream live events.
-                            </p>
-                          </div>
-                        </td>
+              {!isSimulated || filteredLogs.length === 0 ? (
+                <div className="flex-1 p-8 sm:p-12 flex flex-col items-center justify-center text-center w-full min-w-0 text-secondary">
+                  <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                    <span className="material-symbols-outlined text-[26px]">sensors_off</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-on-surface">
+                    No activity logs in stream.
+                  </h4>
+                  <p className="text-xs text-secondary text-center leading-relaxed max-w-md mt-1">
+                    Threat telemetry will stream here after simulation or manual log ingestion.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto relative w-full min-w-0">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-surface-container-low sticky top-0 z-10 border-b border-outline-variant">
+                      <tr className="text-[10px] uppercase font-bold text-secondary tracking-wider">
+                        <th className="px-md py-2">Timestamp</th>
+                        <th className="px-md py-2">Event Type</th>
+                        <th className="px-md py-2">Employee ID</th>
+                        <th className="px-md py-2">Risk Level</th>
                       </tr>
-                    ) : (
-                      filteredLogs.map((log) => (
+                    </thead>
+                    <tbody className="text-body-sm text-on-surface divide-y divide-outline-variant/60 text-xs">
+                      {filteredLogs.map((log) => (
                         <tr
                           key={log.id}
                           className={`hover:bg-surface-container-low transition-colors h-11 ${
@@ -445,15 +429,15 @@ export default function SocDashboardPage() {
                             <RiskBadge level={log.riskLevel} />
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Right Column: Secondary Widgets (Right 5/12) */}
-            <div className="lg:col-span-5 flex flex-col gap-gutter h-[520px]">
+            <div className="lg:col-span-5 min-w-0 flex flex-col gap-gutter h-[520px]">
               {/* Event Distribution Widget */}
               <div className="bg-surface-container-lowest border border-outline-variant rounded-xl flex-1 flex flex-col p-md shadow-xs">
                 <div className="mb-2 border-b border-outline-variant pb-2">

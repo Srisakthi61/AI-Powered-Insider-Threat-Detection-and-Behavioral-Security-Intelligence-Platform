@@ -94,19 +94,27 @@ export const SimulationProvider = ({ children }) => {
   }, []);
 
   const fetchTargetedAlerts = useCallback(async () => {
+    if (!isSimulated) {
+      setTargetedAlerts([]);
+      return;
+    }
     try {
       const data = await alertApi.getRoleTargeted();
       if (data && Array.isArray(data.targeted_alerts)) {
         setTargetedAlerts(data.targeted_alerts);
       }
     } catch (err) {}
-  }, []);
+  }, [isSimulated]);
 
   useEffect(() => {
-    fetchTargetedAlerts();
-    const interval = setInterval(fetchTargetedAlerts, 8000);
-    return () => clearInterval(interval);
-  }, [fetchTargetedAlerts]);
+    if (isSimulated) {
+      fetchTargetedAlerts();
+      const interval = setInterval(fetchTargetedAlerts, 8000);
+      return () => clearInterval(interval);
+    } else {
+      setTargetedAlerts([]);
+    }
+  }, [isSimulated, fetchTargetedAlerts]);
 
   const openSimModal = useCallback(() => setShowSimModal(true), []);
   const closeSimModal = useCallback(() => setShowSimModal(false), []);

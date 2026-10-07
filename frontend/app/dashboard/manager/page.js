@@ -122,13 +122,6 @@ export default function ManagerDashboardPage() {
                   Reset
                 </button>
               )}
-              <button
-                onClick={openSimModal}
-                className="bg-primary text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[16px]">bolt</span>
-                Simulate Threat
-              </button>
             </div>
           </div>
 
@@ -149,17 +142,10 @@ export default function ManagerDashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-secondary mt-1 max-w-2xl leading-relaxed">
-                    No departmental threat vectors are currently flagged. Click <strong>"Simulate Threat"</strong> in the navigation bar to evaluate employee risk profiles, department benchmarks, and generate manager-targeted alerts.
+                    No departmental threat vectors are currently flagged. Use <strong>"Simulate Threat"</strong> in the top navigation bar to evaluate employee risk profiles, department benchmarks, and generate manager-targeted alerts.
                   </p>
                 </div>
               </div>
-              <button
-                onClick={openSimModal}
-                className="bg-error text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer active:scale-95 animate-pulse"
-              >
-                <span className="material-symbols-outlined text-[18px]">crisis_alert</span>
-                <span>Simulate Threat Event</span>
-              </button>
             </div>
           ) : (
             <div className="bg-surface-container-lowest border border-primary/20 rounded-xl p-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-md bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/5">
@@ -196,35 +182,35 @@ export default function ManagerDashboardPage() {
             <MetricCard
               title="Telemetry Data Points"
               value={
-                anomalyStats?.total_activity_logs
+                isSimulated && anomalyStats?.total_activity_logs
                   ? Number(anomalyStats.total_activity_logs).toLocaleString()
-                  : "10,000"
+                  : "0"
               }
               trend="MongoDB Time-Series"
               trendType="up-safe"
               icon="dataset"
-              iconBg="bg-primary-fixed"
-              iconColor="text-primary"
-              description="Indexed security events"
+              iconBg={isSimulated ? "bg-primary-fixed" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-primary" : "text-secondary"}
+              description={isSimulated ? "Indexed security events" : "Standby baseline"}
             />
             <MetricCard
               title="ML Flagged Outliers"
-              value={anomalyReport?.flagged_count ?? (reportData?.high_risk_profiles || 2)}
+              value={isSimulated ? (anomalyReport?.flagged_count ?? (reportData?.high_risk_profiles || 0)) : 0}
               trend="Isolation Forest"
               trendType="neutral"
               icon="psychology"
-              iconBg="bg-error-container"
-              iconColor="text-error"
+              iconBg={isSimulated ? "bg-error-container" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-error" : "text-secondary"}
               description="High risk insider profiles"
             />
             <MetricCard
               title="Behavioral Baselines"
-              value={anomalyStats?.total_baselines_calculated || 78}
+              value={isSimulated ? (anomalyStats?.total_baselines_calculated || 0) : 0}
               trend="6 Indicators / Person"
               trendType="neutral"
               icon="tune"
-              iconBg="bg-tertiary-fixed"
-              iconColor="text-tertiary"
+              iconBg={isSimulated ? "bg-tertiary-fixed" : "bg-surface-container"}
+              iconColor={isSimulated ? "text-tertiary" : "text-secondary"}
               description="Statistical baseline profiles"
             />
             <MetricCard
@@ -401,45 +387,43 @@ export default function ManagerDashboardPage() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col overflow-hidden shadow-xs">
             <div className="border-b border-outline-variant pb-sm mb-md flex justify-between items-center">
               <h3 className="font-card-title text-card-title text-on-surface text-sm font-semibold">
-                Top Risk Profiles ({topRisks.length})
+                Top Risk Profiles ({isSimulated ? topRisks.length : 0})
               </h3>
               <Link href="/employees" className="text-primary text-xs font-semibold hover:underline">
                 View All Directory
               </Link>
             </div>
 
-            <div className="flex-1 overflow-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-outline-variant">
-                    <th className="pb-2 font-label-caps text-label-caps text-secondary font-medium text-[10px]">
-                      User
-                    </th>
-                    <th className="pb-2 font-label-caps text-label-caps text-secondary font-medium text-[10px]">
-                      Dept
-                    </th>
-                    <th className="pb-2 font-label-caps text-label-caps text-secondary font-medium text-right text-[10px]">
-                      Score
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/60">
-                  {!isSimulated || topRisks.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="py-8 text-center text-secondary text-xs">
-                        <div className="flex flex-col items-center justify-center gap-1.5">
-                          <span className="material-symbols-outlined text-[24px] text-outline">
-                            verified
-                          </span>
-                          <p className="font-medium">No High-Risk Profiles Detected</p>
-                          <p className="text-[10px] text-secondary">
-                            Click "Simulate Threat" to analyze behavioral outliers across employees.
-                          </p>
-                        </div>
-                      </td>
+            {!isSimulated || topRisks.length === 0 ? (
+              <div className="py-10 flex flex-col items-center justify-center text-center w-full min-w-0">
+                <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
+                  <span className="material-symbols-outlined text-[24px]">verified</span>
+                </div>
+                <h4 className="font-bold text-sm text-on-surface">
+                  No high-risk employee profiles detected.
+                </h4>
+                <p className="text-xs text-secondary text-center leading-relaxed max-w-md mt-1">
+                  Threat evaluations will appear here after simulation.
+                </p>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-auto w-full min-w-0">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-outline-variant">
+                      <th className="pb-2 font-label-caps text-label-caps text-secondary font-medium text-[10px]">
+                        User
+                      </th>
+                      <th className="pb-2 font-label-caps text-label-caps text-secondary font-medium text-[10px]">
+                        Dept
+                      </th>
+                      <th className="pb-2 font-label-caps text-label-caps text-secondary font-medium text-right text-[10px]">
+                        Score
+                      </th>
                     </tr>
-                  ) : (
-                    topRisks.map((profile) => (
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/60">
+                    {topRisks.map((profile) => (
                       <tr
                         key={profile.code}
                         className="hover:bg-surface-container-low transition-colors group cursor-pointer"
@@ -464,11 +448,11 @@ export default function ManagerDashboardPage() {
                           <RiskBadge level={profile.level} />
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </AppLayout>
