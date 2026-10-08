@@ -149,6 +149,19 @@ export function formatThreatDescription(rawTitleOrMsg, rawDetails) {
     return THREAT_DEFINITIONS.LARGE_EXTERNAL_TRANSFER.description;
   }
 
+  if (
+    lowerTitle.includes("isolation forest") ||
+    lowerTitle.includes("ml model") ||
+    lowerTitle.includes("ml anomaly") ||
+    lowerTitle.includes("statistical deviation") ||
+    lowerTitle.includes("multi-indicator") ||
+    lowerTitle.includes("outlier") ||
+    lowerDetails.includes("anomaly score") ||
+    lowerDetails.includes("multi-indicator")
+  ) {
+    return "The employee's recent activity is significantly different from their normal behavior.";
+  }
+
   // If rawDetails is a simple text string without technical score metadata
   if (
     rawDetails &&
@@ -163,7 +176,7 @@ export function formatThreatDescription(rawTitleOrMsg, rawDetails) {
       .trim();
   }
 
-  return THREAT_DEFINITIONS.UNUSUAL_ACTIVITY.description;
+  return "The employee's recent activity is significantly different from their normal behavior.";
 }
 
 /**
@@ -246,139 +259,328 @@ export function formatRiskFlag(riskFlag) {
 }
 
 /**
- * Convert raw JSON activity metadata into clean, user-friendly sentences.
+ * Robust parser for JSON strings or Python dict strings with single quotes
+ */
+export function parseDictOrJson(input) {
+  if (!input) return null;
+  if (typeof input === "object") return input;
+  if (typeof input !== "string") return null;
+
+  let str = input.trim();
+  if (str.startsWith("Details:")) {
+    str = str.replace(/^Details:\s*/i, "").trim();
+  }
+
+  const jsonMatch = str.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    str = jsonMatch[0];
+  } else {
+    return null;
+  }
+
+  // 1. Try native JSON.parse
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    // 2. Try converting Python dict string to valid JSON
+    try {
+      const converted = str
+        .replace(/None\b/g, "null")
+        .replace(/True\b/g, "true")
+        .replace(/False\b/g, "false")
+        .replace(/'((?:\\.|[^'\\])*)'/g, '"$1"');
+      return JSON.parse(converted);
+    } catch (e2) {
+      // 3. Regex extraction fallback
+      const result = {};
+      const pairRegex = /['"]?([a-zA-Z0-9_]+)['"]?\s*:\s*(['"]([^'"]*)['"]|([0-9.]+)|true|false|null)/gi;
+      let m;
+      while ((m = pairRegex.exec(str)) !== null) {
+        const key = m[1];
+        let val = m[3] !== undefined ? m[3] : m[2];
+        if (val === "true") val = true;
+        else if (val === "false") val = false;
+        else if (val === "null") val = null;
+        else if (!isNaN(Number(val)) && typeof val === "string" && val.trim() !== "") val = Number(val);
+        result[key] = val;
+      }
+      if (Object.keys(result).length > 0) return result;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract structured, human-friendly key-value pairs from activity log details.
+ * Prevents raw JSON output and displays structured information:
+ * Destination: External storage
+ * File size: 4.2 GB
+ * File: Financial_Report.xlsx
+ * Device: USB storage
+ */
+export function getActivityDetailPairs(details, eventType = "") {
+  if (!details) return [{ label: "Activity", value: "Normal standard activity" }];
+
+  let parsed = parseDictOrJson(details) || details;
+
+  if (typeof parsed !== "object" || parsed === null) {
+    return [{ label: "Details", value: String(parsed) }];
+  }
+
+  const pairs = [];
+
+  // 1. Destination
+  if (parsed.destination) {
+    let destVal = String(parsed.destination);
+    if (destVal.includes("external") || destVal.includes(".ru") || destVal.includes("s3")) {
+      destVal = "External storage";
+    } else if (destVal.includes("Internal/")) {
+      destVal = "Internal repository";
+    }
+    pairs.push({ label: "Destination", value: destVal });
+  }
+
+  // 2. File size / Transferred MB / USB Total
+  const sizeMb = parsed.file_size_mb || parsed.file_size || parsed.transferred_mb || parsed.usb_total_mb;
+  if (sizeMb !== undefined && sizeMb !== null && sizeMb !== "") {
+    const num = parseFloat(sizeMb);
+    if (!isNaN(num) && num > 0) {
+      const formattedSize = num >= 1000 ? `${(num / 1024).toFixed(1)} GB` : `${num.toFixed(1)} MB`;
+      pairs.push({ label: "File size", value: formattedSize });
+    }
+  }
+
+  // 3. File name
+  if (parsed.file_name || parsed.file) {
+    pairs.push({ label: "File", value: String(parsed.file_name || parsed.file) });
+  }
+
+  // 4. Device
+  if (parsed.device || parsed.device_name) {
+    let devVal = String(parsed.device || parsed.device_name);
+    if (devVal.toLowerCase().includes("sandisk") || devVal.toLowerCase().includes("usb")) {
+      devVal = "USB storage";
+    }
+    pairs.push({ label: "Device", value: devVal });
+  }
+
+  // 5. IP Address
+  if (parsed.ip_address || parsed.ip) {
+    pairs.push({ label: "IP Address", value: String(parsed.ip_address || parsed.ip) });
+  }
+
+  // 6. Location
+  if (parsed.location) {
+    pairs.push({ label: "Location", value: String(parsed.location) });
+  }
+
+  // 7. Command
+  if (parsed.command) {
+    pairs.push({ label: "Command", value: String(parsed.command) });
+  }
+
+  // 8. Status
+  if (parsed.status) {
+    let statusVal = String(parsed.status);
+    if (statusVal === "failed_mfa_bruteforce") statusVal = "Failed MFA (Unusual Attempts)";
+    else if (statusVal === "success") statusVal = "Success";
+    else if (statusVal === "denied") statusVal = "Denied (Unauthorized)";
+    pairs.push({ label: "Status", value: statusVal });
+  }
+
+  // 9. Attempt Count
+  if (parsed.attempt_count) {
+    pairs.push({ label: "Attempts", value: `${parsed.attempt_count} attempts` });
+  }
+
+  // 10. Protocol
+  if (parsed.protocol) {
+    pairs.push({ label: "Protocol", value: String(parsed.protocol) });
+  }
+
+  // 11. Recipient Count
+  if (parsed.recipient_count) {
+    pairs.push({ label: "Recipients", value: `${parsed.recipient_count} recipients` });
+  }
+
+  // 12. USB event count
+  if (parsed.usb_event_count && !parsed.usb_total_mb) {
+    pairs.push({ label: "USB Events", value: `${parsed.usb_event_count} connections` });
+  }
+
+  // Any other keys in details not already processed (skip internal identifiers)
+  const handledKeys = new Set([
+    "_id", "id", "risk_flag", "destination", "file_size_mb", "file_size",
+    "transferred_mb", "usb_total_mb", "file_name", "file", "device",
+    "device_name", "ip_address", "ip", "location", "command", "status",
+    "attempt_count", "protocol", "recipient_count", "usb_event_count",
+    "is_simulation", "timestamp"
+  ]);
+
+  for (const [key, val] of Object.entries(parsed)) {
+    if (!handledKeys.has(key) && val !== undefined && val !== null && val !== "") {
+      const cleanKey = key
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      const cleanVal = typeof val === "object" ? JSON.stringify(val) : String(val);
+      pairs.push({ label: cleanKey, value: cleanVal });
+    }
+  }
+
+  if (pairs.length === 0) {
+    pairs.push({ label: "Activity", value: "Normal monitored employee activity" });
+  }
+
+  return pairs;
+}
+
+/**
+ * Convert raw JSON activity metadata into clean, user-friendly sentences or strings.
  */
 export function formatActivityDetails(details, eventType = "") {
   if (!details) return "Normal standard activity.";
 
-  // If already a clean readable string (not stringified JSON)
-  if (typeof details === "string") {
-    if (details.trim().startsWith("{")) {
-      try {
-        details = JSON.parse(details);
-      } catch {
-        return details;
-      }
-    } else {
-      return details;
-    }
+  // If already a clean string and doesn't look like JSON
+  if (typeof details === "string" && !details.trim().startsWith("{")) {
+    return details;
   }
 
-  if (typeof details !== "object") {
-    return String(details);
-  }
-
-  // 1. High-priority risk scenarios
-  const riskFlag = (details.risk_flag || "").toLowerCase();
-  if (riskFlag.includes("mass_usb") || riskFlag.includes("usb_exfiltration")) {
-    return "USB device connected and a large amount of data was copied.";
-  }
-  if (riskFlag.includes("bulk_egress") || riskFlag.includes("cloud_data_dump")) {
-    return "Large data transfer to an external storage location.";
-  }
-  if (riskFlag.includes("unauthorized_sudo") || riskFlag.includes("sudo_privilege")) {
-    return "Unauthorized admin access attempt.";
-  }
-  if (riskFlag.includes("off_hours") || riskFlag.includes("brute_force")) {
-    return "Unusual login attempts outside normal working hours.";
-  }
-
-  // 2. Specific event details inspection
-  const ev = String(eventType).toLowerCase();
-
-  // USB
-  if (ev === "usb_connect" || details.device_name || details.usb_total_mb) {
-    const mb = details.transferred_mb || details.usb_total_mb;
-    if (mb && parseFloat(mb) > 500) {
-      return "USB device connected and a large amount of data was copied.";
-    }
-    const dev = details.device_name ? ` (${details.device_name})` : "";
-    return `USB device connected${dev}.`;
-  }
-
-  // Privilege change
-  if (
-    ev === "privilege_change" ||
-    String(details.command || "").toLowerCase().includes("sudo") ||
-    details.status === "denied"
-  ) {
-    if (details.status === "denied" || String(details.command || "").includes("/etc/shadow")) {
-      return "Unauthorized admin access attempt.";
-    }
-    return "Admin privilege setting change request.";
-  }
-
-  // Login
-  if (ev === "login" || details.status === "failed_mfa_bruteforce" || details.attempt_count > 5) {
-    if (details.status === "failed_mfa_bruteforce" || details.attempt_count > 5) {
-      return "Unusual login attempts outside normal working hours.";
-    }
-    if (details.status === "failed" || details.status === "denied") {
-      return "Failed system login attempt.";
-    }
-    const ip = details.ip_address ? ` from IP ${details.ip_address}` : "";
-    return `User logged into system${ip}.`;
-  }
-
-  // External Data Transfer / File Upload
-  if (ev === "data_transfer" || details.destination || details.protocol === "SFTP") {
-    const mb = details.transferred_mb;
-    if (
-      String(details.destination || "").includes("external") ||
-      String(details.destination || "").includes(".ru") ||
-      (mb && parseFloat(mb) > 1000)
-    ) {
-      return "Large data transfer to an external storage location.";
-    }
-    if (mb) {
-      return `Internal network data transfer of ${mb} MB completed.`;
-    }
-    return "Internal data transfer completed.";
-  }
-
-  // File Download
-  if (ev === "file_download") {
-    if (details.file_name) {
-      return `Downloaded file: ${details.file_name}.`;
-    }
-    return "Standard file download from repository.";
-  }
-
-  // File Upload
-  if (ev === "file_upload") {
-    if (details.file_name) {
-      return `Uploaded file: ${details.file_name}.`;
-    }
-    return "Standard file upload to repository.";
-  }
-
-  // Email
-  if (ev === "email_activity") {
-    if (details.recipient_count) {
-      return `Sent email communication to ${details.recipient_count} recipient(s).`;
-    }
-    return "Corporate email communications activity.";
-  }
-
-  // Remote Access
-  if (ev === "remote_access") {
-    return "Remote workstation access session active.";
-  }
-
-  // Fallback: clean key-value summary without JSON symbols
-  const cleanPairs = Object.entries(details)
-    .filter(([k]) => k !== "_id" && k !== "id" && k !== "risk_flag")
-    .map(([k, v]) => {
-      const cleanKey = k.replace(/_/g, " ");
-      const cleanVal = typeof v === "object" ? "" : String(v);
-      return `${cleanKey}: ${cleanVal}`;
-    })
-    .filter((s) => s.trim().length > 0)
-    .slice(0, 3);
-
-  if (cleanPairs.length > 0) {
-    return cleanPairs.join(", ");
-  }
-
-  return "Normal monitored employee activity.";
+  const pairs = getActivityDetailPairs(details, eventType);
+  return pairs.map((p) => `${p.label}: ${p.value}`).join(" • ");
 }
+
+/**
+ * Format incident timeline entries into human-friendly headlines and structured attributes.
+ * Prevents raw Python dicts/JSON strings like {'file_name':'schema.sql',...} from being shown.
+ */
+export function formatHumanTimelineActivity(item) {
+  if (!item) return { headline: "Activity recorded", attributes: [] };
+
+  const parsed =
+    parseDictOrJson(item.description) ||
+    (typeof item.meta === "object" && item.meta !== null ? item.meta : null) ||
+    (typeof item.metadata === "object" && item.metadata !== null ? item.metadata : null) ||
+    {};
+
+  const title = (item.title || "").toLowerCase();
+  const eventType = (item.event_type || item.source || "").toLowerCase();
+  const attributes = [];
+  let headline = "";
+
+  // 1. Determine clean, natural language headline
+  if (eventType.includes("file_upload") || title.includes("file upload")) {
+    headline = parsed.file_name ? `File uploaded: ${parsed.file_name}` : "File uploaded";
+  } else if (eventType.includes("file_download") || title.includes("file download")) {
+    headline = parsed.file_name ? `File downloaded: ${parsed.file_name}` : "File downloaded";
+  } else if (eventType.includes("login") || title.includes("login")) {
+    if (parsed.status === "success") {
+      headline = "Login successful";
+    } else if (
+      (parsed.status && (parsed.status.includes("fail") || parsed.status.includes("mfa"))) ||
+      title.includes("brute")
+    ) {
+      headline = "Login failed (unusual attempts detected)";
+    } else {
+      headline = "User login recorded";
+    }
+  } else if (eventType.includes("usb") || title.includes("usb")) {
+    headline = parsed.device_name ? `USB device connected: ${parsed.device_name}` : "USB device connected";
+  } else if (eventType.includes("privilege") || title.includes("privilege") || title.includes("sudo")) {
+    headline = parsed.command ? `Admin command: ${parsed.command}` : "Privileged command executed";
+  } else if (eventType.includes("remote") || title.includes("remote") || title.includes("vpn")) {
+    headline = `Remote access session (${parsed.protocol || "VPN"})`;
+  } else if (eventType.includes("email") || title.includes("email")) {
+    headline = "Outbound email activity";
+  } else if (eventType.includes("transfer") || title.includes("transfer")) {
+    headline = "Data transfer session";
+  } else if (item.title) {
+    headline = formatThreatTitle(item.title);
+  }
+
+  // 2. Extract structured human-readable attributes
+  if (parsed.device || parsed.device_name) {
+    let dev = String(parsed.device || parsed.device_name);
+    attributes.push({ label: "Device", value: dev });
+  }
+
+  const sizeMb = parsed.file_size_mb || parsed.file_size || parsed.transferred_mb || parsed.usb_total_mb;
+  if (sizeMb !== undefined && sizeMb !== null && sizeMb !== "") {
+    const num = parseFloat(sizeMb);
+    if (!isNaN(num)) {
+      const formatted = num >= 1024 ? `${(num / 1024).toFixed(2)} GB` : `${num} MB`;
+      attributes.push({ label: "Size", value: formatted });
+    }
+  }
+
+  if (parsed.destination || parsed.destination_path) {
+    let dest = String(parsed.destination || parsed.destination_path);
+    dest = dest.replace(/^Internal\//, "").replace(/_/g, " ");
+    attributes.push({ label: "Destination", value: dest });
+  }
+
+  if (parsed.source) {
+    let src = String(parsed.source).replace(/_/g, " ");
+    attributes.push({ label: "Source", value: src });
+  }
+
+  if (parsed.ip_address || parsed.ip) {
+    attributes.push({ label: "IP address", value: String(parsed.ip_address || parsed.ip) });
+  }
+
+  if (parsed.location) {
+    attributes.push({ label: "Location", value: String(parsed.location) });
+  }
+
+  if (parsed.command && !headline.includes(parsed.command)) {
+    attributes.push({ label: "Command", value: String(parsed.command) });
+  }
+
+  if (parsed.status && !headline.toLowerCase().includes(parsed.status.toLowerCase())) {
+    const st =
+      parsed.status === "success"
+        ? "Success"
+        : parsed.status === "denied"
+        ? "Denied (Unauthorized)"
+        : parsed.status === "failed_mfa_bruteforce"
+        ? "Failed MFA"
+        : String(parsed.status);
+    attributes.push({ label: "Status", value: st });
+  }
+
+  if (parsed.target_host) {
+    attributes.push({ label: "Target Host", value: String(parsed.target_host) });
+  }
+
+  if (parsed.protocol) {
+    attributes.push({ label: "Protocol", value: String(parsed.protocol) });
+  }
+
+  if (parsed.duration_min) {
+    attributes.push({ label: "Duration", value: `${parsed.duration_min} min` });
+  }
+
+  if (parsed.attempt_count) {
+    attributes.push({ label: "Attempts", value: String(parsed.attempt_count) });
+  }
+
+  if (parsed.file_count) {
+    attributes.push({ label: "Files", value: `${parsed.file_count} files` });
+  }
+
+  if (parsed.recipient_domain) {
+    attributes.push({ label: "Recipient Domain", value: String(parsed.recipient_domain) });
+  }
+
+  // If no headline was determined and no details, fall back to clean description
+  if (!headline) {
+    if (item.description && !item.description.includes("{")) {
+      headline = item.description;
+    } else {
+      headline = "Security activity recorded";
+    }
+  }
+
+  return { headline, attributes };
+}
+
+

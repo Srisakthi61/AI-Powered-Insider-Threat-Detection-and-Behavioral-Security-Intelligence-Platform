@@ -359,42 +359,34 @@ export default function AnomaliesPage() {
           {activeTab === "ml_model" && (
             <div className="flex flex-col gap-gutter">
               {/* Model Info Bar */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-md">
+              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary text-[22px]">
+                      <span className="material-symbols-outlined text-primary text-[20px]">
                         verified_user
                       </span>
                       <h2 className="text-sm font-bold text-on-surface">
-                        AI Behavioral Detection Engine
+                        Behavioral Anomaly Detection
                       </h2>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
-                        ACTIVE
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                        Active Monitoring
                       </span>
                     </div>
-                    <p className="text-xs text-secondary mt-1 max-w-3xl leading-relaxed">
-                      Analyzes employee behavior to detect unusual activity, data transfers, off-hours access, and permission misuse across monitored activity records.
+                    <p className="text-xs text-secondary mt-0.5 max-w-2xl">
+                      Analyzes login patterns, file transfers, and administrative actions against baseline behavior to detect insider risks.
                     </p>
                   </div>
 
-                  {/* Model Telemetry Pills */}
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-                    <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">ANALYSIS</span>
-                      <span className="font-bold text-primary">Active</span>
+                  <div className="flex items-center gap-3 text-xs shrink-0">
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-secondary block">Indicators Monitored</span>
+                      <span className="font-bold text-on-surface">15 Behavioral Factors</span>
                     </div>
-                    <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">BEHAVIOR FACTORS</span>
-                      <span className="font-bold text-primary">15 Factors</span>
-                    </div>
-                    <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">DETECTION ACCURACY</span>
-                      <span className="font-bold text-emerald-600">80.0%</span>
-                    </div>
-                    <div className="px-2.5 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
-                      <span className="text-secondary text-[9px] block">STATUS</span>
-                      <span className="font-bold text-primary">Ready</span>
+                    <div className="h-6 w-px bg-outline-variant" />
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-secondary block">Engine Status</span>
+                      <span className="font-bold text-emerald-600">Operational</span>
                     </div>
                   </div>
                 </div>
@@ -403,7 +395,7 @@ export default function AnomaliesPage() {
               {/* Threat Radar Grid (Left Radar, Right Flagged Outliers) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
                 {/* Threat Radar Visualization (Left 5/12) */}
-                <div className="lg:col-span-5 flex flex-col h-full">
+                <div className="lg:col-span-5 flex flex-col h-[500px]">
                   <RadarScanner
                     employees={isSimulated ? (report?.all_analyzed || []) : []}
                     flaggedCount={isSimulated ? (report?.flagged_count || 0) : 0}
@@ -416,7 +408,7 @@ export default function AnomaliesPage() {
                 </div>
 
                 {/* Ranked Threat Outliers Table (Right 7/12) */}
-                <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs flex flex-col h-full min-h-[440px]">
+                <div className="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-xs flex flex-col h-[500px]">
                   <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-xs text-on-surface">
@@ -431,17 +423,17 @@ export default function AnomaliesPage() {
                     </span>
                   </div>
 
-                  <div className="overflow-x-auto flex-1 overflow-y-auto min-h-0">
-                    <table className="table-fixed w-full min-w-full text-left border-collapse text-xs">
-                      <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant text-[10px] uppercase font-bold text-secondary backdrop-blur-xs">
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto w-full">
+                    <table className="w-full min-w-full text-left border-collapse text-xs table-auto">
+                      <thead className="sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant text-[10px] uppercase font-bold text-secondary backdrop-blur-xs shadow-xs">
                         <tr>
-                          <th className="w-16 p-sm pl-md">Rank</th>
-                          <th className="w-44 p-sm">Employee</th>
-                          <th className="w-24 p-sm">Unusual Activity Score</th>
-                          <th className="w-48 p-sm">Primary Reason</th>
-                          <th className="w-36 p-sm">Suggested Owner</th>
-                          <th className="w-24 p-sm">Risk</th>
-                          <th className="w-24 p-sm pr-md text-right">Inspect</th>
+                          <th className="p-sm pl-md">Rank</th>
+                          <th className="p-sm">Employee</th>
+                          <th className="p-sm">Score</th>
+                          <th className="p-sm">Primary Reason</th>
+                          <th className="p-sm">Suggested Owner</th>
+                          <th className="p-sm">Risk</th>
+                          <th className="p-sm pr-md text-right">Inspect</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-outline-variant/60 text-on-surface">
@@ -465,11 +457,11 @@ export default function AnomaliesPage() {
                                   </div>
                                 </td>
                                 <td className="p-sm font-mono font-bold">
-                                  <span className={row.anomaly_score < 0 ? (isHighRisk ? "text-error" : "text-amber-600") : "text-emerald-600"}>
-                                    {row.anomaly_score?.toFixed(4)}
+                                  <span className={isHighRisk ? "text-error" : row.anomaly_score < 0 ? "text-amber-600" : "text-emerald-600"}>
+                                    {row.anomaly_score?.toFixed(3)}
                                   </span>
                                 </td>
-                                <td className="p-sm text-secondary max-w-[160px] truncate text-[11px]">
+                                <td className="p-sm text-secondary text-[11px] font-medium">
                                   {formatThreatTitle(row.primary_reason) || "Normal Activity"}
                                 </td>
                                 <td className="p-sm">
@@ -791,7 +783,7 @@ export default function AnomaliesPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-                  {/* Indicator 1: Login Times */}
+                  {/* Indicator 1: Login Schedule */}
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "avg_login_hour");
                     const meanHour = b?.typical_value ?? 9.25;
@@ -799,27 +791,27 @@ export default function AnomaliesPage() {
                     const mins = Math.round((meanHour % 1) * 60);
                     const timeStr = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
                     return (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between min-h-[175px]">
                         <div>
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">schedule</span>
-                              1. Login Times
+                              1. Login Schedule
                             </span>
-                            <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
-                              N = {b?.sample_size || 0}
+                            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
+                              {b?.sample_size || 0} records
                             </span>
                           </div>
                           <div className="text-2xl font-bold font-mono text-on-surface">
                             {timeStr} <span className="text-xs font-sans text-secondary font-normal">({meanHour}h)</span>
                           </div>
                           <p className="text-xs text-secondary mt-1">
-                            Typical login time with <strong className="text-on-surface font-mono">±{b?.std_deviation || 0.4}h</strong> standard deviation spread.
+                            Typical login time with normal deviation of <strong className="text-on-surface font-mono">±{b?.std_deviation || 0.4}h</strong>.
                           </p>
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
-                          <span>Baseline Status: <strong className="text-emerald-600 font-semibold">Active</strong></span>
-                          <span>Indicator: <code className="font-mono text-primary">avg_login_hour</code></span>
+                          <span>Status: <strong className="text-emerald-600 font-semibold">Active Baseline</strong></span>
+                          <span>Metric: <strong className="text-on-surface">Daily Login</strong></span>
                         </div>
                       </div>
                     );
@@ -829,15 +821,15 @@ export default function AnomaliesPage() {
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "resource_access_freq");
                     return (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between min-h-[175px]">
                         <div>
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">folder_managed</span>
                               2. File &amp; Resource Access
                             </span>
-                            <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
-                              N = {b?.sample_size || 0}
+                            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
+                              {b?.sample_size || 0} records
                             </span>
                           </div>
                           <div className="text-2xl font-bold font-mono text-on-surface">
@@ -849,7 +841,7 @@ export default function AnomaliesPage() {
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
                           <span>Max Single Day: <strong className="text-on-surface">{b?.metadata?.max_daily_accesses || 14}</strong></span>
-                          <span>Indicator: <code className="font-mono text-primary">resource_access_freq</code></span>
+                          <span>Metric: <strong className="text-on-surface">Access Volume</strong></span>
                         </div>
                       </div>
                     );
@@ -859,14 +851,14 @@ export default function AnomaliesPage() {
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "device_usage");
                     return (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between min-h-[175px]">
                         <div>
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">devices</span>
                               3. Device Usage
                             </span>
-                            <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
+                            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
                               {((b?.typical_value || 0.95) * 100).toFixed(0)}% Affinity
                             </span>
                           </div>
@@ -879,7 +871,7 @@ export default function AnomaliesPage() {
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
                           <span>Device Diversity: <strong className="text-on-surface">{b?.metadata?.known_devices?.length || 1} Known</strong></span>
-                          <span>Indicator: <code className="font-mono text-primary">device_usage</code></span>
+                          <span>Metric: <strong className="text-on-surface">Authorized Assets</strong></span>
                         </div>
                       </div>
                     );
@@ -889,15 +881,15 @@ export default function AnomaliesPage() {
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "app_usage_freq");
                     return (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between min-h-[175px]">
                         <div>
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">terminal</span>
                               4. Application Usage
                             </span>
-                            <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
-                              N = {b?.sample_size || 0}
+                            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
+                              {b?.sample_size || 0} records
                             </span>
                           </div>
                           <div className="text-2xl font-bold font-mono text-on-surface">
@@ -909,7 +901,7 @@ export default function AnomaliesPage() {
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
                           <span>Total App Events: <strong className="text-on-surface">{b?.metadata?.total_app_events || 0}</strong></span>
-                          <span>Indicator: <code className="font-mono text-primary">app_usage_freq</code></span>
+                          <span>Metric: <strong className="text-on-surface">Workflow Operations</strong></span>
                         </div>
                       </div>
                     );
@@ -919,15 +911,15 @@ export default function AnomaliesPage() {
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "avg_data_transfer_mb");
                     return (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between min-h-[175px]">
                         <div>
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">cloud_sync</span>
                               5. Data Transfer
                             </span>
-                            <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
-                              N = {b?.sample_size || 0}
+                            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
+                              {b?.sample_size || 0} records
                             </span>
                           </div>
                           <div className="text-2xl font-bold font-mono text-on-surface">
@@ -939,7 +931,7 @@ export default function AnomaliesPage() {
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
                           <span>Max Historical: <strong className="text-on-surface">{b?.metadata?.max_single_transfer_mb || 45} MB</strong></span>
-                          <span>Indicator: <code className="font-mono text-primary">avg_data_transfer_mb</code></span>
+                          <span>Metric: <strong className="text-on-surface">Transfer Payload</strong></span>
                         </div>
                       </div>
                     );
@@ -949,15 +941,15 @@ export default function AnomaliesPage() {
                   {(() => {
                     const b = employeeBaselines.find((item) => item.indicator === "communication_patterns");
                     return (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-xs flex flex-col justify-between min-h-[175px]">
                         <div>
                           <div className="flex justify-between items-center mb-sm">
                             <span className="text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[16px] text-primary">mail</span>
                               6. Communication Activity
                             </span>
-                            <span className="text-[10px] bg-primary/10 text-primary font-mono font-bold px-2 py-0.5 rounded">
-                              N = {b?.sample_size || 0}
+                            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
+                              {b?.sample_size || 0} records
                             </span>
                           </div>
                           <div className="text-2xl font-bold font-mono text-on-surface">
@@ -969,7 +961,7 @@ export default function AnomaliesPage() {
                         </div>
                         <div className="mt-md pt-sm border-t border-outline-variant/60 flex justify-between text-[11px] text-secondary">
                           <span>Total Emails: <strong className="text-on-surface">{b?.metadata?.total_emails_sent || 0}</strong></span>
-                          <span>Indicator: <code className="font-mono text-primary">communication_patterns</code></span>
+                          <span>Metric: <strong className="text-on-surface">Outbound Activity</strong></span>
                         </div>
                       </div>
                     );

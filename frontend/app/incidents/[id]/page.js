@@ -7,7 +7,7 @@ import AppLayout from "../../components/AppLayout";
 import RiskBadge from "../../components/RiskBadge";
 import MetricCard from "../../components/MetricCard";
 import { incidentApi, uebaApi, alertApi } from "../../lib/api";
-import { formatThreatTitle, formatThreatDescription, formatEventType } from "../../lib/threatFormatting";
+import { formatThreatTitle, formatThreatDescription, formatEventType, formatHumanTimelineActivity } from "../../lib/threatFormatting";
 
 export default function IncidentDetailPage() {
   const params = useParams();
@@ -147,16 +147,19 @@ export default function IncidentDetailPage() {
   };
 
   const getTimelineIcon = (type) => {
-    switch ((type || "").toUpperCase()) {
+    const normalized = (type || "").toUpperCase().replace(/_/g, " ");
+    switch (normalized) {
       case "LOG":
+      case "ACTIVITY":
         return { icon: "terminal", color: "text-blue-500", bg: "bg-blue-500/10" };
-      case "RULE_ANOMALY":
+      case "RULE ANOMALY":
         return { icon: "rule", color: "text-amber-500", bg: "bg-amber-500/10" };
-      case "ML_ANOMALY":
+      case "ML ANOMALY":
         return { icon: "psychology", color: "text-purple-500", bg: "bg-purple-500/10" };
       case "ALERT":
         return { icon: "notifications_active", color: "text-orange-500", bg: "bg-orange-500/10" };
-      case "INVESTIGATION_NOTE":
+      case "INVESTIGATION NOTE":
+      case "NOTE":
         return { icon: "rate_review", color: "text-emerald-500", bg: "bg-emerald-500/10" };
       case "INCIDENT":
         return { icon: "shield", color: "text-rose-500", bg: "bg-rose-500/10" };
@@ -382,8 +385,8 @@ export default function IncidentDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
           {/* Left Column: Timeline & Evidence Feed (8 cols) */}
           <div className="lg:col-span-8 flex flex-col gap-4">
-            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-4">
-              <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-4 flex flex-col h-[620px] overflow-hidden">
+              <div className="flex items-center justify-between pb-3 border-b border-outline-variant shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-xl">
                     history_edu
@@ -412,8 +415,8 @@ export default function IncidentDetailPage() {
                 </button>
               </div>
 
-              {/* Timeline Container */}
-              <div className="mt-4 relative pl-4 border-l-2 border-outline-variant space-y-4">
+              {/* Timeline Container with Internal Scrolling */}
+              <div className="mt-4 relative pl-5 pr-2 border-l-2 border-outline-variant space-y-4 flex-1 min-h-0 overflow-y-auto">
                 {timelineLoading ? (
                   <div className="py-8 text-center text-secondary text-xs flex items-center justify-center gap-2">
                     <span className="material-symbols-outlined animate-spin text-primary">
@@ -427,12 +430,13 @@ export default function IncidentDetailPage() {
                   </div>
                 ) : (
                   timeline.map((item, idx) => {
-                    const style = getTimelineIcon(item.event_type);
+                    const style = getTimelineIcon(item.event_type || item.source);
+                    const humanActivity = formatHumanTimelineActivity(item);
                     return (
                       <div key={idx} className="relative group">
                         {/* Timeline node icon */}
                         <div
-                          className={`absolute -left-[25px] top-1 w-5 h-5 rounded-full flex items-center justify-center border border-outline-variant ${style.bg} ${style.color}`}
+                          className={`absolute -left-[29px] top-1 w-5 h-5 rounded-full flex items-center justify-center border border-outline-variant ${style.bg} ${style.color}`}
                         >
                           <span className="material-symbols-outlined text-[13px]">
                             {style.icon}
@@ -441,12 +445,12 @@ export default function IncidentDetailPage() {
 
                         {/* Timeline Event Card */}
                         <div className="bg-surface-container-low rounded-lg border border-outline-variant p-3 transition-colors hover:border-primary/40">
-                          <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
                             <div className="flex items-center gap-2">
                               <span
                                 className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${style.bg} ${style.color}`}
                               >
-                                {formatEventType(item.event_type)}
+                                {formatEventType(item.event_type || item.source)}
                               </span>
                               <span className="font-bold text-xs text-on-surface">
                                 {formatThreatTitle(item.title)}
@@ -459,22 +463,31 @@ export default function IncidentDetailPage() {
                             </span>
                           </div>
 
-                          <p className="text-xs text-on-surface-variant leading-relaxed">
-                            {formatThreatDescription(item.title, item.description)}
-                          </p>
+                          {/* Human-Friendly Activity Headline */}
+                          <div className="text-xs text-on-surface-variant leading-relaxed font-medium">
+                            {humanActivity.headline}
+                          </div>
 
-                          {/* Extra metadata fields */}
-                          {item.metadata && Object.keys(item.metadata).length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-outline-variant/60 flex flex-wrap gap-2 text-[10px] font-mono text-secondary">
-                              {Object.entries(item.metadata).map(([k, v]) => (
+                          {/* Human-Friendly Structured Attributes (replaces raw JSON) */}
+                          {humanActivity.attributes && humanActivity.attributes.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-outline-variant/60 flex flex-wrap gap-1.5 text-[11px] text-secondary">
+                              {humanActivity.attributes.map((attr, aIdx) => (
                                 <span
-                                  key={k}
-                                  className="bg-surface-container px-1.5 py-0.5 rounded"
+                                  key={aIdx}
+                                  className="bg-surface-container px-2 py-0.5 rounded text-[10px] text-on-surface-variant font-medium"
                                 >
-                                  <strong className="text-on-surface">{k}:</strong>{" "}
-                                  {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                                  <strong className="text-on-surface font-semibold">{attr.label}:</strong>{" "}
+                                  {attr.value}
                                 </span>
                               ))}
+                            </div>
+                          )}
+
+                          {/* Evidence Reference if available */}
+                          {item.evidence_reference && (
+                            <div className="mt-2 pt-1.5 border-t border-outline-variant/60 flex items-center gap-1 text-[10px] font-mono text-primary font-semibold">
+                              <span className="material-symbols-outlined text-[12px]">link</span>
+                              Evidence: {item.evidence_reference}
                             </div>
                           )}
                         </div>
@@ -489,7 +502,7 @@ export default function IncidentDetailPage() {
           {/* Right Column: Investigation Notes & Evidence Log (4 cols) */}
           <div className="lg:col-span-4 flex flex-col gap-4">
             {/* Add Note Card */}
-            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm shrink-0">
               <div className="flex items-center gap-2 pb-2 mb-3 border-b border-outline-variant">
                 <span className="material-symbols-outlined text-primary text-xl">
                   edit_note
@@ -543,8 +556,8 @@ export default function IncidentDetailPage() {
             </div>
 
             {/* Case Notes History */}
-            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
-              <div className="flex items-center justify-between pb-2 mb-3 border-b border-outline-variant">
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm flex flex-col h-[280px]">
+              <div className="flex items-center justify-between pb-2 mb-3 border-b border-outline-variant shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-emerald-500 text-xl">
                     sticky_note_2
@@ -558,7 +571,7 @@ export default function IncidentDetailPage() {
                 </span>
               </div>
 
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
                 {!incident.notes || incident.notes.length === 0 ? (
                   <div className="p-4 text-center text-secondary text-xs">
                     No investigation notes recorded yet. Use the form above to add the first note.
@@ -596,9 +609,8 @@ export default function IncidentDetailPage() {
 
         {/* Resolve Case Modal */}
         {showResolveModal && (
-          <div className="fixed inset-0 w-screen h-screen z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant w-[40%] max-w-[400px] min-w-[40%] p-5 sm:p-6 shadow-2xl my-auto animate-toast-slide-in
-            ">
+          <div className="itbis-modal-backdrop">
+            <div className="itbis-modal-card animate-toast-slide-in">
               <div className="flex justify-between items-start border-b border-outline-variant pb-sm mb-md">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-emerald-500 text-2xl">

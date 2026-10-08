@@ -401,8 +401,8 @@ export default function EmployeesPage() {
 
         {/* Create Employee Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 w-screen h-screen z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-md w-full p-5 sm:p-6 shadow-2xl relative my-auto animate-toast-slide-in">
+          <div className="itbis-modal-backdrop">
+            <div className="itbis-modal-card animate-toast-slide-in">
               <div className="flex justify-between items-center border-b border-outline-variant pb-sm mb-md">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-2xl">
@@ -536,8 +536,8 @@ export default function EmployeesPage() {
 
         {/* Edit Employee Modal */}
         {showEditModal && editingEmp && (
-          <div className="fixed inset-0 w-screen h-screen z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-md w-full p-5 sm:p-6 shadow-2xl relative my-auto animate-toast-slide-in">
+          <div className="itbis-modal-backdrop">
+            <div className="itbis-modal-card animate-toast-slide-in">
               <div className="flex justify-between items-center border-b border-outline-variant pb-sm mb-md">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-2xl">

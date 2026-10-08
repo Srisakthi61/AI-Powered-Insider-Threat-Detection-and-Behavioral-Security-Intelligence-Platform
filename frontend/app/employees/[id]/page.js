@@ -517,7 +517,7 @@ export default function EmployeeInvestigationPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant">
+              <div className="space-y-3 max-h-[550px] overflow-y-auto pr-2 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant">
                 {profile.recent_activity?.map((act, idx) => (
                   <div key={idx} className="flex items-start gap-3 relative pl-1">
                     <div className="w-6 h-6 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center shrink-0 z-10 text-primary">
@@ -649,8 +649,8 @@ export default function EmployeeInvestigationPage() {
 
           {/* Create Incident Modal */}
           {showIncidentModal && (
-            <div className="fixed inset-0 w-screen h-screen z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-              <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-lg w-full p-6 shadow-2xl relative my-auto animate-toast-slide-in">
+            <div className="itbis-modal-backdrop">
+              <div className="itbis-modal-card animate-toast-slide-in">
                 <div className="flex justify-between items-center border-b border-outline-variant pb-3 mb-4">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-error text-[22px]">gavel</span>

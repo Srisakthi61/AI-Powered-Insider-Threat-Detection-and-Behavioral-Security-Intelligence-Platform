@@ -248,25 +248,27 @@ export default function IncidentsPage() {
         {/* Incidents Table & Controls */}
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
           {/* Table Toolbar */}
-          <div className="p-3 border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40">
-            <div className="flex flex-1 items-center gap-2 max-w-xl">
-              <div className="relative flex-1">
-                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary text-[18px] pointer-events-none">
-                  search
-                </span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search cases..."
-                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 py-1.5 text-xs text-on-surface placeholder:text-secondary/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-xs"
-                />
-              </div>
+          <div className="p-3 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/40">
+            {/* Search Input on Left */}
+            <div className="relative w-full sm:w-80 md:w-96">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[20px] pointer-events-none">
+                search
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search cases by ID, title, employee..."
+                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-3.5 py-2 text-xs text-on-surface placeholder:text-secondary/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-xs"
+              />
+            </div>
 
+            {/* Filter Dropdowns on Opposite / Right Side */}
+            <div className="flex items-center gap-2.5 self-end sm:self-auto">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium shadow-xs"
+                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium shadow-xs"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="OPEN">Open</option>
@@ -278,7 +280,7 @@ export default function IncidentsPage() {
               <select
                 value={filterSeverity}
                 onChange={(e) => setFilterSeverity(e.target.value)}
-                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium shadow-xs"
+                className="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer font-medium shadow-xs"
               >
                 <option value="ALL">All Severities</option>
                 <option value="CRITICAL">Critical</option>
@@ -286,28 +288,17 @@ export default function IncidentsPage() {
                 <option value="MEDIUM">Medium</option>
                 <option value="LOW">Low</option>
               </select>
-
-              <button
-                onClick={() => {
-                  setFilterStatus("ALL");
-                  setFilterSeverity("ALL");
-                  setSearchQuery("");
-                }}
-                className="px-3 py-1.5 text-xs font-semibold text-secondary hover:text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-lg border border-outline-variant transition-colors cursor-pointer shadow-xs"
-              >
-                Reset
-              </button>
             </div>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="table-fixed w-full min-w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-low text-secondary font-semibold">
                   <th className="w-24 p-3 pl-4">Case ID</th>
                   <th className="w-24 p-3">Severity</th>
-                  <th className="w-72 p-3">Title &amp; Summary</th>
+                  <th className="p-3 min-w-[260px]">Title &amp; Summary</th>
                   <th className="w-48 p-3">Subject Employee</th>
                   <th className="w-28 p-3">Status</th>
                   <th className="w-20 p-3">Notes</th>
@@ -368,11 +359,11 @@ export default function IncidentsPage() {
                       <td className="p-3">
                         <RiskBadge level={inc.severity} />
                       </td>
-                      <td className="p-3 max-w-sm">
-                        <div className="font-bold text-on-surface group-hover:text-primary transition-colors">
+                      <td className="p-3">
+                        <div className="font-bold text-on-surface text-xs leading-snug group-hover:text-primary transition-colors">
                           {formatThreatTitle(inc.title)}
                         </div>
-                        <div className="text-[11px] text-secondary truncate mt-0.5">
+                        <div className="text-[11px] text-secondary leading-relaxed mt-1">
                           {formatThreatDescription(inc.title, inc.summary)}
                         </div>
                       </td>
@@ -429,8 +420,8 @@ export default function IncidentsPage() {
 
         {/* Create Incident Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 w-screen h-screen z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-lg w-full p-5 sm:p-6 shadow-2xl relative my-auto animate-toast-slide-in">
+          <div className="itbis-modal-backdrop">
+            <div className="itbis-modal-card animate-toast-slide-in">
               <div className="flex justify-between items-start border-b border-outline-variant pb-sm mb-md">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-2xl">

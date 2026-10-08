@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import AppLayout from "../components/AppLayout";
 import RoleGuard from "../components/RoleGuard";
 import { logApi, employeeApi } from "../lib/api";
-import { formatEventType, formatRiskFlag, formatActivityDetails } from "../lib/threatFormatting";
+import { formatEventType, formatRiskFlag, formatActivityDetails, getActivityDetailPairs } from "../lib/threatFormatting";
 
 export default function LogsPage() {
   const [employeeId, setEmployeeId] = useState("ALL");
@@ -242,8 +242,18 @@ export default function LogsPage() {
                               </span>
                             )}
                           </td>
-                          <td className="p-sm pr-md text-[11px] text-on-surface-variant max-w-md truncate" title={formatActivityDetails(log.details, log.event_type)}>
-                            {formatActivityDetails(log.details, log.event_type)}
+                          <td className="p-sm pr-md text-[11px] text-on-surface-variant max-w-xl" title={formatActivityDetails(log.details, log.event_type)}>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              {getActivityDetailPairs(log.details, log.event_type).map((p, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 bg-surface-container-low px-1.5 py-0.5 rounded border border-outline-variant/60"
+                                >
+                                  <span className="font-semibold text-secondary">{p.label}:</span>
+                                  <span className="text-on-surface font-medium">{p.value}</span>
+                                </span>
+                              ))}
+                            </div>
                           </td>
                         </tr>
                       );

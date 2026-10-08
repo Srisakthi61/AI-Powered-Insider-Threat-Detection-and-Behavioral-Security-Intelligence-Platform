@@ -240,10 +240,10 @@ export default function AnalystDashboardPage() {
           </div>
 
           {/* Main Analysis Area: Priority Queue + Recent Events Stream */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
             {/* Priority Queue (Left 8/12) */}
-            <div className="lg:col-span-8 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden shadow-xs">
-              <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+            <div className="lg:col-span-8 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col h-[420px] overflow-hidden shadow-xs">
+              <div className="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright shrink-0">
                 <div className="flex items-center gap-2">
                   <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
                     Alerts / Priority Queue
@@ -270,7 +270,7 @@ export default function AnalystDashboardPage() {
               </div>
 
               {!isSimulated || activeAlerts.length === 0 ? (
-                <div className="flex-1 w-full min-w-0 py-8 px-6 flex flex-col items-center justify-center text-center">
+                <div className="flex-1 min-h-0 w-full min-w-0 py-8 px-6 flex flex-col items-center justify-center text-center">
                   <div className="w-full max-w-[380px] mx-auto flex flex-col items-center justify-center text-center">
                     <div className="w-12 h-12 rounded-full bg-surface-container-high text-secondary flex items-center justify-center mb-2">
                       <span className="material-symbols-outlined text-[24px]">verified_user</span>
@@ -284,10 +284,10 @@ export default function AnalystDashboardPage() {
                   </div>
                 </div>
               ) : (
-                <div className="overflow-x-auto w-full min-w-0">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto w-full min-w-0">
                   <table className="w-full min-w-full text-left border-collapse table-auto">
-                    <thead>
-                      <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps">
+                    <thead className="sticky top-0 z-10 bg-surface-container-low shadow-xs">
+                      <tr className="border-b border-outline-variant text-on-surface-variant font-label-caps text-label-caps">
                         <th className="p-sm pl-md font-semibold">Priority</th>
                         <th className="p-sm font-semibold">Alert Message</th>
                         <th className="p-sm font-semibold">Employee</th>
@@ -351,8 +351,8 @@ export default function AnalystDashboardPage() {
             </div>
 
             {/* Recent Events Stream (Right 4/12) */}
-            <div className="lg:col-span-4 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col shadow-xs">
-              <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
+            <div className="lg:col-span-4 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col h-[420px] overflow-hidden shadow-xs">
+              <div className="p-md border-b border-outline-variant bg-surface-bright flex justify-between items-center shrink-0">
                 <h2 className="font-section-title text-section-title text-on-surface font-semibold text-sm">
                   Recent Security Events
                 </h2>
@@ -362,26 +362,26 @@ export default function AnalystDashboardPage() {
                   }`}
                 />
               </div>
-              <div className="p-md flex-1 overflow-y-auto relative space-y-4 max-h-[380px]">
+              <div className="p-md flex-1 min-h-0 overflow-y-auto relative space-y-3">
                 {!isSimulated || displayEvents.length === 0 ? (
-                  <div className="w-full max-w-[280px] mx-auto p-8 text-center text-secondary text-xs flex flex-col items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-[28px] text-outline">
+                  <div className="h-full flex flex-col items-center justify-center p-6 text-center text-secondary text-xs">
+                    <span className="material-symbols-outlined text-[28px] text-outline mb-1">
                       dataset
                     </span>
                     <p className="text-xs font-medium">Waiting for Activity</p>
-                    <p className="text-[10px] text-secondary/80 text-center leading-relaxed w-full">
+                    <p className="text-[10px] text-secondary/80 text-center leading-relaxed mt-0.5 max-w-[200px]">
                       Activity will appear here when security events are detected.
                     </p>
                   </div>
                 ) : (
-                  displayEvents.slice(0, 6).map((log, idx) => (
+                  displayEvents.map((log, idx) => (
                     <div key={log._id || idx} className="flex gap-3 relative z-10 text-xs">
                       <div className="w-7 h-7 rounded-full bg-surface border-2 border-primary-container flex items-center justify-center shrink-0">
                         <span className="material-symbols-outlined text-primary-container text-[14px]">
                           {log.event_type === "usb_connect" ? "usb" : log.event_type === "login" ? "login" : "bolt"}
                         </span>
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-on-surface text-[11px]">
                             {formatEventType(log.event_type)}
@@ -390,10 +390,10 @@ export default function AnalystDashboardPage() {
                             {log.employee_id}
                           </span>
                         </div>
-                        <p className="text-[11px] text-on-surface-variant mt-0.5 leading-snug truncate max-w-[200px]" title={formatActivityDetails(log.details, log.event_type)}>
+                        <p className="text-[11px] text-on-surface-variant mt-0.5 leading-snug line-clamp-2" title={formatActivityDetails(log.details, log.event_type)}>
                           {formatActivityDetails(log.details, log.event_type)}
                         </p>
-                        <span className="text-[10px] text-outline mt-1 block">
+                        <span className="text-[10px] text-outline mt-0.5 block">
                           {log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : "Recent"}
                         </span>
                       </div>
@@ -493,8 +493,8 @@ export default function AnalystDashboardPage() {
 
           {/* Alert Investigation Modal */}
           {selectedAlert && (
-            <div className="fixed inset-0 w-screen h-screen z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-              <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-lg w-full p-5 sm:p-6 shadow-2xl relative my-auto animate-toast-slide-in">
+            <div className="itbis-modal-backdrop">
+              <div className="itbis-modal-card animate-toast-slide-in">
                 <div className="flex justify-between items-start border-b border-outline-variant pb-sm mb-md">
                   <div>
                     <div className="flex items-center gap-2">
