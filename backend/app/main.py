@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base, init_db
@@ -24,10 +25,13 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+raw_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+origins = [origin.strip() for origin in raw_cors_origins.split(",") if origin.strip()]
+if not origins:
+    origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
 app.add_middleware(
     CORSMiddleware,

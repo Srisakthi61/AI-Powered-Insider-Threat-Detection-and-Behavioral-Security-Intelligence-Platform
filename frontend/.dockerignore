@@ -1,0 +1,53 @@
+# ==============================================================================
+# ITBIS Frontend - Docker Build Ignore File
+# Build context: ./frontend
+# Preserves: app/, public/ (images & icons), configs, package.json, package-lock.json
+# ==============================================================================
+
+# Version control
+.git/
+.gitignore
+
+# Secrets and environment files
+.env
+.env.*
+.env*.local
+!.env.example
+
+# Node.js dependencies and caches
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+
+# Next.js and production build outputs
+.next/
+out/
+build/
+
+# Test outputs, reports, and screenshots
+test-results/
+test-reports/
+screenshots/
+tests/reports/
+tests/screenshots/
+coverage/
+
+# Logs and debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary and build cache files
+.vercel/
+*.tsbuildinfo
+*.pem
