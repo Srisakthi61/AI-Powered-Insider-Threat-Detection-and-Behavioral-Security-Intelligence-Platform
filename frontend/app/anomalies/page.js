@@ -141,6 +141,7 @@ export default function AnomaliesPage() {
   const handleRunLiveSandbox = async (e) => {
     if (e) e.preventDefault();
     setSandboxLoading(true);
+    setSandboxResult(null);
     try {
       const payload = {
         employee_id: sandboxEmpId,
@@ -167,10 +168,14 @@ export default function AnomaliesPage() {
     }
   };
 
-  const applySandboxPreset = (type) => {
+  const applySandboxPreset = async (type) => {
+    setSandboxResult(null);
+    let targetEmpId = sandboxEmpId;
+    let presetVals = {};
+
     if (type === "usb_exfiltration") {
-      setSandboxEmpId("EMP1007");
-      setSandboxValues({
+      targetEmpId = "EMP1007";
+      presetVals = {
         avg_login_hour: 9.17,
         off_hours_logins: 0,
         usb_total_mb: 6500.0,
@@ -179,10 +184,10 @@ export default function AnomaliesPage() {
         denied_events: 0,
         critical_flags: 103,
         total_transfer_mb: 7200.0,
-      });
+      };
     } else if (type === "sudo_escalation") {
-      setSandboxEmpId("EMP1011");
-      setSandboxValues({
+      targetEmpId = "EMP1011";
+      presetVals = {
         avg_login_hour: 9.27,
         off_hours_logins: 0,
         usb_total_mb: 255.9,
@@ -191,10 +196,10 @@ export default function AnomaliesPage() {
         denied_events: 99,
         critical_flags: 99,
         total_transfer_mb: 1200.0,
-      });
+      };
     } else if (type === "off_hours_mfa") {
-      setSandboxEmpId("EMP1008");
-      setSandboxValues({
+      targetEmpId = "EMP1008";
+      presetVals = {
         avg_login_hour: 3.25,
         off_hours_logins: 29,
         usb_total_mb: 346.2,
@@ -203,10 +208,10 @@ export default function AnomaliesPage() {
         denied_events: 50,
         critical_flags: 87,
         total_transfer_mb: 850.0,
-      });
+      };
     } else if (type === "normal_baseline") {
-      setSandboxEmpId("EMP1001");
-      setSandboxValues({
+      targetEmpId = "EMP1001";
+      presetVals = {
         avg_login_hour: 9.18,
         off_hours_logins: 0,
         usb_total_mb: 0.0,
@@ -215,7 +220,36 @@ export default function AnomaliesPage() {
         denied_events: 0,
         critical_flags: 0,
         total_transfer_mb: 35.0,
-      });
+      };
+    }
+
+    setSandboxEmpId(targetEmpId);
+    setSandboxValues(presetVals);
+
+    setSandboxLoading(true);
+    try {
+      const payload = {
+        employee_id: targetEmpId,
+        ...presetVals,
+      };
+      const res = await anomalyApi.evaluateLive(payload);
+      setSandboxResult(res);
+      if (res.is_outlier || res.risk_tier === "Critical" || res.risk_tier === "High") {
+        setRealtimeAlert({
+          severity: res.risk_tier,
+          alert_message: `[Sandbox Evaluation] ${res.primary_reason || "ML Outlier Flagged"}`,
+          employee_id: res.employee_id,
+          employee_name: res.name,
+          department: res.department,
+          target_role: res.target_role,
+          target_role_title: res.target_role_title,
+          recommended_action: res.recommended_action,
+        });
+      }
+    } catch (err) {
+      console.error("Sandbox test error:", err);
+    } finally {
+      setSandboxLoading(false);
     }
   };
 

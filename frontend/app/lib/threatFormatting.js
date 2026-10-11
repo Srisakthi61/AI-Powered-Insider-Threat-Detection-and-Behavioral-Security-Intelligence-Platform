@@ -40,6 +40,15 @@ export function formatThreatTitle(rawTitle) {
   const lower = rawTitle.toLowerCase();
 
   if (
+    lower.includes("baseline parameters") ||
+    lower.includes("within baseline") ||
+    lower.includes("normal activity") ||
+    lower.includes("no anomalies")
+  ) {
+    return "Normal Activity";
+  }
+
+  if (
     lower.includes("usb") ||
     lower.includes("sandisk") ||
     lower.includes("flash") ||
@@ -108,6 +117,15 @@ export function formatThreatTitle(rawTitle) {
 export function formatThreatDescription(rawTitleOrMsg, rawDetails) {
   const lowerTitle = (rawTitleOrMsg || "").toLowerCase();
   const lowerDetails = (typeof rawDetails === "string" ? rawDetails : JSON.stringify(rawDetails || "")).toLowerCase();
+
+  if (
+    lowerTitle.includes("baseline parameters") ||
+    lowerTitle.includes("within baseline") ||
+    lowerTitle.includes("normal activity") ||
+    lowerDetails.includes("baseline parameters")
+  ) {
+    return "Behavioral activity within expected baseline parameters. No anomalies detected.";
+  }
 
   if (
     lowerTitle.includes("usb") ||

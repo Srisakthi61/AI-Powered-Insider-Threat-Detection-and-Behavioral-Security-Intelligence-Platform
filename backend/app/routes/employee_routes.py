@@ -24,12 +24,21 @@ def create_employee(
     Register a new monitored employee in the organization.
     Restricted to 'admin' and 'security_manager' roles.
     """
+    emp_id = (request.employee_id or request.employee_code or "").strip()
+    if not emp_id:
+        last_emp = db.query(Employee).order_by(Employee.id.desc()).first()
+        next_num = 1001 + (last_emp.id if last_emp else 0)
+        emp_id = f"EMP{next_num}"
+        while db.query(Employee).filter(Employee.employee_id == emp_id).first():
+            next_num += 1
+            emp_id = f"EMP{next_num}"
+
     # 1. Check whether employee_id already exists
-    existing = db.query(Employee).filter(Employee.employee_id == request.employee_id).first()
+    existing = db.query(Employee).filter(Employee.employee_id == emp_id).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Employee ID already exists",
+            detail=f"Employee ID '{emp_id}' already exists",
         )
 
     # 2. Verify manager_id if provided
@@ -41,15 +50,20 @@ def create_employee(
                 detail="manager_id does not match any existing employee",
             )
 
-    # 3. Create employee record
+    # 3. Normalize access_privileges string
+    access_privs = request.access_privileges
+    if isinstance(access_privs, list):
+        access_privs = ", ".join(access_privs)
+
+    # 4. Create employee record
     new_employee = Employee(
-        employee_id=request.employee_id,
-        name=request.name,
-        department=request.department,
-        designation=request.designation,
+        employee_id=emp_id,
+        name=request.name.strip(),
+        department=request.department.strip(),
+        designation=request.designation.strip(),
         manager_id=request.manager_id,
         device_info=request.device_info,
-        access_privileges=request.access_privileges,
+        access_privileges=access_privs,
     )
     db.add(new_employee)
     db.commit()
@@ -155,7 +169,11 @@ def update_employee(
                 detail="manager_id does not match any existing employee",
             )
 
-    # 4. Apply updates
+    # 4. Normalize access_privileges if provided as list
+    if "access_privileges" in update_data and isinstance(update_data["access_privileges"], list):
+        update_data["access_privileges"] = ", ".join(update_data["access_privileges"])
+
+    # 5. Apply updates
     for field, value in update_data.items():
         setattr(employee, field, value)
 

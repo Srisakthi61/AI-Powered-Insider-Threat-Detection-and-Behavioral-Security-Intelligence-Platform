@@ -50,21 +50,21 @@ class AnomalyCheckRequest(BaseModel):
 
 class LiveEvaluationRequest(BaseModel):
     employee_id: str = "EMP1007"
-    avg_login_hour: Optional[float] = 9.0
-    std_login_hour: Optional[float] = 0.5
+    avg_login_hour: Optional[float] = 9.1
+    std_login_hour: Optional[float] = 0.35
     off_hours_logins: Optional[int] = 0
-    mean_daily_access: Optional[float] = 5.0
-    std_daily_access: Optional[float] = 1.0
-    total_transfer_mb: Optional[float] = 50.0
-    avg_transfer_mb: Optional[float] = 25.0
-    max_single_transfer_mb: Optional[float] = 30.0
+    mean_daily_access: Optional[float] = 6.8
+    std_daily_access: Optional[float] = 2.6
+    total_transfer_mb: Optional[float] = 3500.0
+    avg_transfer_mb: Optional[float] = 4.5
+    max_single_transfer_mb: Optional[float] = 50.0
     usb_event_count: Optional[int] = 0
     usb_total_mb: Optional[float] = 0.0
     sudo_attempts: Optional[int] = 0
     denied_events: Optional[int] = 0
     critical_flags: Optional[int] = 0
     unique_devices: Optional[int] = 1
-    email_count: Optional[int] = 2
+    email_count: Optional[int] = 108
 
 
 class ThreatSimulationRequest(BaseModel):
@@ -161,10 +161,22 @@ def evaluate_live_features(
     """
     artifact = load_model_artifact()
     row_dict = req.model_dump()
+    # If USB transfers are specified, scale transfer averages accordingly
+    if row_dict.get("usb_total_mb", 0) > 0 and row_dict.get("usb_event_count", 0) > 0:
+        usb_mb = float(row_dict["usb_total_mb"])
+        usb_cnt = int(row_dict["usb_event_count"])
+        if row_dict.get("avg_transfer_mb", 0) < (usb_mb / max(usb_cnt, 1)):
+            row_dict["avg_transfer_mb"] = round(usb_mb / max(usb_cnt, 1), 2)
+        if row_dict.get("max_single_transfer_mb", 0) < (usb_mb / max(usb_cnt, 1)):
+            row_dict["max_single_transfer_mb"] = round(usb_mb / max(usb_cnt, 1), 2)
+
     df_single = pd.DataFrame([row_dict])
 
     result_df = run_model(df_single, artifact)
     result = result_df.to_dict(orient="records")[0]
+
+    # Outlier flag accounts for ML decision function and High/Critical threat tiers
+    is_flagged = bool(result.get("is_outlier", False)) or (result.get("risk_tier") in ["Critical", "High"])
 
     # Query employee from database if available
     db = SessionLocal()
@@ -186,7 +198,7 @@ def evaluate_live_features(
         "name": emp_name,
         "department": dept,
         "anomaly_score": result.get("anomaly_score", 0.0),
-        "is_outlier": result.get("is_outlier", False),
+        "is_outlier": is_flagged,
         "risk_tier": result.get("risk_tier", "Low"),
         "primary_reason": result.get("primary_reason"),
         "details": result.get("details"),
@@ -865,6 +877,7 @@ def get_anomaly_stats(
 
     if sim_logs_count == 0:
         return {
+            "is_simulated": False,
             "total_activity_logs": 0,
             "total_baselines_calculated": 0,
             "monitored_employees": 0,
@@ -885,6 +898,7 @@ def get_anomaly_stats(
     flagged_threats = ml_report.get("flagged_count", 0)
 
     return {
+        "is_simulated": True,
         "total_activity_logs": total_logs,
         "total_baselines_calculated": total_baselines,
         "monitored_employees": distinct_emps_logged,

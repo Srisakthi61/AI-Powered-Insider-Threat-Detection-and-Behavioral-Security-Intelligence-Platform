@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends
+import csv
+import io
+import json
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.database import get_db
+from app.database import get_db, get_mongo_db
 from app.models import User
 from app.security import require_role
+from pymongo.database import Database
 
 router = APIRouter()
 
@@ -105,3 +110,60 @@ def get_admin_users(
         "roles_summary": roles_summary,
         "platform_roles": platform_roles,
     }
+
+
+@router.get("/audit-export")
+def export_audit_trail(
+    mongo: Database = Depends(get_mongo_db),
+    current_user: dict = Depends(require_role("admin")),
+):
+    """
+    Exports system audit trail (MongoDB activity_logs) as a downloadable CSV file.
+    Restricted to 'admin' role only.
+    """
+    cursor = mongo["activity_logs"].find({}).sort("timestamp", -1)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Event ID",
+        "Timestamp",
+        "Employee ID",
+        "Event Type",
+        "Risk Flag",
+        "Details",
+        "Is Simulation"
+    ])
+
+    for doc in cursor:
+        doc_id = str(doc.get("_id", ""))
+        ts = doc.get("timestamp")
+        ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts or "")
+        emp_id = doc.get("employee_id", "")
+        ev_type = doc.get("event_type", "")
+        details = doc.get("details", {})
+        risk_flag = details.get("risk_flag", "") if isinstance(details, dict) else ""
+        details_str = json.dumps(details) if isinstance(details, (dict, list)) else str(details or "")
+        is_sim = str(bool(doc.get("is_simulation", False)))
+
+        writer.writerow([
+            doc_id,
+            ts_str,
+            emp_id,
+            ev_type,
+            risk_flag,
+            details_str,
+            is_sim,
+        ])
+
+    csv_data = output.getvalue()
+    filename = f"itbis_audit_trail_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )

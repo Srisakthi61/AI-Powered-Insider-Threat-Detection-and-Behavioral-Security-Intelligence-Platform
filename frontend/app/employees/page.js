@@ -29,6 +29,8 @@ export default function EmployeesPage() {
     access_privileges: "standard_corp,git_repo",
   });
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState(null);
+  const [createSuccessMsg, setCreateSuccessMsg] = useState(null);
 
   // Edit Modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -85,19 +87,28 @@ export default function EmployeesPage() {
 
   const handleCreateEmployee = async (e) => {
     e.preventDefault();
+    if (creating) return;
     setCreating(true);
+    setCreateError(null);
     try {
+      const code = (createForm.employee_code || "").trim();
+      const rawPrivs = createForm.access_privileges;
+      const privsStr = Array.isArray(rawPrivs)
+        ? rawPrivs.join(", ")
+        : (rawPrivs || "").trim();
+
       const payload = {
-        name: createForm.name,
-        employee_code: createForm.employee_code || undefined,
+        name: createForm.name.trim(),
         department: createForm.department,
         designation: createForm.designation,
         device_info: createForm.device_info,
-        access_privileges: createForm.access_privileges
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        access_privileges: privsStr,
       };
+      if (code) {
+        payload.employee_id = code;
+        payload.employee_code = code;
+      }
+
       await employeeApi.create(payload);
       setShowCreateModal(false);
       setCreateForm({
@@ -108,10 +119,18 @@ export default function EmployeesPage() {
         device_info: "Dell Latitude 5420, Windows 11 Enterprise",
         access_privileges: "standard_corp,git_repo",
       });
+      setCreateSuccessMsg("Employee profile registered successfully.");
+      setTimeout(() => setCreateSuccessMsg(null), 5000);
       fetchEmployeesAndRisks();
     } catch (err) {
       console.error("Creation failed:", err);
-      alert("Failed to create employee profile.");
+      const detail = err.response?.data?.detail;
+      const errorMsg = typeof detail === "string"
+        ? detail
+        : Array.isArray(detail) && detail[0]?.msg
+        ? detail[0].msg
+        : "Failed to create employee profile.";
+      setCreateError(errorMsg);
     } finally {
       setCreating(false);
     }
@@ -175,9 +194,7 @@ export default function EmployeesPage() {
 
   const canManage =
     user?.role === "admin" ||
-    user?.role === "security_manager" ||
-    user?.role === "soc_engineer" ||
-    user?.role === "security_analyst";
+    user?.role === "security_manager";
 
   return (
     <AppLayout>
@@ -210,6 +227,13 @@ export default function EmployeesPage() {
             )}
           </div>
         </div>
+
+        {createSuccessMsg && (
+          <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-600 text-base">check_circle</span>
+            <span>{createSuccessMsg}</span>
+          </div>
+        )}
 
         {/* Directory Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
@@ -421,6 +445,13 @@ export default function EmployeesPage() {
               </div>
 
               <form onSubmit={handleCreateEmployee} className="space-y-3 text-xs">
+                {createError && (
+                  <div className="p-2.5 bg-red-50 border border-red-300 text-red-800 rounded-lg text-xs flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm text-red-600">error</span>
+                    <span>{createError}</span>
+                  </div>
+                )}
+
                 <div>
                   <label className="font-bold text-secondary block mb-1">
                     Full Name <span className="text-error">*</span>

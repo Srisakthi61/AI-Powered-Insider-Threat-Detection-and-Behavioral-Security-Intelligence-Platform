@@ -26,7 +26,7 @@ export const SimulationProvider = ({ children }) => {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSimModal, setShowSimModal] = useState(false);
 
-  // Initialize simulation status from storage if previously run in this session
+  // Initialize simulation status from storage and verify with backend
   useEffect(() => {
     try {
       const stored =
@@ -46,6 +46,30 @@ export const SimulationProvider = ({ children }) => {
     } catch (e) {
       setIsSimulated(false);
     }
+
+    // Verify actual persistence status with backend
+    anomalyApi
+      .getStats()
+      .then((stats) => {
+        if (stats && typeof stats.is_simulated === "boolean") {
+          if (stats.is_simulated) {
+            setIsSimulated(true);
+            try {
+              sessionStorage.setItem("itbis_simulated", "true");
+              localStorage.setItem("itbis_simulated", "true");
+            } catch (e) {}
+          } else {
+            setIsSimulated(false);
+            try {
+              sessionStorage.removeItem("itbis_simulated");
+              localStorage.removeItem("itbis_simulated");
+              sessionStorage.removeItem("itbis_simulated_threat");
+              localStorage.removeItem("itbis_simulated_threat");
+            } catch (e) {}
+          }
+        }
+      })
+      .catch(() => {});
 
     const handleReset = () => {
       setIsSimulated(false);

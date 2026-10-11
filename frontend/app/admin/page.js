@@ -13,6 +13,27 @@ export default function AdminPage() {
   const [adminUsersData, setAdminUsersData] = useState(null);
   const [systemOnline, setSystemOnline] = useState(true);
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(null);
+  const [exportError, setExportError] = useState(null);
+
+  const handleExportAuditTrail = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setExportSuccess(null);
+    setExportError(null);
+    try {
+      const res = await adminApi.exportAuditTrail();
+      setExportSuccess(`Audit trail export started successfully (${res.filename}).`);
+      setTimeout(() => setExportSuccess(null), 6000);
+    } catch (err) {
+      console.error("Audit trail export failed:", err);
+      setExportError(err.response?.data?.detail || "Failed to export audit trail. Please retry.");
+      setTimeout(() => setExportError(null), 6000);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const fetchAdminData = () => {
     adminApi
@@ -94,13 +115,29 @@ export default function AdminPage() {
             </p>
           </div>
           <button
-            onClick={() => alert("Audit log export initiated.")}
-            className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs self-start cursor-pointer active:scale-95"
+            onClick={handleExportAuditTrail}
+            disabled={exporting}
+            className="bg-primary-container text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary transition-colors flex items-center gap-1.5 shadow-xs self-start cursor-pointer active:scale-95 disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[16px]">download</span>
-            Export Audit Trail
+            <span className="material-symbols-outlined text-[16px]">
+              {exporting ? "progress_activity" : "download"}
+            </span>
+            {exporting ? "Exporting..." : "Export Audit Trail"}
           </button>
         </div>
+
+        {exportSuccess && (
+          <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-300 text-xs flex items-center gap-2">
+            <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span>
+            <span>{exportSuccess}</span>
+          </div>
+        )}
+        {exportError && (
+          <div className="p-3 bg-error-container text-on-error-container rounded-xl border border-error/20 text-xs flex items-center gap-2">
+            <span className="material-symbols-outlined text-sm text-error">error</span>
+            <span>{exportError}</span>
+          </div>
+        )}
 
         {/* Error or Success message */}
         {error ? (

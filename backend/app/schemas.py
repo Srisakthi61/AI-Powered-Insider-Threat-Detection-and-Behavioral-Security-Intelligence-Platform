@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,8 +13,15 @@ class EmployeeBase(BaseModel):
     access_privileges: Optional[str] = None
 
 
-class EmployeeCreate(EmployeeBase):
-    pass
+class EmployeeCreate(BaseModel):
+    employee_id: Optional[str] = None
+    employee_code: Optional[str] = None
+    name: str
+    department: str
+    designation: str
+    manager_id: Optional[int] = None
+    device_info: Optional[str] = None
+    access_privileges: Optional[Union[str, List[str]]] = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -23,7 +30,7 @@ class EmployeeUpdate(BaseModel):
     designation: Optional[str] = None
     manager_id: Optional[int] = None
     device_info: Optional[str] = None
-    access_privileges: Optional[str] = None
+    access_privileges: Optional[Union[str, List[str]]] = None
 
 
 class EmployeeResponse(EmployeeBase):

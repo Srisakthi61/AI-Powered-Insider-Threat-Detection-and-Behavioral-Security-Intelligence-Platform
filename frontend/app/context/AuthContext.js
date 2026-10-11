@@ -172,15 +172,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("itbis_token");
     localStorage.removeItem("itbis_role");
     localStorage.removeItem("itbis_email");
-    try {
-      sessionStorage.removeItem("itbis_simulated");
-      localStorage.removeItem("itbis_simulated");
-      sessionStorage.removeItem("itbis_simulated_threat");
-      localStorage.removeItem("itbis_simulated_threat");
-    } catch (e) {}
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("simulation-reset"));
-    }
     setUser(null);
     router.push("/login");
   };

@@ -364,6 +364,26 @@ export const adminApi = {
     const response = await api.get("/dashboard/admin");
     return response.data;
   },
+  exportAuditTrail: async () => {
+    const response = await api.get("/admin/audit-export", {
+      responseType: "blob",
+    });
+    let filename = "itbis_audit_trail.csv";
+    const disposition = response.headers ? response.headers["content-disposition"] : null;
+    if (disposition && disposition.includes("filename=")) {
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: "text/csv" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    return { success: true, filename };
+  },
 };
 
 export const systemApi = {
