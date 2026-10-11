@@ -3,13 +3,16 @@
 # ==============================================================================
 
 # Build Stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Prevent Puppeteer browser download during container build
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --fetch-retries=5
 
 # Copy application source code
 COPY . .
@@ -23,7 +26,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
 RUN npm run build
 
 # Runner Stage
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \

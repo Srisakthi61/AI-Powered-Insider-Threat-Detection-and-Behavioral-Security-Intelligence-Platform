@@ -427,19 +427,52 @@ node run_puppeteer_tests.js
 ```
 Automates browser testing across all 19 frontend screens, capturing visual screenshots in `frontend/test-results/screenshots/`.
 
+> [!CAUTION]
+> **Test Safety Guidelines:**
+> - Avoid running blind unconstrained automated tests against live database instances. Specifically, `backend/tests/test_milestone2.py` triggers `train_anomaly_model(force_retrain=True)` which overwrites the pre-trained Isolation Forest model weights.
+> - **NEVER invoke `POST /anomalies/reset-simulation`** on live production data, as it deletes incidents, active alerts, and investigation notes.
+
 ---
 
 ## 22. Docker & Multi-Container Deployment
 
+### 1. Starting the Platform
 Run all 4 services via Docker Compose:
 ```bash
-docker-compose up --build -d
+docker compose up -d
 ```
-Services initialized:
-- `itbis-postgres` (Port 5432)
-- `itbis-mongo` (Port 27017)
-- `itbis-backend` (Port 8000)
-- `itbis-frontend` (Port 3000)
+
+### 2. Service Endpoints & Host Port Mappings
+| Service | Container | Internal Port | Host Port / URL | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **Frontend UI** | `itbis-frontend` | `3000` | `http://localhost:3000` | Next.js 16 Web Application |
+| **Backend API** | `itbis-backend` | `8000` | `http://localhost:8000` | FastAPI ASGI Server & Swagger Docs (`/docs`) |
+| **PostgreSQL** | `itbis-postgres` | `5432` | `127.0.0.1:5433` | Relational Store (host port mapped to 5433) |
+| **MongoDB** | `itbis-mongo` | `27017` | `127.0.0.1:27018` | Document Store (host port mapped to 27018) |
+
+### 3. Checking Service Health
+Inspect running container states and health checks:
+```bash
+docker compose ps
+```
+
+### 4. Safe Shutdown & Restart Procedures
+- **Safe Stop (Preserves Containers):**
+  ```bash
+  docker compose stop
+  ```
+- **Safe Restart:**
+  ```bash
+  docker compose restart
+  ```
+- **Safe Teardown (Preserves Data Volumes):**
+  ```bash
+  docker compose down
+  ```
+
+> [!CAUTION]
+> **Data Preservation Rule:**
+> **NEVER run `docker compose down -v`**. Passing the `-v` flag removes Docker volumes (`postgres_data`, `mongo_data`), permanently wiping relational records and time-series telemetry.
 
 ---
 
@@ -495,5 +528,5 @@ This project is licensed under the terms of the **MIT License**. See [`LICENSE.m
 | **M4: Excel Report Export (.xlsx)** | ✅ FULLY SATISFIED | `test_excel_report_export` (openpyxl) PASSED |
 | **M4: PDF Report Export (.pdf)** | ✅ FULLY SATISFIED | `test_pdf_report_export` (ReportLab) PASSED |
 | **M4: Multi-Container Dockerfile & Compose**| ✅ FULLY SATISFIED | Dockerfile & docker-compose.yml present |
-| **Docker Engine Build on Host** | ❓ NOT VERIFIED | Docker CLI is not installed on this Windows host |
+| **Docker Multi-Container Deployment & Recovery** | ✅ FULLY VERIFIED | Docker Compose 4-container stack running & verified healthy on host (restart recovery tested) |
 | **Full 20-Step End-to-End Chain** | ✅ FULLY SATISFIED | `test_complete_end_to_end_chain` PASSED |
